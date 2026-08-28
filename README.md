@@ -2,8 +2,6 @@
 
 [![Version](https://img.shields.io/badge/version-0.8.0--alpha-E65100)](CHANGELOG.md)
 [![Release](https://img.shields.io/badge/release-alpha_prerelease-FF6F00?logo=github)](https://github.com/rjvaleo/M-Clone/releases/latest)
-[![GitHub Pages deployment](https://github.com/rjvaleo/M-Clone/actions/workflows/pages.yml/badge.svg)](https://github.com/rjvaleo/M-Clone/actions/workflows/pages.yml)
-[![Build Release](https://github.com/rjvaleo/M-Clone/actions/workflows/release.yml/badge.svg)](https://github.com/rjvaleo/M-Clone/actions/workflows/release.yml)
 [![Launch M-Clone](https://img.shields.io/badge/Launch_M--Clone-GitHub_Pages-222222?logo=github)](https://rjvaleo.github.io/M-Clone/)
 
 > **Alpha — 0.8.0.** M Classic Web is feature-complete against the M 2.7 manual
@@ -91,12 +89,12 @@ status, spec and next-steps documents that used to live here were folded into it
 on 2026-08-05 and removed; they remain in git history.
 
 - [`CHANGELOG.md`](CHANGELOG.md) — released versions and what each one included.
-- [`reference/README.md`](reference/README.md) — provenance of the manual,
+- `reference/README.md` (moved to the `audio-research` repository) — provenance of the manual,
   screenshots and mockups.
-- [`reference/panels/CATALOG.md`](reference/panels/CATALOG.md) — the hardware
+- `reference/panels/CATALOG.md` (moved to the `audio-research` repository) — the hardware
   panel catalogue and its layout grammar.
 - [`fonts/CATALOG.md`](fonts/CATALOG.md) — per-file font licence findings.
-- [`rust/README.md`](rust/README.md) — the DSP crate's real-time
+- `rust/README.md` (moved to the `idmlab` repository) — the DSP crate's real-time
   non-negotiables.
 
 ## Status
@@ -240,50 +238,30 @@ and ride the sliders. For MIDI, choose **File ▸ Midi Assignment**, click
 build a single self-contained HTML preview: `npm run build:single`
 then open `dist-single/index.html`.
 
-## Deploy to GitHub Pages
+## Deploy
 
-The live application runs at
-[rjvaleo.github.io/M-Clone](https://rjvaleo.github.io/M-Clone/). The tested
-`.github/workflows/pages.yml` pipeline rebuilds and deploys it automatically on
-every push to `master`; generated files are not committed to the repository.
+M Classic ships two ways today, both from this repository:
 
 ```bash
-npm run build:pages
+npm run build        # typechecked production build in dist/
+npm run build:single # one self-contained HTML file in dist-single/
 ```
 
-The output is written to `dist-pages/` with `/M-Clone/` asset URLs. The workflow
-runs the 100%-coverage product gate and manual-conformance suite before it
-uploads that directory. GitHub Pages supplies the HTTPS secure context required
-by Web MIDI; device access still depends on browser support and user permission.
+The single-file build is the interesting one: the whole instrument inlined into
+one document that runs by opening it, with no server and no install. A browser
+needs an HTTPS secure context for Web MIDI, so a hosted copy still wants TLS;
+device access then depends on browser support and user permission.
+
+There is no Pages workflow here. The pre-split repository deployed to
+[rjvaleo.github.io/M-Clone](https://rjvaleo.github.io/M-Clone/) and that site is
+still live, but it serves the combined application as it stood before M Classic
+and idMLab became separate repositories — it does not track this one.
 
 ## Releases
 
-Releases are cut from annotated tags. Pushing a `v*` tag runs
-[`.github/workflows/release.yml`](.github/workflows/release.yml), which checks
-the tag against `package.json`, runs the 100%-coverage product gate and the
-manual-conformance suite, builds the normal and single-file bundles, and
-publishes a GitHub Release with:
-
-| Artifact | What it is |
-| --- | --- |
-| `m-clone-<version>-standalone.html` | The whole application inlined into one HTML file. Open it in a browser; no server or install. |
-| `m-clone-<version>-web.zip` | The static `dist/` build, for hosting on your own domain. |
-| `m-clone-<version>-SHA256SUMS.txt` | Checksums for both artifacts. |
-
-Any tag containing `-alpha`, `-beta`, or `-rc` is published as a GitHub
-prerelease. Release notes come from the matching section of
-[`CHANGELOG.md`](CHANGELOG.md).
-
-To cut one:
-
-```bash
-git tag -a v0.8.0-alpha -m "M-Clone 0.8.0-alpha" && git push origin v0.8.0-alpha
-```
-
-For MIDI hardware, prefer the hosted
-[GitHub Pages app](https://rjvaleo.github.io/M-Clone/) or your own HTTPS host:
-Web MIDI requires a secure context and explicit permission, and browsers may
-restrict device access for a local file. The built-in Synth works everywhere.
+No release workflow is wired up yet. The inherited one built the combined
+bundle and was removed in the split; what replaces it depends on what M Classic
+is released *as*, and the plan is a VST3/AU plugin rather than a web bundle.
 
 ## Develop
 
@@ -293,7 +271,6 @@ npm run coverage  # tests + coverage (engine/state held at 100%)
 npm run test:watch # interactive test watch mode
 npm run typecheck # tsc --noEmit
 npm run build     # typecheck + production build
-npm run build:pages # typechecked GitHub Pages build in dist-pages/
 npm run build:single # self-contained dist-single/index.html
 npm run preview   # preview the normal production build
 ```
@@ -333,8 +310,7 @@ src/
     windowlauncher.tsx canvas-wide auxiliary-window launcher
     useDraggable.ts    draggable/persisted window positions + z-order
   manual/          executable manual capability inventory
-docs/              stack, plans, specifications, audits, status, and backlog
-reference/         original M manual, screenshots, layout mockup
+docs/              screenshots
 ```
 
 Included engine and state logic are held at **100% statement/line/branch/function
