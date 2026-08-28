@@ -1,0 +1,4035 @@
+{
+  "tempo": 120,
+  "patterns": [
+    {
+      "id": "pattern-1",
+      "steps": [
+        {
+          "pitches": [
+            60
+          ]
+        },
+        {
+          "pitches": [
+            62
+          ]
+        },
+        {
+          "pitches": [
+            64
+          ]
+        },
+        {
+          "pitches": [
+            65
+          ]
+        },
+        {
+          "pitches": [
+            67
+          ]
+        },
+        {
+          "pitches": [
+            69
+          ]
+        },
+        {
+          "pitches": [
+            71
+          ]
+        },
+        {
+          "pitches": [
+            72
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": [
+            64
+          ]
+        },
+        {
+          "pitches": [
+            62
+          ]
+        },
+        {
+          "pitches": [
+            71
+          ]
+        },
+        {
+          "pitches": [
+            72
+          ]
+        },
+        {
+          "pitches": [
+            67
+          ]
+        },
+        {
+          "pitches": [
+            65
+          ]
+        },
+        {
+          "pitches": [
+            60
+          ]
+        },
+        {
+          "pitches": [
+            69
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 8,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-2",
+      "steps": [
+        {
+          "pitches": [
+            53
+          ]
+        },
+        {
+          "pitches": [
+            58
+          ]
+        },
+        {
+          "pitches": [
+            63
+          ]
+        },
+        {
+          "pitches": [
+            54,
+            58,
+            63
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            65
+          ]
+        },
+        {
+          "pitches": [
+            57
+          ]
+        },
+        {
+          "pitches": [
+            62
+          ]
+        },
+        {
+          "pitches": [
+            54
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            61,
+            58,
+            63
+          ]
+        },
+        {
+          "pitches": [
+            56
+          ]
+        },
+        {
+          "pitches": [
+            61
+          ]
+        },
+        {
+          "pitches": [
+            53
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            63
+          ]
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": [
+            63
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            53
+          ]
+        },
+        {
+          "pitches": [
+            61
+          ]
+        },
+        {
+          "pitches": [
+            56
+          ]
+        },
+        {
+          "pitches": [
+            61,
+            58,
+            63
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            54
+          ]
+        },
+        {
+          "pitches": [
+            62
+          ]
+        },
+        {
+          "pitches": [
+            57
+          ]
+        },
+        {
+          "pitches": [
+            65
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            54,
+            58,
+            63
+          ]
+        },
+        {
+          "pitches": [
+            63
+          ]
+        },
+        {
+          "pitches": [
+            58
+          ]
+        },
+        {
+          "pitches": [
+            53
+          ]
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-3",
+      "steps": [
+        {
+          "pitches": [
+            56
+          ]
+        },
+        {
+          "pitches": [
+            61
+          ]
+        },
+        {
+          "pitches": [
+            66
+          ]
+        },
+        {
+          "pitches": [
+            57,
+            61,
+            66
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            68
+          ]
+        },
+        {
+          "pitches": [
+            60
+          ]
+        },
+        {
+          "pitches": [
+            65
+          ]
+        },
+        {
+          "pitches": [
+            57
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            64,
+            61,
+            66
+          ]
+        },
+        {
+          "pitches": [
+            59
+          ]
+        },
+        {
+          "pitches": [
+            64
+          ]
+        },
+        {
+          "pitches": [
+            56
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            66
+          ]
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": [
+            66
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            56
+          ]
+        },
+        {
+          "pitches": [
+            64
+          ]
+        },
+        {
+          "pitches": [
+            59
+          ]
+        },
+        {
+          "pitches": [
+            64,
+            61,
+            66
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            57
+          ]
+        },
+        {
+          "pitches": [
+            65
+          ]
+        },
+        {
+          "pitches": [
+            60
+          ]
+        },
+        {
+          "pitches": [
+            68
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            57,
+            61,
+            66
+          ]
+        },
+        {
+          "pitches": [
+            66
+          ]
+        },
+        {
+          "pitches": [
+            61
+          ]
+        },
+        {
+          "pitches": [
+            56
+          ]
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 11,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-4",
+      "steps": [
+        {
+          "pitches": [
+            59
+          ]
+        },
+        {
+          "pitches": [
+            64
+          ]
+        },
+        {
+          "pitches": [
+            69
+          ]
+        },
+        {
+          "pitches": [
+            60,
+            64,
+            69
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            71
+          ]
+        },
+        {
+          "pitches": [
+            63
+          ]
+        },
+        {
+          "pitches": [
+            68
+          ]
+        },
+        {
+          "pitches": [
+            60
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            67,
+            64,
+            69
+          ]
+        },
+        {
+          "pitches": [
+            62
+          ]
+        },
+        {
+          "pitches": [
+            67
+          ]
+        },
+        {
+          "pitches": [
+            59
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            69
+          ]
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": [
+            69
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            59
+          ]
+        },
+        {
+          "pitches": [
+            67
+          ]
+        },
+        {
+          "pitches": [
+            62
+          ]
+        },
+        {
+          "pitches": [
+            67,
+            64,
+            69
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            60
+          ]
+        },
+        {
+          "pitches": [
+            68
+          ]
+        },
+        {
+          "pitches": [
+            63
+          ]
+        },
+        {
+          "pitches": [
+            71
+          ]
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": [
+            60,
+            64,
+            69
+          ]
+        },
+        {
+          "pitches": [
+            69
+          ]
+        },
+        {
+          "pitches": [
+            64
+          ]
+        },
+        {
+          "pitches": [
+            59
+          ]
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 6,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-5",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-6",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-7",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-8",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-9",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-10",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-11",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-12",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-13",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-14",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-15",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-16",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-17",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-18",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-19",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-20",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-21",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-22",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-23",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    },
+    {
+      "id": "pattern-24",
+      "steps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambledSteps": [
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        },
+        {
+          "pitches": []
+        }
+      ],
+      "scrambleGeneration": 0,
+      "outputLength": 16,
+      "maxSize": 100,
+      "chordMode": "single",
+      "insertMode": "insert",
+      "drumMachine": false,
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 8,
+      "phase": 0
+    }
+  ],
+  "voices": [
+    {
+      "patternIndex": 0,
+      "playEnabled": true,
+      "transposition": -2,
+      "noteOrderMix": {
+        "original": 40,
+        "cyclic": 35,
+        "utterly": 25
+      },
+      "density": 0.6,
+      "velocityRange": {
+        "low": 48,
+        "high": 110
+      },
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 4,
+      "phase": 0,
+      "timeDistort": {
+        "points": [],
+        "length": 1,
+        "denominator": 4
+      },
+      "legato": 0.5,
+      "channel": 1,
+      "outputChannels": [
+        1,
+        9
+      ],
+      "program": 0,
+      "sourceChannel": "all",
+      "inputUse": "disabled",
+      "echoInput": false,
+      "mouseAdvance": false
+    },
+    {
+      "patternIndex": 1,
+      "playEnabled": true,
+      "transposition": -1,
+      "noteOrderMix": {
+        "original": 20,
+        "cyclic": 60,
+        "utterly": 20
+      },
+      "density": 0.75,
+      "velocityRange": {
+        "low": 48,
+        "high": 110
+      },
+      "timeBaseNumerator": 2,
+      "timeBaseDenominator": 8,
+      "phase": 12,
+      "timeDistort": {
+        "points": [
+          {
+            "x": 0.35,
+            "y": 0.6
+          }
+        ],
+        "length": 2,
+        "denominator": 4
+      },
+      "legato": 0.75,
+      "channel": 2,
+      "outputChannels": [
+        2,
+        10
+      ],
+      "program": 0,
+      "sourceChannel": "all",
+      "inputUse": "disabled",
+      "echoInput": false,
+      "mouseAdvance": false
+    },
+    {
+      "patternIndex": 2,
+      "playEnabled": true,
+      "transposition": 0,
+      "noteOrderMix": {
+        "original": 70,
+        "cyclic": 10,
+        "utterly": 20
+      },
+      "density": 0.8999999999999999,
+      "velocityRange": {
+        "low": 48,
+        "high": 110
+      },
+      "timeBaseNumerator": 1,
+      "timeBaseDenominator": 16,
+      "phase": 24,
+      "timeDistort": {
+        "points": [],
+        "length": 1,
+        "denominator": 4
+      },
+      "legato": 1,
+      "channel": 3,
+      "outputChannels": [
+        3,
+        11
+      ],
+      "program": 0,
+      "sourceChannel": "all",
+      "inputUse": "disabled",
+      "echoInput": false,
+      "mouseAdvance": false
+    },
+    {
+      "patternIndex": 3,
+      "playEnabled": true,
+      "transposition": 1,
+      "noteOrderMix": {
+        "original": 40,
+        "cyclic": 35,
+        "utterly": 25
+      },
+      "density": 0.6,
+      "velocityRange": {
+        "low": 48,
+        "high": 110
+      },
+      "timeBaseNumerator": 2,
+      "timeBaseDenominator": 4,
+      "phase": 36,
+      "timeDistort": {
+        "points": [
+          {
+            "x": 0.35,
+            "y": 0.6
+          }
+        ],
+        "length": 2,
+        "denominator": 4
+      },
+      "legato": 1.25,
+      "channel": 4,
+      "outputChannels": [
+        4,
+        12
+      ],
+      "program": 0,
+      "sourceChannel": "all",
+      "inputUse": "disabled",
+      "echoInput": false,
+      "mouseAdvance": false
+    }
+  ],
+  "root": 7,
+  "scale": "minorPentatonic",
+  "scaleSnap": true,
+  "seed": 1,
+  "diatonicTranspose": true,
+  "secondOrderTranspose": true,
+  "chordTones": false,
+  "midiAssignments": {
+    "inputs": [
+      {
+        "deviceId": null,
+        "channel": 1
+      },
+      {
+        "deviceId": null,
+        "channel": 2
+      },
+      {
+        "deviceId": null,
+        "channel": 3
+      },
+      {
+        "deviceId": null,
+        "channel": 4
+      },
+      {
+        "deviceId": null,
+        "channel": 5
+      },
+      {
+        "deviceId": null,
+        "channel": 6
+      },
+      {
+        "deviceId": null,
+        "channel": 7
+      },
+      {
+        "deviceId": null,
+        "channel": 8
+      },
+      {
+        "deviceId": null,
+        "channel": 9
+      },
+      {
+        "deviceId": null,
+        "channel": 10
+      },
+      {
+        "deviceId": null,
+        "channel": 11
+      },
+      {
+        "deviceId": null,
+        "channel": 12
+      },
+      {
+        "deviceId": null,
+        "channel": 13
+      },
+      {
+        "deviceId": null,
+        "channel": 14
+      },
+      {
+        "deviceId": null,
+        "channel": 15
+      },
+      {
+        "deviceId": null,
+        "channel": 16
+      }
+    ],
+    "outputs": [
+      {
+        "deviceId": null,
+        "channel": 1
+      },
+      {
+        "deviceId": null,
+        "channel": 2
+      },
+      {
+        "deviceId": null,
+        "channel": 3
+      },
+      {
+        "deviceId": null,
+        "channel": 4
+      },
+      {
+        "deviceId": null,
+        "channel": 5
+      },
+      {
+        "deviceId": null,
+        "channel": 6
+      },
+      {
+        "deviceId": null,
+        "channel": 7
+      },
+      {
+        "deviceId": null,
+        "channel": 8
+      },
+      {
+        "deviceId": null,
+        "channel": 9
+      },
+      {
+        "deviceId": null,
+        "channel": 10
+      },
+      {
+        "deviceId": null,
+        "channel": 11
+      },
+      {
+        "deviceId": null,
+        "channel": 12
+      },
+      {
+        "deviceId": null,
+        "channel": 13
+      },
+      {
+        "deviceId": null,
+        "channel": 14
+      },
+      {
+        "deviceId": null,
+        "channel": 15
+      },
+      {
+        "deviceId": null,
+        "channel": 16
+      }
+    ],
+    "programBase": 0,
+    "latencyMs": 0,
+    "conductXController": 16,
+    "conductYController": 17
+  },
+  "echoMapChannels": [],
+  "cyclic": {
+    "accent": [
+      [
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        }
+      ],
+      [
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        }
+      ],
+      [
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        }
+      ],
+      [
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 1,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        }
+      ]
+    ],
+    "legato": [
+      [
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 2
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        }
+      ],
+      [
+        {
+          "min": 2,
+          "max": 2
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 2
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        }
+      ],
+      [
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 2
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        }
+      ],
+      [
+        {
+          "min": 2,
+          "max": 2
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 2
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        }
+      ]
+    ],
+    "rhythm": [
+      [
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 2
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 0,
+          "max": 2
+        }
+      ],
+      [
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 2
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        },
+        {
+          "min": 2,
+          "max": 4
+        }
+      ],
+      [
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 2
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 0,
+          "max": 2
+        }
+      ],
+      [
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 0
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 4
+        },
+        {
+          "min": 3,
+          "max": 3
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 3
+        },
+        {
+          "min": 2,
+          "max": 2
+        },
+        {
+          "min": 3,
+          "max": 4
+        },
+        {
+          "min": 0,
+          "max": 2
+        },
+        {
+          "min": 1,
+          "max": 1
+        },
+        {
+          "min": 2,
+          "max": 4
+        }
+      ]
+    ]
+  },
+  "cyclicLengths": {
+    "accent": [
+      16,
+      5,
+      8,
+      3
+    ],
+    "legato": [
+      16,
+      5,
+      8,
+      3
+    ],
+    "rhythm": [
+      16,
+      5,
+      8,
+      3
+    ]
+  },
+  "cyclicValues": {
+    "legato": [
+      6,
+      25,
+      50,
+      75,
+      100
+    ],
+    "rhythm": [
+      1,
+      1,
+      1.5,
+      2,
+      5
+    ]
+  }
+}

@@ -17,7 +17,7 @@
 import { Rng } from "./rng";
 import { makeCursors, planWindow } from "./planner";
 import { createDefaultProject } from "./project";
-import type { ProjectState } from "./types";
+import type { ProjectState, CyclicStep } from "./types";
 
 export type TraceOptions = {
   /** Seconds of music to plan. */
@@ -99,6 +99,203 @@ export function traceFixture(voices: number): ProjectState {
       density: 0.75,
     })),
   };
+}
+
+/**
+ * A project that actually exercises the planner.
+ *
+ * `traceFixture` was built to make the Voice count matter, and it does. It does
+ * almost nothing else: every cyclic step is the constant 2, so accent, legato
+ * and rhythm consume no randomness and never vary; the Note Order mix is 100%
+ * Original, so the Cyclic and Utterly branches never run and `scrambledSteps`
+ * is never read; and every flag is off. Mutating the planner's cyclic wrap, its
+ * rest handling, its scrambled-list selection or its second-order transposition
+ * left those traces byte-identical.
+ *
+ * So this one turns the machinery on: ranges rather than points, so levels are
+ * drawn; a zero level, so rests happen; cycle lengths that differ per Voice, so
+ * the position wrap is observable; all three Note Order sources; two output
+ * channels; staggered phases; distinct time bases; a bent Time Distortion Map;
+ * and diatonic transposition stacked second-order over a snapped scale.
+ */
+export function traceRichFixture(voices: number): ProjectState {
+  const project = createDefaultProject(voices);
+
+  const accentAt = (voice: number, i: number): CyclicStep => {
+    const k = (i + voice) % 6;
+    if (k === 0) return { min: 0, max: 0 };      // a rest, so velocity 0 is reached
+    if (k % 2 === 1) return { min: 1, max: 4 };  // a range, so a draw is consumed
+    return { min: 3, max: 3 };                   // a point, which consumes none
+  };
+
+  const spanAt = (voice: number, i: number): CyclicStep => {
+    const lo = (i + voice * 2) % 4;
+    return i % 3 === 0 ? { min: lo, max: lo } : { min: lo, max: Math.min(lo + 2, 4) };
+  };
+
+  const cycle = (make: (voice: number, i: number) => CyclicStep) =>
+    project.voices.map((_, voice) =>
+      Array.from({ length: 16 }, (_, i) => make(voice, i)));
+
+  // Lengths that are not all 16, so `position % length` is observable.
+  const lengthsFor = () => project.voices.map((_, v) => [16, 5, 8, 3][v % 4]);
+
+  // `createDefaultProject` seeds Pattern 0 alone; the rest hold steps with no
+  // pitches, so a Voice pointed at one is silent. Four Patterns are given
+  // material here — including a chord and a rest — so `patternIndex` selects
+  // something, and so a step with several pitches reaches the channel loop.
+  const seeded = project.patterns.map((pattern, index) => {
+    if (index >= 4) return pattern;
+
+    const shift = index * 3;
+    const steps = pattern.steps.map((step, i) => {
+      if (index === 0) return step;
+      if (i % 5 === 4) return { ...step, pitches: [] };
+      if (i % 7 === 3) return { ...step, pitches: [48 + shift + i, 55 + shift, 60 + shift] };
+      return { ...step, pitches: [50 + shift + ((i * 5) % 13)] };
+    });
+
+    return {
+      ...pattern,
+      steps,
+      // Reversed, so the Cyclic branch reading this list rather than `steps`
+      // changes the music rather than happening to agree with it.
+      scrambledSteps: index === 0 ? pattern.scrambledSteps : [...steps].reverse(),
+      outputLength: [8, 16, 11, 6][index],
+    };
+  });
+
+  return {
+    ...project,
+    patterns: seeded,
+    root: 7,
+    scale: "minorPentatonic",
+    scaleSnap: true,
+    diatonicTranspose: true,
+    secondOrderTranspose: true,
+    chordTones: false,
+    cyclic: {
+      accent: cycle(accentAt),
+      legato: cycle(spanAt),
+      rhythm: cycle((v, i) => spanAt(v, i + 1)),
+    },
+    cyclicLengths: {
+      accent: lengthsFor(),
+      legato: lengthsFor(),
+      rhythm: lengthsFor(),
+    },
+    voices: project.voices.map((voice, index) => ({
+      ...voice,
+      patternIndex: index % 4,
+      playEnabled: true,
+      transposition: (index % 5) - 2,
+      density: 0.6 + (index % 3) * 0.15,
+      legato: 0.5 + (index % 4) * 0.25,
+      phase: (index % 4) * 12,
+      timeBaseNumerator: 1 + (index % 2),
+      timeBaseDenominator: [4, 8, 16][index % 3],
+      outputChannels: [(index % 16) + 1, ((index + 8) % 16) + 1],
+      noteOrderMix: [
+        { original: 40, cyclic: 35, utterly: 25 },
+        { original: 20, cyclic: 60, utterly: 20 },
+        { original: 70, cyclic: 10, utterly: 20 },
+      ][index % 3],
+      timeDistort:
+        index % 2 === 0
+          ? voice.timeDistort
+          : { points: [{ x: 0.35, y: 0.6 }], length: 2, denominator: 4 },
+    })),
+  };
+}
+
+/**
+ * The pitch guardrails on their own.
+ *
+ * `traceRichFixture` turns Diatonic Transpose on, and that snaps internally —
+ * so the Scale Snap that follows it is a no-op and skipping it changes nothing.
+ * This variant turns Diatonic off and Scale Snap and Chord Tones on, which is
+ * the only arrangement where those two stages are observable.
+ */
+export function traceGuardFixture(voices: number): ProjectState {
+  const project = traceRichFixture(voices);
+  return {
+    ...project,
+    diatonicTranspose: false,
+    scaleSnap: true,
+    chordTones: true,
+  };
+}
+
+export function traceGuardProject(voices: number, seed = 1, options: TraceOptions = {}): string {
+  return traceProject(traceGuardFixture(voices), seed, options);
+}
+
+const detailBits = new DataView(new ArrayBuffer(8));
+
+/** A float as its exact bit pattern. */
+function f64Hex(value: number): string {
+  detailBits.setFloat64(0, value);
+  return detailBits.getBigUint64(0).toString(16).padStart(16, "0");
+}
+
+/**
+ * Everything a trace leaves out.
+ *
+ * Traces carry ticks and drop seconds, because seconds come from a
+ * floating-point multiply and the trace is meant to be the music. The cost is
+ * that `startSec`, `durationSec` and the Rhythm multiplier are then pinned by
+ * nothing: dropping the Cyclic Legato from the duration in seconds leaves every
+ * trace byte-identical.
+ *
+ * So they are recorded here as raw bit patterns, where an exact comparison is
+ * well defined, along with the Note Order source each step was drawn from.
+ */
+export function traceDetail(
+  project: ProjectState,
+  seed: number,
+  { spanSec = 8, windows = 4 }: TraceOptions = {},
+): string {
+  const rngs = project.voices.map((_, voice) =>
+    new Rng((seed ^ Math.imul(voice + 1, 0x9e3779b1)) >>> 0));
+  let cursors = makeCursors(project, 0);
+  const rows: string[] = [];
+  const step = spanSec / windows;
+
+  for (let w = 0; w < windows; w++) {
+    const planned = planWindow(project, cursors, rngs, step * w, step * (w + 1));
+    cursors = planned.cursors;
+    for (const note of planned.notes) {
+      rows.push([
+        note.atTick ?? 0,
+        note.voice,
+        note.channel,
+        note.note,
+        note.velocity,
+        note.durationTicks ?? 0,
+        note.source ?? "",
+        f64Hex(note.startSec),
+        f64Hex(note.durationSec),
+        f64Hex(note.rhythm ?? 0),
+      ].join(","));
+    }
+  }
+
+  // Emission order, deliberately: this file exists to pin the planner's output
+  // exactly, and sorting would hide a reordering.
+  return rows.join("\n");
+}
+
+export function traceDetailProject(voices: number, seed = 1, options: TraceOptions = {}): string {
+  return traceDetail(traceRichFixture(voices), seed, options);
+}
+
+/** A trace of the rich fixture at a given Voice count. */
+export function traceRichProject(
+  voices: number,
+  seed = 1,
+  options: TraceOptions = {},
+): string {
+  return traceProject(traceRichFixture(voices), seed, options);
 }
 
 /** A trace of the fixture at a given Voice count. */

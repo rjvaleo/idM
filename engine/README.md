@@ -3,10 +3,10 @@
 The port of `src/engine` from TypeScript. One engine, three consumers: `wasm32`
 for the browser app, a static library for the plugin and the standalone.
 
-**Status: started, not usable.** `rng`, `timemap`, `music`, `cyclic` and
-`transform` are ported and conformant. The planner and document model are not,
-and nothing is wired to anything. The TypeScript engine remains the only
-working one.
+**Status: the planner reproduces the TypeScript engine's traces byte for byte.**
+`rng`, `timemap`, `music`, `cyclic`, `transform` and `planner` are ported and
+conformant. `document` is not, and nothing is wired to anything yet — no C ABI,
+no wasm, no CMake. The TypeScript engine remains the only *running* one.
 
 ## The gate
 
@@ -53,12 +53,9 @@ double. Ticks are integers and carry the same musical fact.
    and two straddling the 1e-9 neutrality tolerance.
 3. **`music`, `cyclic`, `transform` — done.** Scales and snapping, the cyclic
    level ranges, and the per-step chain: velocity, density gate, note order.
-4. `planner` — the heart, and where the traces start passing.
+4. **`planner` — done.** The traces pass at 1, 4, 8 and 16 Voices.
 5. `document` — encode and decode, checked against the same v3 fixtures.
 6. C ABI and `wasm32`, then Corrosion wires it into the CMake build.
-
-The traces cannot pass until step 4, so until then they are a target rather
-than a test.
 
 ## What mutation testing found
 
@@ -105,3 +102,53 @@ sweep: zero boundary hits.
 
 The equivalent mutation that *is* caught is `div_euclid` in `midi_to_name`,
 where a negative note really does land an octave out.
+
+## What the traces were not testing
+
+The most useful thing this port has found so far is about the *TypeScript*
+side, not the Rust one.
+
+The Rust planner passed `voices-*.trace` first try. Fourteen deliberate
+mutations then showed why that was worth so little: **only three failed.** The
+cyclic wrap could be changed from 16 to 8, rests could be turned off, the
+Cyclic branch could read the Original list instead of `scrambledSteps`, and
+second-order transposition could be disabled — every trace stayed
+byte-identical.
+
+The fixture was the reason. `traceFixture` was built to make the Voice count
+matter, and it does that well. It does almost nothing else:
+
+- every cyclic step is the constant `2`, so accent, legato and rhythm consume
+  no randomness and never vary;
+- the Note Order mix is 100% Original, so the Cyclic and Utterly branches never
+  run and `scrambledSteps` is never read;
+- every flag is off — diatonic, snap, chord tones, second-order transpose;
+- phase is 0, no Time Distortion Map is bent, every Voice shares a time base,
+  and each has a single output channel.
+
+So three more fixtures exist now, and the traces mean something:
+
+    rich-NN.trace     cyclic ranges, rests, all three Note Order sources, four
+                      seeded Patterns, two channels per Voice, staggered
+                      phases, distinct time bases, a bent Time Distortion Map
+    guard-NN.trace    Diatonic off, Scale Snap and Chord Tones on - the only
+                      arrangement where those two stages are observable, since
+                      Diatonic Transpose snaps internally
+    detail-NN.txt     startSec, durationSec and the Rhythm multiplier as raw
+                      f64 bits, in emission order
+
+That last one closes a structural hole: a trace carries ticks and drops
+seconds, so nothing pinned the seconds at all. Removing the Cyclic Legato from
+`durationSec` left every trace identical.
+
+Against the new fixtures, **eleven of fourteen** mutations fail, and the three
+that survived were each run down:
+
+| Mutation | Verdict |
+|---|---|
+| `at_tick` truncated rather than rounded | equivalent — `transport_tick` starts integral and increments by integral values |
+| Scale Snap skipped | **real gap**, closed by `guard-NN` |
+| Cyclic Legato dropped from `durationSec` | **real gap**, closed by `detail-NN` |
+
+Re-probing after the fix, Chord Tones, a 1e-7 nudge to `startSec` and a 1e-7
+nudge to the Rhythm multiplier are all caught.

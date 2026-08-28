@@ -10,5 +10,10 @@ publish = false
 # rlib for the tests, staticlib for CMake to link into the JUCE target.
 crate-type = ["rlib", "staticlib"]
 
+# Test-only. The library itself has no dependencies, and the plugin and wasm
+# builds link none of this.
+[dev-dependencies]
+serde_json = "1"
+
 [profile.release]
 panic = "abort"

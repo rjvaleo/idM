@@ -5,7 +5,10 @@
 // on disk cannot drift from the engine without one of them failing.
 
 import { Rng, BrownianWalk } from "./rng";
-import { traceDefaultProject } from "./goldenTrace";
+import {
+  traceDefaultProject, traceFixture, traceRichProject, traceRichFixture,
+  traceGuardProject, traceGuardFixture, traceDetailProject,
+} from "./goldenTrace";
 import {
   neutralTimeMap, normalizeTimeMap, isNeutralTimeMap, realToClock, clockToReal,
   timeMapSeconds, distortClockSeconds, type TimeMap,
@@ -403,9 +406,29 @@ export function goldenFiles(): Record<string, string> {
   };
 
   for (const voices of TRACE_VOICE_COUNTS) {
+    const padded = String(voices).padStart(2, "0");
+
     // Traces are stored with a trailing newline, as text files are.
-    files[`voices-${String(voices).padStart(2, "0")}.trace`] =
-      traceDefaultProject(voices) + "\n";
+    files[`voices-${padded}.trace`] = traceDefaultProject(voices) + "\n";
+
+    // The exact state the trace was planned from. Handing the Rust planner the
+    // project rather than asking it to rebuild one isolates the stage under
+    // test: a divergence is then the planner's, not the project builder's.
+    files[`project-${padded}.json`] =
+      JSON.stringify(traceFixture(voices), null, 2) + "\n";
+
+    // The rich pair, which is what actually pins the planner's behaviour.
+    files[`rich-${padded}.trace`] = traceRichProject(voices) + "\n";
+    files[`rich-project-${padded}.json`] =
+      JSON.stringify(traceRichFixture(voices), null, 2) + "\n";
+
+    // Scale Snap and Chord Tones, which the rich fixture hides behind Diatonic.
+    files[`guard-${padded}.trace`] = traceGuardProject(voices) + "\n";
+    files[`guard-project-${padded}.json`] =
+      JSON.stringify(traceGuardFixture(voices), null, 2) + "\n";
+
+    // Seconds and the Rhythm multiplier, as exact bits.
+    files[`detail-${padded}.txt`] = traceDetailProject(voices) + "\n";
   }
 
   return files;

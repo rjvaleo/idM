@@ -9,6 +9,7 @@ import { goldenFiles, rngFixture, TRACE_VOICE_COUNTS } from "./goldenFixtures";
 const COMMITTED = {
   ...import.meta.glob("./__goldens__/*.trace", { query: "?raw", import: "default", eager: true }),
   ...import.meta.glob("./__goldens__/*.txt", { query: "?raw", import: "default", eager: true }),
+  ...import.meta.glob("./__goldens__/*.json", { query: "?raw", import: "default", eager: true }),
 } as Record<string, string>;
 
 describe("golden fixtures", () => {
@@ -25,6 +26,20 @@ describe("golden fixtures", () => {
       expect(committed, `${name} has drifted - run: npx vite-node scripts/goldens.ts`)
         .toBe(expected);
     }
+  });
+
+  /*
+   * The reverse direction. Without this, deleting a generator quietly leaves an
+   * orphan fixture behind that nothing produces and nothing checks - which is
+   * how the Rust side ends up reading a file the TypeScript stopped writing.
+   */
+  it("leaves no committed fixture that nothing generates", () => {
+    const generated = new Set(Object.keys(goldenFiles()));
+    const orphans = Object.keys(COMMITTED)
+      .map((path) => path.replace("./__goldens__/", ""))
+      .filter((name) => !generated.has(name));
+
+    expect(orphans, `orphaned fixtures: ${orphans.join(", ")}`).toEqual([]);
   });
 
   it("covers every voice count the traces are pinned at", () => {
