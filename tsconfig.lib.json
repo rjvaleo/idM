@@ -1,0 +1,27 @@
+{
+  /*
+   * The library build.
+   *
+   * The app tsconfig is `noEmit` — it exists to check types, and Vite does the
+   * transpiling. Publishing needs the opposite: real JavaScript and real
+   * declarations on disk, because a consumer installing this from git gets a
+   * copy of the files rather than a symlink into the source, and nothing
+   * downstream is going to compile our TypeScript for us.
+   *
+   * `allowImportingTsExtensions` is off here because it requires `noEmit`.
+   * That is safe: no import in `src` names a `.ts`/`.tsx` extension.
+   */
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "lib",
+    "rootDir": "src"
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/main.tsx"],
+  "references": []
+}

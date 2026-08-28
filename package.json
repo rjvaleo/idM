@@ -12,11 +12,11 @@
     "test": "vitest run",
     "test:manual": "vitest run --config vitest.manual.config.ts",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "build:lib": "tsc -p tsconfig.lib.json && cp src/styles.css lib/styles.css",
+    "prepare": "npm run build:lib"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "zustand": "^4.5.5"
   },
   "devDependencies": {
@@ -27,20 +27,26 @@
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
     "vite-plugin-singlefile": "^2.3.3",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
     },
-    "./styles.css": "./src/styles.css"
+    "./styles.css": "./lib/styles.css"
   },
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "files": [
-    "src",
+    "lib",
     "README.md",
     "CHANGELOG.md"
-  ]
+  ],
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
 }
