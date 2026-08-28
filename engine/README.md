@@ -3,9 +3,10 @@
 The port of `src/engine` from TypeScript. One engine, three consumers: `wasm32`
 for the browser app, a static library for the plugin and the standalone.
 
-**Status: started, not usable.** `rng` and `timemap` are ported and conformant.
-The planner, transforms and document model are not. The TypeScript engine
-remains the only working one.
+**Status: started, not usable.** `rng`, `timemap`, `music`, `cyclic` and
+`transform` are ported and conformant. The planner and document model are not,
+and nothing is wired to anything. The TypeScript engine remains the only
+working one.
 
 ## The gate
 
@@ -50,7 +51,8 @@ double. Ticks are integers and carry the same musical fact.
 2. **`timemap` — done.** Twelve maps chosen for their edges: unordered points,
    points doubling back, points outside the unit square, zero-width segments,
    and two straddling the 1e-9 neutrality tolerance.
-3. `variables`, `transform` — pure functions over state.
+3. **`music`, `cyclic`, `transform` — done.** Scales and snapping, the cyclic
+   level ranges, and the per-step chain: velocity, density gate, note order.
 4. `planner` — the heart, and where the traces start passing.
 5. `document` — encode and decode, checked against the same v3 fixtures.
 6. C ABI and `wasm32`, then Corrosion wires it into the CMake build.
@@ -74,3 +76,32 @@ first and the clamp cannot then fire; it is defensive code in the TypeScript
 too. The clamp on **y** is caught, as is removing the sort. And `floor` versus
 `trunc` for the cycle index differ only on negative clock times, which return
 before reaching it.
+
+### The `js_round` helper
+
+JavaScript's `Math.round` rounds a half **toward +Infinity**; Rust's
+`f64::round` rounds a half *away from zero*. They disagree on every negative
+half, so `num::js_round` exists rather than the obvious method.
+
+Swapping it for `f64::round` currently fails nothing, and that is not an
+argument for removing it. Every rounding site in the modules ported so far is
+clamped to a non-negative range, which hides the difference. Two sites still to
+be ported are not: `document.ts` clamps transposition to `-127..127`, and
+`transpose.ts` rounds signed semitones. The helper becomes load-bearing there.
+
+### Two mutations that are equivalences, not gaps
+
+Recorded so nobody spends the afternoon re-deriving them.
+
+Using `%` instead of `rem_euclid` for the *pitch class* changes nothing. The
+sign of a negative dividend cancels, because `rel` and the final delta are each
+reduced mod 12 independently. Checked exhaustively over 11 scales x 12 roots x
+641 notes: **zero** differences.
+
+Folding the tie at `+5` instead of `+6` also changes nothing, because the fold
+only differs at a tritone and the nearest scale degree is never more than **one
+semitone** away — no scale here has a gap wider than three semitones. Same
+sweep: zero boundary hits.
+
+The equivalent mutation that *is* caught is `div_euclid` in `midi_to_name`,
+where a negative note really does land an octave out.
