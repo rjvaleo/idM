@@ -71,8 +71,32 @@ webview root. The components are already separate and already standalone; what
 is added is a way to mount one on its own instead of inside the canvas, and the
 state bridge already required for the docked panel.
 
-## Open
+## Decided
 
-- Does the docked panel resize, or is 1000 × 460 fixed? Fixed is simpler and
-  matches the original's fixed layout.
-- Do pop-out positions and open/closed state save with the host session?
+**The panel is fixed at 1000 × 460.** Not resizable. This matches the original,
+which had a fixed layout, and it removes reflow from the port entirely — there
+is one size, and the windows are already laid out for it.
+
+Two consequences.
+
+**Zoom needs a decision it did not need in a browser.** The View menu offers
+Zoom Out / Zoom In / Actual Size against a workspace scale. In a browser the
+page grows and the viewport scrolls; in a fixed 1000 × 460 panel, zooming in
+overflows with nowhere to go. Either zoom is removed from the plugin's View
+menu, or the panel scrolls, or zoom scales the whole grid down only. Removing it
+is the most honest for a fixed panel and the least code.
+
+**Pop-out state saves with the host session.** Which windows are open, and where
+each one sits, restore when the session reopens.
+
+That means moving where it lives. Today `useDraggable` persists positions to
+`localStorage`, keyed per window. In a plugin that is wrong twice over: it is
+per-webview-origin rather than per-session, so two instances of the plugin in
+one set would fight over the same keys, and it does not travel with the project.
+Pop-out state belongs in the plugin's own state blob — the one the host asks for
+and hands back — alongside the project.
+
+Worth keeping separate inside that blob, though: the project is the musical
+document and already has its own `.mclone` format, while open-windows-and-where
+is interface state. Restoring a session should not be able to corrupt a project
+because a window moved.
