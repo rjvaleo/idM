@@ -123,12 +123,23 @@ thousands of plugins have already walked.
 One target yields VST3, AU and Standalone, plus CLAP through
 `clap-juce-extensions`.
 
-**D2a — JUCE licensing is a decision, not a detail.** GPLv3 is free and fine
-for personal use; selling this needs a commercial licence, and the GPL
-obligation attaches to what is distributed. Everything else in the stack —
-Rust, CMake, Corrosion, `clap-juce-extensions` — is permissive. If selling
-becomes likely, that cost is the argument for revisiting `nih-plug`, trading
-AU confidence for licence freedom. Decide before building on it.
+**D2a — JUCE licensing is not a blocker.** JUCE is dual licensed: the JUCE
+licence, or **AGPLv3** (not GPLv3 — the network-use clause differs, though for
+a desktop plugin it rarely bites).
+
+The free **Starter** tier permits **closed-source commercial distribution** up
+to roughly $20,000 annual revenue. Above that, **Indie** covers up to $300,000
+at $40/month or **$800 perpetual**; **Pro** is unlimited at $175/month or
+$3,500 perpetual.
+
+So selling M Classic costs nothing until it earns real money, and $800 once
+thereafter — which is not a consideration against the effort of building it.
+For an individual the limit aggregates *all* revenue arising from use of the
+framework, including donations, sponsorship and advertising, not only sales.
+
+This removes the argument for revisiting `nih-plug`. The remaining reasons to
+prefer it would be language preference or a wish to avoid a copyleft-adjacent
+dependency entirely, neither of which outweighs proven AU support.
 
 **D2b — CMake at the top, Corrosion bridging to Cargo.** The Rust engine builds
 as a static library inside the normal CMake build rather than as a separate
