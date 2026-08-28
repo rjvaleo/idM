@@ -1,0 +1,14 @@
+[package]
+name = "mclassic-engine"
+version = "0.1.0"
+edition = "2021"
+description = "M Classic's generative engine. One engine, three consumers: wasm for the browser app, a static library for the plugin and the standalone."
+license = "MIT"
+publish = false
+
+[lib]
+# rlib for the tests, staticlib for CMake to link into the JUCE target.
+crate-type = ["rlib", "staticlib"]
+
+[profile.release]
+panic = "abort"

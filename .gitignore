@@ -55,3 +55,6 @@ lib/
 
 # JUCE plugin build output
 plugin/build*/
+
+# Rust engine build output
+engine/target/
