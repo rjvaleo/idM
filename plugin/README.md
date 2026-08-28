@@ -1,6 +1,6 @@
 # M Classic — plugin shell
 
-JUCE 8 host for the M Classic engine. One target yields **AU**, **VST3** and
+JUCE 9 host for the M Classic engine. One target yields **AU**, **VST3** and
 **Standalone**; CLAP follows via `clap-juce-extensions`.
 
 Nothing of the engine is here yet. What lives in `src/` is a scaffold: an
@@ -12,7 +12,7 @@ Rust engine (M2) and the webview UI (M3) arrive.
 
     plugin/
       CMakeLists.txt     target definition
-      JUCE/              git submodule, pinned to 8.0.15, shallow
+      JUCE/              git submodule, pinned to 9.0.1, shallow
       src/               PluginProcessor / PluginEditor scaffold
       build/             ignored
 
@@ -47,8 +47,19 @@ A stale directory holds a few dozen entries against the SDK's ~190. Remove it:
 This is a machine fault, not a project one — every C++ build on the host fails
 the same way. There is deliberately no workaround baked into `CMakeLists.txt`.
 
+## Validating the AU
+
+    rm -rf ~/Library/Audio/Plug-Ins/Components/"M Classic.component"
+    cmake --build plugin/build -j
+    auval -v aumu Mcls Rjvl
+
+**Clear the installed component first.** `auval` validates whatever is in
+`~/Library/Audio/Plug-Ins/Components`, not what you just built. A failed build
+leaves the previous bundle in place, and the run reports
+`AU VALIDATION SUCCEEDED` for code that no longer compiles.
+
 ## Version note
 
-JUCE **9.0.1** is released. This target stays on **8.0.15** because
-`clap-juce-extensions` is proven against 8.x and AU is the hard requirement.
-Revisit once CLAP support catches up.
+Pinned to JUCE **9.0.1**. Both 8.0.15 and 9.0.1 were built and validated here;
+9 was chosen for `@juce-framework/webview`, the typed npm package for the
+WebBrowserComponent bridge that the UI depends on. See D2 in `PLUGIN_PLAN.md`.
