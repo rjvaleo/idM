@@ -5,5 +5,7 @@
 //! See `tests/conformance.rs`.
 
 pub mod rng;
+pub mod timemap;
 
 pub use rng::{BrownianWalk, Rng};
+pub use timemap::{TimeMap, TimeMapPoint};

@@ -3,9 +3,9 @@
 The port of `src/engine` from TypeScript. One engine, three consumers: `wasm32`
 for the browser app, a static library for the plugin and the standalone.
 
-**Status: started, not usable.** `rng` is ported and conformant. The planner,
-tempo map, transforms and document model are not. The TypeScript engine remains
-the only working one.
+**Status: started, not usable.** `rng` and `timemap` are ported and conformant.
+The planner, transforms and document model are not. The TypeScript engine
+remains the only working one.
 
 ## The gate
 
@@ -15,6 +15,8 @@ this one required to reproduce them.
 
     src/engine/__goldens__/rng.txt         raw u32 draws, the derived helpers,
                                            and BrownianWalk as f64 bit patterns
+    src/engine/__goldens__/timemap.txt     the map definitions and every
+                                           result, as f64 bit patterns
     src/engine/__goldens__/voices-*.trace  every planned note for a fixed
                                            project, seed and span
 
@@ -45,7 +47,9 @@ double. Ticks are integers and carry the same musical fact.
 
 1. **`rng` — done.** Conformant against 773 fixture lines, with four deliberate
    mutations confirmed to fail the test.
-2. `timemap` — ticks and seconds, the boundary the traces depend on.
+2. **`timemap` — done.** Twelve maps chosen for their edges: unordered points,
+   points doubling back, points outside the unit square, zero-width segments,
+   and two straddling the 1e-9 neutrality tolerance.
 3. `variables`, `transform` — pure functions over state.
 4. `planner` — the heart, and where the traces start passing.
 5. `document` — encode and decode, checked against the same v3 fixtures.
@@ -53,3 +57,20 @@ double. Ticks are integers and carry the same musical fact.
 
 The traces cannot pass until step 4, so until then they are a target rather
 than a test.
+
+## What mutation testing found
+
+Each stage is mutated deliberately, because a conformance test that has never
+failed has not been shown to work.
+
+The `timemap` round found one real gap and two false alarms. The gap: no map
+sat near the 1e-9 neutrality tolerance, so tightening it to 1e-12 passed
+everything — fixed by adding maps 5e-10 and 2e-9 off the diagonal, which now
+pin it from both sides.
+
+The false alarms are worth recording so nobody re-opens them. Dropping the
+monotonic clamp on **x** changes nothing, because `normalizeTimeMap` sorts by x
+first and the clamp cannot then fire; it is defensive code in the TypeScript
+too. The clamp on **y** is caught, as is removing the sort. And `floor` versus
+`trunc` for the cycle index differ only on negative clock times, which return
+before reaching it.
