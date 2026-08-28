@@ -58,3 +58,6 @@ plugin/build*/
 
 # Rust engine build output
 engine/target/
+
+# Stray copies from mutation-testing backups
+engine/src/src/
