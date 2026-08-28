@@ -5,7 +5,37 @@ import { neutralTimeMap } from "./timemap";
 import { scrambleSteps } from "./patterncmd";
 
 export const STEP_COUNT = 16;
-export const VOICE_COUNT = 4;
+
+/**
+ * How many Voices a project has, and the range one may have.
+ *
+ * M shipped four and Classic still opens with four — the window is drawn for
+ * four lanes and that is the interface being recreated. But four was never a
+ * property of the music, only of the 1986 product, and the engine has no reason
+ * to know the number: a project carries as many Voices as its `voices` array is
+ * long.
+ *
+ * There is deliberately no `voiceCount` field. A stored count can disagree with
+ * the array it counts, and then every reader has to decide which to believe.
+ * `voices.length` is the count; `voiceCount()` below is how to ask.
+ */
+export const DEFAULT_VOICE_COUNT = 4;
+export const MIN_VOICE_COUNT = 1;
+export const MAX_VOICE_COUNT = 16;
+
+/** @deprecated Prefer `voiceCount(project)`. Kept for the four-lane Classic UI. */
+export const VOICE_COUNT = DEFAULT_VOICE_COUNT;
+
+/** How many Voices this project has. The array is the authority. */
+export function voiceCount(project: { voices: readonly unknown[] }): number {
+  return project.voices.length;
+}
+
+export function clampVoiceCount(value: number): number {
+  const rounded = Math.round(value);
+  if (!Number.isFinite(rounded)) return DEFAULT_VOICE_COUNT;
+  return Math.max(MIN_VOICE_COUNT, Math.min(MAX_VOICE_COUNT, rounded));
+}
 export const PATTERN_COUNT = 24;
 export const CYCLIC_NEUTRAL_LEVEL = 2;
 /** Default ceiling of the Pattern Size Numerical, as M shipped it. */
@@ -61,9 +91,10 @@ export function createDefaultVoice(index: number): VoiceState {
   };
 }
 
-export function createDefaultProject(): ProjectState {
+export function createDefaultProject(voices = DEFAULT_VOICE_COUNT): ProjectState {
+  const count = clampVoiceCount(voices);
   const neutralCycle = () =>
-    Array.from({ length: VOICE_COUNT }, () =>
+    Array.from({ length: count }, () =>
       Array(STEP_COUNT).fill(CYCLIC_NEUTRAL_LEVEL),
     );
   return {
@@ -71,7 +102,7 @@ export function createDefaultProject(): ProjectState {
     patterns: Array.from({ length: PATTERN_COUNT }, (_, i) =>
       createDefaultPattern(`pattern-${i + 1}`, i === 0),
     ),
-    voices: Array.from({ length: VOICE_COUNT }, (_, i) => createDefaultVoice(i)),
+    voices: Array.from({ length: count }, (_, i) => createDefaultVoice(i)),
     root: 0,
     scale: "major",
     scaleSnap: false,
@@ -94,9 +125,9 @@ export function createDefaultProject(): ProjectState {
       rhythm: neutralCycle(),
     },
     cyclicLengths: {
-      accent: Array(VOICE_COUNT).fill(STEP_COUNT),
-      legato: Array(VOICE_COUNT).fill(STEP_COUNT),
-      rhythm: Array(VOICE_COUNT).fill(STEP_COUNT),
+      accent: Array(count).fill(STEP_COUNT),
+      legato: Array(count).fill(STEP_COUNT),
+      rhythm: Array(count).fill(STEP_COUNT),
     },
     cyclicValues: {
       legato: [6, 25, 50, 75, 100],

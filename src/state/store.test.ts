@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { DOCUMENT_VERSION } from "../engine/document";
 import { useM, SNAPSHOT_COUNT, MAX_PATTERN_STEPS } from "./store";
 import { createDefaultProject } from "../engine/project";
 import { makeDefaultPositions } from "../engine/variables";
@@ -1216,7 +1217,7 @@ describe("project document export / import", () => {
     g().activatePosition("transposition", 2);
     g().setPatternGroup(4);
     const doc = g().exportDocument();
-    expect(doc.version).toBe(2);
+    expect(doc.version).toBe(DOCUMENT_VERSION);
     expect(doc.project.tempo).toBe(137);
     expect(doc.positions.transposition.active).toBe(2);
     expect(doc.patternGroup).toBe(4);

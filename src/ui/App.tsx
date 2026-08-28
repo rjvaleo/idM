@@ -220,6 +220,8 @@ export function App({ onExitToPatch, extraControls }: {
   const openWindow = (id: AppWindowId) => window.dispatchEvent(
     new CustomEvent<AppWindowId>("mclone:open-window", { detail: id }),
   );
+  // Voice lanes come from the project, which is how many Voices it has.
+  const voices = useM((s) => s.project.voices);
   const documentName = useM((s) => s.documentName);
   const isDirty = useM((s) => s.isDirty);
   const movie = useM((s) => s.movieRecorder.movie);
@@ -287,7 +289,7 @@ export function App({ onExitToPatch, extraControls }: {
       ]),
     ),
     ...Object.fromEntries(
-      [0, 1, 2, 3].map((voice) => [
+      voices.map((_, voice: number) => [
         `voiceColor.${voice}`,
         { run: () => openVoiceColor(voice), hint: `Change Voice ${voice + 1}'s colour` },
       ]),

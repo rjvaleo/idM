@@ -518,7 +518,7 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
     })),
     { label: "Edit Orchestration…", run: () => showVariableEditor("outputChannels") },
     "separator",
-    ...Array.from({ length: 4 }, (_, voice) => ({
+    ...project.voices.map((_, voice: number) => ({
       label: `Voice ${voice + 1} Color…`,
       run: () => openVoiceColor?.(voice),
       enabled: Boolean(openVoiceColor),

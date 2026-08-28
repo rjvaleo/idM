@@ -32,6 +32,8 @@ type Row = { ctrl: string | null; tune: string | null };
 
 export function MidiView() {
   const events = useM((state) => state.midiViewEvents);
+  // One STREAM column per Voice the project has.
+  const voices = useM((state) => state.project.voices);
   const transport = useM((state) => state.midiViewTransport);
   const clear = useM((state) => state.clearMidiView);
   const tempo = useM((state) => state.project.tempo);
@@ -176,7 +178,7 @@ export function MidiView() {
       <div className="midiview__tracker-head">
         <b>CTRL</b>
         <b>TUNE</b>
-        {Array.from({ length: 4 }, (_, voice) => (
+        {voices.map((_, voice: number) => (
           <b key={voice} className={`uvoice uvoice--${voice + 1}`}>STREAM {voice + 1}</b>
         ))}
       </div>

@@ -64,7 +64,8 @@ function roundTrip(src: DocumentSource) {
 describe("the document envelope", () => {
   it("stamps the schema version", () => {
     expect(encodeDocument(source()).version).toBe(DOCUMENT_VERSION);
-    expect(DOCUMENT_VERSION).toBe(2);
+    // Pinned deliberately: bumping this is a migration decision, not a typo.
+    expect(DOCUMENT_VERSION).toBe(3);
   });
 
   it("survives a JSON round trip unchanged", () => {

@@ -52,6 +52,7 @@ export function TimeDistortEditor({ editVoice, onEditVoice, editPosition }: {
   onEditVoice: (voice: number) => void;
   editPosition: number;
 }) {
+  const voices = useM((s) => s.project.voices);
   const positions = useM((s) => s.positions);
   const setSlotValue = useM((s) => s.setSlotValue);
   const transferVariableVoice = useM((s) => s.transferVariableVoice);
@@ -124,7 +125,7 @@ export function TimeDistortEditor({ editVoice, onEditVoice, editPosition }: {
       <div className="utd__bar">
         <span className="utd__label">Edit:</span>
         <div className="utd__voices" role="group" aria-label="Map Edit selector">
-          {[0, 1, 2, 3].map((v) => (
+          {voices.map((_, v: number) => (
             <button key={v} type="button"
               draggable
               className={"utd__voice" + (v === editVoice ? " utd__voice--on" : "")}

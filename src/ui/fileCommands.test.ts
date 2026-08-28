@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { DOCUMENT_VERSION } from "../engine/document";
 import { useM } from "../state/store";
 import {
   loadStartupState, needsDownloadName, saveProject, saveStartupState,
@@ -27,7 +28,7 @@ describe("project file saving", () => {
     await saveProject(true);
 
     expect(showSaveFilePicker).toHaveBeenCalledOnce();
-    expect(write).toHaveBeenCalledWith(expect.stringContaining('"version": 2'));
+    expect(write).toHaveBeenCalledWith(expect.stringContaining(`"version": ${DOCUMENT_VERSION}`));
     expect(close).toHaveBeenCalledOnce();
     expect(useM.getState().documentName).toBe("Picked.mclone");
   });
@@ -48,7 +49,7 @@ describe("project file saving", () => {
     expect(click).toHaveBeenCalledOnce();
     expect(remove).not.toHaveBeenCalled();
     expect(link.href).toMatch(/^data:application\/json;charset=utf-8,/);
-    expect(decodeURIComponent(link.href)).toContain('"version": 2');
+    expect(decodeURIComponent(link.href)).toContain(`"version": ${DOCUMENT_VERSION}`);
   });
 
   it("requests an in-app name when the embedded browser cannot show a picker", () => {

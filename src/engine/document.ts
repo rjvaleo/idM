@@ -30,9 +30,19 @@ import { createDefaultProject } from "./project";
 import { makePresetPositions } from "./variables";
 import { neutralTimeMap } from "./timemap";
 import { DEFAULT_OPTIONS, OPTION_IDS, type Options } from "./options";
+import { MAX_VOICE_COUNT, MIN_VOICE_COUNT } from "./project";
 import type { Slideshow, SlideshowAction } from "./slideshow";
 
-export const DOCUMENT_VERSION = 2;
+/**
+ * Version 3 carries a project whose Voice count is whatever its `voices` array
+ * is long, between 1 and 16. Version 2 documents always had exactly four and
+ * still open unchanged.
+ *
+ * The bump exists so an older M-Clone refuses an eight-Voice document with
+ * "saved by a newer version" rather than its v2 reader rejecting it as damaged
+ * musical data — the same outcome, but one of them tells the truth.
+ */
+export const DOCUMENT_VERSION = 3;
 
 const SNAPSHOT_SLOTS = 26;
 const SLIDESHOW_SLOTS = 9;
@@ -63,10 +73,20 @@ export type DocumentSource = {
   options: Options;
 };
 
-export type ProjectDocumentV2 = DocumentSource & { version: 2; variableMarks: VariableMarks };
+export type ProjectDocumentV3 = DocumentSource & { version: 3; variableMarks: VariableMarks };
+
+/**
+ * The name the rest of the app imports. Aliased rather than renamed everywhere:
+ * callers want "the current document", not a version number, and every previous
+ * bump would have rippled through them for no benefit.
+ */
+export type ProjectDocument = ProjectDocumentV3;
+
+/** @deprecated Use `ProjectDocument`. */
+export type ProjectDocumentV2 = ProjectDocumentV3;
 
 export type DecodeResult =
-  | { ok: true; document: ProjectDocumentV2; warnings: string[] }
+  | { ok: true; document: ProjectDocument; warnings: string[] }
   | { ok: false; error: string };
 
 /* ===== Encoding ===== */
@@ -74,7 +94,7 @@ export type DecodeResult =
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 /** Capture the musical document from live state, fully detached. */
-export function encodeDocument(source: DocumentSource): ProjectDocumentV2 {
+export function encodeDocument(source: DocumentSource): ProjectDocument {
   return {
     version: DOCUMENT_VERSION,
     project: clone(source.project),
@@ -176,7 +196,7 @@ function readPattern(value: unknown, index: number, warn: (m: string) => void) {
 }
 
 function readVoice(value: unknown, index: number): VoiceState {
-  const defaults = createDefaultProject().voices[index];
+  const defaults = createDefaultProject(MAX_VOICE_COUNT).voices[index];
   if (!isBag(value)) return defaults;
 
   const map = isBag(value.timeDistort) ? (value.timeDistort as Bag) : null;
@@ -246,7 +266,11 @@ function readCyclicStep(value: unknown): CyclicStep {
 function readProject(value: unknown, warn: (m: string) => void): ProjectState | null {
   if (!isBag(value)) return null;
   if (!Array.isArray(value.patterns) || ![4, 24].includes(value.patterns.length)) return null;
-  if (!Array.isArray(value.voices) || value.voices.length !== 4) return null;
+  if (!Array.isArray(value.voices)) return null;
+  // v2 always had four. v3 has between one and sixteen, and the array is the
+  // count — there is no separate field to disagree with it.
+  if (value.voices.length < MIN_VOICE_COUNT || value.voices.length > MAX_VOICE_COUNT) return null;
+  const voices = value.voices.length;
 
   const patterns: Pattern[] = [];
   for (let i = 0; i < value.patterns.length; i++) {
@@ -255,7 +279,7 @@ function readProject(value: unknown, warn: (m: string) => void): ProjectState | 
     patterns.push(pattern);
   }
 
-  const defaults = createDefaultProject();
+  const defaults = createDefaultProject(voices);
   while (patterns.length < defaults.patterns.length) {
     patterns.push(structuredClone(defaults.patterns[patterns.length]));
   }
@@ -284,7 +308,7 @@ function readProject(value: unknown, warn: (m: string) => void): ProjectState | 
   return {
     tempo: clamp(num(value.tempo, defaults.tempo), MIN_TEMPO, MAX_TEMPO),
     patterns,
-    voices: Array.from({ length: 4 }, (_, i) => readVoice((value.voices as unknown[])[i], i)),
+    voices: Array.from({ length: voices }, (_, i) => readVoice((value.voices as unknown[])[i], i)),
     root: clamp(Math.round(num(value.root, defaults.root)), 0, 11),
     scale: typeof value.scale === "string" ? (value.scale as ProjectState["scale"]) : defaults.scale,
     scaleSnap: bool(value.scaleSnap, defaults.scaleSnap),
