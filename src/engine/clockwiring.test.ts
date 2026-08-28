@@ -101,7 +101,9 @@ function rig(over: Partial<{ sendClock: boolean; tempo: number }> = {}) {
     sendClock: over.sendClock ?? true,
     externalClock: false,
     syncRatio: 4,
-    syncRatioDirection: "out" as const,
+    // Widened deliberately: the follower tests flip this to "in", and `as const`
+    // would infer the literal "out" and reject them.
+    syncRatioDirection: "out" as "out" | "in",
   };
   const project = { ...createDefaultProject(), tempo: over.tempo ?? 120 };
   let now = 0;
