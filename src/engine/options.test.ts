@@ -4,6 +4,7 @@ import {
   OPTION_IDS,
   OPTION_LABELS,
   isOptionAvailable,
+  optionUnavailableReason,
   optionEntries,
   setOption,
   type OptionId,
@@ -73,16 +74,31 @@ describe("the Options menu", () => {
     expect(DEFAULT_OPTIONS).toEqual(before);
   });
 
-  it("reports availability so unbuilt options can be shown honestly", () => {
-    // Everything that needs MIDI input is unavailable until that is wired.
+  it("reports availability so options with no target are shown honestly", () => {
+    // Everything that reaches something real is live.
     expect(isOptionAvailable("useMetronome")).toBe(true);
     // Was unavailable until the clock follower existed; clockinput.ts and the
     // realtime decoding in midiinput.ts make it real, so the switch is live.
     expect(isOptionAvailable("externalClock")).toBe(true);
     expect(isOptionAvailable("midiConduct")).toBe(true);
-    expect(isOptionAvailable("echoInBackground")).toBe(true);
     expect(isOptionAvailable("tapAffectsVelocity")).toBe(true);
     expect(isOptionAvailable("sustainEntersRests")).toBe(true);
+
+    // The three the manual conformance audit marks `not-applicable`: they have
+    // no target in a browser build, so they are disabled rather than left as
+    // checkboxes that toggle and change nothing.
+    for (const id of ["noZoomRects", "syncRestartsSequence", "echoInBackground"] as const) {
+      expect(isOptionAvailable(id), id).toBe(false);
+      expect(optionUnavailableReason(id), id).toBeTruthy();
+    }
+  });
+
+  it("gives a reason only for the options that are unavailable", () => {
+    // A reason on an available option would print a disabled hint on a live
+    // menu item, which is the failure this pairing exists to prevent.
+    for (const id of OPTION_IDS) {
+      expect(optionUnavailableReason(id) === undefined, id).toBe(isOptionAvailable(id));
+    }
   });
 
   it("lists options in menu order with their label, state and availability", () => {

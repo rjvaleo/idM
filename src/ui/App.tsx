@@ -315,7 +315,7 @@ export function App({ onExitToPatch, extraControls }: {
     label: entry.label,
     checked: entry.checked,
     enabled: entry.available,
-    hint: entry.available ? undefined : "Unavailable in this browser build",
+    hint: entry.unavailableReason,
     run: () => setOption(entry.id, !entry.checked),
   }));
 

@@ -46,17 +46,34 @@ export const OPTION_LABELS: Record<OptionId, string> = {
 };
 
 /**
- * Options that cannot do anything yet because they act on MIDI *input*, which
- * this build does not have. They are shown, and shown disabled, rather than
- * hidden or silently inert.
+ * Options with nothing to act on, and why.
+ *
+ * Each of these is `not-applicable` in the manual conformance audit — not
+ * unimplemented, but without a target in a browser build. They stay in the menu
+ * because chapter 22 prints them and this is a recreation, and they are shown
+ * disabled with the reason attached, because a checkbox that toggles and
+ * changes nothing is worse than one that explains itself.
+ *
+ * The reasons are the audit's, verbatim in substance: `option.no-zoom`,
+ * `option.sync-sequence` and `option.echo-background` in
+ * `src/manual/manualConformance.ts`.
  */
-const NEEDS_MIDI_INPUT: ReadonlySet<OptionId> = new Set<OptionId>([
-  // Empty. External Clock lived here until the clock follower existed; every
-  // option now reaches something real.
+const UNAVAILABLE_OPTIONS: ReadonlyMap<OptionId, string> = new Map<OptionId, string>([
+  ["noZoomRects",
+    "Browser windows open immediately and never draw the obsolete zoom rectangles."],
+  ["syncRestartsSequence",
+    "Imported Sequence playback is deliberately out of scope, so Sync has no sequence to restart."],
+  ["echoInBackground",
+    "Whether MIDI arrives while another application is in front is decided by the browser and OS, not by M."],
 ]);
 
 export function isOptionAvailable(id: OptionId): boolean {
-  return !NEEDS_MIDI_INPUT.has(id);
+  return !UNAVAILABLE_OPTIONS.has(id);
+}
+
+/** Why an option is disabled, or undefined when it is not. */
+export function optionUnavailableReason(id: OptionId): string | undefined {
+  return UNAVAILABLE_OPTIONS.get(id);
 }
 
 /**
@@ -80,6 +97,8 @@ export type OptionEntry = {
   label: string;
   checked: boolean;
   available: boolean;
+  /** Present only when `available` is false. */
+  unavailableReason?: string;
 };
 
 /** The menu's own view of itself, in printed order. */
@@ -88,6 +107,7 @@ export function optionEntries(options: Options): OptionEntry[] {
     id,
     label: OPTION_LABELS[id],
     checked: options[id],
+    unavailableReason: optionUnavailableReason(id),
     available: isOptionAvailable(id),
   }));
 }
