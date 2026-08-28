@@ -100,17 +100,47 @@ above it needs to know which.
 **D1 — Port the engine to Rust.** Not C++, not an embedded JS runtime. The
 existing `rust/dsp-core` in idMLab already proves dependency-free portable Rust
 works in this project and builds for both native and `wasm32`. A JS runtime
-inside a plugin is a determinism and real-time risk for no benefit.
+inside a plugin is a determinism and real-time risk for no benefit. Porting to
+C++ instead would remove a language from the build, but would give up the
+exhaustive matching that makes the event union safe to port and the `wasm32`
+target that keeps the browser app on the same engine.
 
-**D2 — `nih-plug` for CLAP and VST3, `clap-wrapper` for AU.** One Rust
-codebase, three formats, no C++ and no JUCE licence. JUCE is the more trodden
-path to AU and remains the fallback if `clap-wrapper` disappoints on
-validation — that is the decision point at the end of Phase 2, not now.
+One engine, three consumers: `wasm32` for the browser app, and a static library
+for both the plugin and the standalone.
+
+**D2 — JUCE 8 for the plugin shell; the engine stays Rust behind a C ABI.**
+Decided against the all-Rust alternative (`nih-plug` for CLAP, `clap-wrapper`
+re-exporting as AUv2) for one reason: AU is the hard requirement, and in that
+arrangement AU arrives through the newest and least-proven link in the chain.
+JUCE's AU support is native and is what most shipping plugins use.
+
+Two things settled it beyond that. **JUCE 8 has first-class WebView UI** — a
+C++/JavaScript bridge, parameter binding, hot reload, and an official
+`WebViewPluginDemo` with a React frontend, which is precisely this project's
+shape. And DAWs are tested against JUCE, so a misbehaving host is a path
+thousands of plugins have already walked.
+
+One target yields VST3, AU and Standalone, plus CLAP through
+`clap-juce-extensions`.
+
+**D2a — JUCE licensing is a decision, not a detail.** GPLv3 is free and fine
+for personal use; selling this needs a commercial licence, and the GPL
+obligation attaches to what is distributed. Everything else in the stack —
+Rust, CMake, Corrosion, `clap-juce-extensions` — is permissive. If selling
+becomes likely, that cost is the argument for revisiting `nih-plug`, trading
+AU confidence for licence freedom. Decide before building on it.
+
+**D2b — CMake at the top, Corrosion bridging to Cargo.** The Rust engine builds
+as a static library inside the normal CMake build rather than as a separate
+step. CI is a GitHub Actions matrix — macOS universal (arm64 + x86_64, signed
+and notarised), Windows x86_64, Linux x86_64 — with `auval` and `pluginval`
+running in CI rather than by hand.
 
 **D3 — Webview UI, not native.** The classic window is pixel-matched to the
 M 2.7 manual in React and CSS, and it is the product's identity. Rebuilding it
 in a native toolkit would be months of work to arrive back where we started,
-worse. The webview hosts the same React that ships in the browser build.
+worse. The webview hosts the same React that ships in the browser build, over
+JUCE 8's WebBrowserComponent bridge.
 
 **D4 — The engine supports 1–16 voices; the classic view shows 4.** The
 four-channel window stays exactly as it is, because that is the point of it.
@@ -169,8 +199,8 @@ it is *specified* effort, with an oracle, which is the best kind.
 ### Phase 2 — The plugin shell
 
 1. `nih-plug` wrapper: CLAP and VST3, instrument category with MIDI output.
-2. `clap-wrapper` to produce the AU. Validate with `auval` early — this is
-   where the JUCE fallback decision gets made.
+2. JUCE targets for VST3, AU and Standalone; CLAP via `clap-juce-extensions`.
+   Run `auval` from the first day there is a bundle, not at the end.
 3. Host transport → `clockinput`: tempo, play state, song position. The plugin
    follows the host by default; external MIDI clock stays available for
    standalone.
