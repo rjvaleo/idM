@@ -1,6 +1,7 @@
 // Makes a panel draggable by its title bar. Permanent panels remember where
 // they were left; auxiliary panels find a fresh non-overlapping slot whenever
-// they open. Every drag release aligns and resolves collisions.
+// they open. A drag leaves the window exactly where it was dropped — windows
+// may overlap, because sometimes that is what you want.
 
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { placeWindow, type WorkspaceRect, type WorkspaceSize } from "../engine/workspace";
@@ -147,7 +148,14 @@ export function useDraggable(id: string, def: Pos, options: { autoPlace?: boolea
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
         const size = elementSize();
-        latest = placeWindow(latest, size, occupiedRects(), WINDOW_GAP);
+        // A window stays where it is dropped. This used to re-run `placeWindow`
+        // on release, which aligned the position and pushed the window clear of
+        // its neighbours — so a deliberate placement, or any overlap the user
+        // actually wanted, was undone the instant the pointer came up.
+        //
+        // Auto-placement on *open* is kept: a window appearing in a fresh slot
+        // is helpful, because nobody chose that position. A window moving after
+        // you chose one is not.
         posRef.current = latest;
         setPos(latest);
         registeredWindows.set(id, { ...latest, ...size, autoPlace });

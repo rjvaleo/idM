@@ -108,13 +108,13 @@ target that keeps the browser app on the same engine.
 One engine, three consumers: `wasm32` for the browser app, and a static library
 for both the plugin and the standalone.
 
-**D2 — JUCE 8 for the plugin shell; the engine stays Rust behind a C ABI.**
+**D2 — JUCE 9 for the plugin shell; the engine stays Rust behind a C ABI.**
 Decided against the all-Rust alternative (`nih-plug` for CLAP, `clap-wrapper`
 re-exporting as AUv2) for one reason: AU is the hard requirement, and in that
 arrangement AU arrives through the newest and least-proven link in the chain.
 JUCE's AU support is native and is what most shipping plugins use.
 
-Two things settled it beyond that. **JUCE 8 has first-class WebView UI** — a
+Two things settled it beyond that. **JUCE has first-class WebView UI** — a
 C++/JavaScript bridge, parameter binding, hot reload, and an official
 `WebViewPluginDemo` with a React frontend, which is precisely this project's
 shape. And DAWs are tested against JUCE, so a misbehaving host is a path
@@ -123,12 +123,33 @@ thousands of plugins have already walked.
 One target yields VST3, AU and Standalone, plus CLAP through
 `clap-juce-extensions`.
 
+*Amended 2026-08-28: this decision originally read JUCE 8, on the belief that
+`clap-juce-extensions` was proven only against 8.x. That was wrong — its most
+recent commit (2026-08-05) is a JUCE 9 fix for embedded UIs, which is precisely
+our webview case.*
+
+*The move to **9.0.1** was tested rather than assumed. The same scaffold builds
+clean and reports `AU VALIDATION SUCCEEDED` under both 8.0.15 and 9.0.1 on
+macOS 26 with Command Line Tools alone. JUCE 9 wins on the one axis this
+project cares about: the WebBrowserComponent bindings are now a typed npm
+package, `@juce-framework/webview`, where 8.x offers an untyped `index.js` at a
+path 9 has already moved. Building the UI on 8 would mean writing against a
+location we would have to migrate off later. The 9.0.0 breaking changes — the
+SVG parser rework, `Drawable` no longer inheriting `Component`, Windows
+multi-touch defaults, zlib built as C — all bite existing codebases; ours was a
+hundred lines old.*
+
+*The only argument left for 8.x is that it has a year more exposure in
+shipping hosts. Real, but alone against the list above.*
+
 **D2a — JUCE licensing is not a blocker.** JUCE is dual licensed: the JUCE
 licence, or **AGPLv3** (not GPLv3 — the network-use clause differs, though for
 a desktop plugin it rarely bites).
 
 The free **Starter** tier permits **closed-source commercial distribution** up
-to roughly $20,000 annual revenue. Above that, **Indie** covers up to $300,000
+to roughly $20,000 annual revenue. The JUCE 9 EULA carries the same
+tiers and the same figures as JUCE 8; `LICENSE.md` differs only in the EULA
+URL, and the framework remains AGPLv3-or-commercial. Above that, **Indie** covers up to $300,000
 at $40/month or **$800 perpetual**; **Pro** is unlimited at $175/month or
 $3,500 perpetual.
 
@@ -151,7 +172,7 @@ running in CI rather than by hand.
 M 2.7 manual in React and CSS, and it is the product's identity. Rebuilding it
 in a native toolkit would be months of work to arrive back where we started,
 worse. The webview hosts the same React that ships in the browser build, over
-JUCE 8's WebBrowserComponent bridge.
+JUCE's WebBrowserComponent bridge.
 
 **D4 — The engine supports 1–16 voices; the classic view shows 4.** The
 four-channel window stays exactly as it is, because that is the point of it.

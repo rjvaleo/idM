@@ -55,7 +55,10 @@ export class MRuntime {
   private timer: SchedulerHandle | null = null;
   private auditionWakes = new Set<SchedulerHandle>();
   private pausedAt: number | null = null;
-  private synthEnabled = true;
+  // Matches DEFAULT_SYNTH_SETTINGS.enabled. `setSynthSettings` recomputes this
+  // from the patches, so the two cannot drift, but the initial value is read
+  // before any settings arrive.
+  private synthEnabled = false;
   private synthSettings = createDefaultSynthSettings();
   private timing: TimingFingerprint[] = [];
   private onPlannedNotes: ((notes: readonly import("./planner").PlannedNote[]) => void) | null;

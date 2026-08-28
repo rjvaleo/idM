@@ -58,6 +58,10 @@ describe("SynthSink envelopes", () => {
     const sink = new SynthSink(context, master as unknown as GainNode);
     const streamThreePatch: SynthSettings = {
       ...DEFAULT_SYNTH_SETTINGS,
+      // Explicit, rather than inherited: this test is about the voice graph the
+      // sink builds, so the patch being on is part of its setup and not
+      // something to borrow from whatever the shipped default happens to be.
+      enabled: true,
       waveform: "square",
       oscillator2Waveform: "sine",
       subOscillatorWaveform: "triangle",

@@ -9,7 +9,9 @@ import {
 describe("built-in synth controls", () => {
   it("ships a click-safe, playable subtractive-synth patch", () => {
     expect(DEFAULT_SYNTH_SETTINGS).toMatchObject({
-      enabled: true,
+      // Off by default: the synth is a monitor, and M's output is MIDI. In a
+      // host it would double whatever instrument the MIDI is driving.
+      enabled: false,
       waveform: "triangle",
       oscillator2Waveform: "sawtooth",
       subOscillatorWaveform: "square",

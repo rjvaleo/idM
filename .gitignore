@@ -52,4 +52,6 @@ Thumbs.db
 lib/
 
 # single-file build output (regenerate with: npm run build:single)
-dist-single/
+
+# JUCE plugin build output
+plugin/build*/
