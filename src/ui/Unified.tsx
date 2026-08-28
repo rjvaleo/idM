@@ -171,9 +171,13 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
   const [cyclicEditor, setCyclicEditor] = useState<CyclicSelection | null>(null);
   const [continuousEditor, setContinuousEditor] = useState<ContinuousKind | null>(null);
   const [editingPositions, setEditingPositions] = useState<Partial<Record<PositionVarId, number>>>({});
+  // The Synth is not opened at startup. M is a MIDI generator, and the target
+  // that matters now is a plugin in a host that supplies its own instruments —
+  // where an internal synth is not a monitor but a second sound nobody asked
+  // for. It stays available from the Windows menu for anyone who wants it.
   const [openWindows, setOpenWindows] = useState<Set<string>>(() => new Set([
     ...APP_WINDOWS.filter((window) => window.permanent).map((window) => window.id),
-    "pattern-editor", "midi-view", "synth",
+    "pattern-editor", "midi-view",
   ]));
   const project = useM((s) => s.project);
   const documentName = useM((s) => s.documentName);

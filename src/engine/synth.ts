@@ -43,7 +43,12 @@ export type SynthSettings = {
 };
 
 export const DEFAULT_SYNTH_SETTINGS: SynthSettings = {
-  enabled: true,
+  // Off by default. The built-in synth is a monitor, and a monitor is the wrong
+  // default for something whose output is MIDI: in a host it doubles whatever
+  // instrument the MIDI is driving. Switched on per patch from the Output bar,
+  // and `setSynthSettings` re-derives `synthEnabled` from these, so turning one
+  // on is all it takes.
+  enabled: false,
   waveform: "triangle",
   oscillatorOctave: 0,
   detuneCents: 0,
