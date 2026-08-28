@@ -34,7 +34,12 @@ export default defineConfig({
         "src/engine/outputs/types.ts",
         "src/modular/audio/nodes.ts",
         // Browser-only wiring that cannot run under Node.
-        "src/engine/runtime.ts",
+        //
+        // `runtime.ts` is no longer here. It was excluded because it builds an
+        // `AudioContext`, but that is stubbable, and the exclusion was hiding
+        // the highest-risk code in the MIDI path: the clock send and receive
+        // wiring, where `sendClock` appeared in a test exactly once, set to
+        // false. `clockwiring.test.ts` now asserts the bytes on the wire.
         "src/engine/outputs/synth.ts",
         "src/engine/outputs/webmidi.ts",
         // Runs inside an AudioWorkletGlobalScope, which Node cannot construct.
