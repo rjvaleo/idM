@@ -47,6 +47,50 @@ function callNative(name: string, ...params: unknown[]): void {
 }
 
 /**
+ * Call into the engine and wait for the answer.
+ *
+ * The reply arrives on `__juce__complete` keyed by the id we sent. This is the
+ * only reliable direction: JUCE's push API is
+ * `emitEventIfBrowserIsVisible`, which drops the event when a host does not
+ * consider the plugin's webview visible, silently.
+ */
+function callNativeForResult(name: string, ...params: unknown[]): Promise<unknown> {
+  const juce = backend();
+  if (!juce) return Promise.resolve(null);
+
+  const resultId = nextCallId++;
+
+  return new Promise((resolve) => {
+    const settle = (payload: unknown) => {
+      const reply = payload as { promiseId?: number; result?: unknown } | null;
+      if (!reply || reply.promiseId !== resultId) return;
+      resolve(reply.result ?? null);
+    };
+
+    juce.addEventListener("__juce__complete", settle);
+    juce.emitEvent("__juce__invoke", { name, params, resultId });
+
+    // A host that never answers must not leave the poll wedged.
+    setTimeout(() => resolve(null), 1000);
+  });
+}
+
+/** What the engine is doing, for the interface to display. */
+export type EngineStatus = {
+  playing: boolean;
+  tempo: number;
+  notesSent: number;
+  port: string;
+  standalone: boolean;
+};
+
+let latestStatus: EngineStatus | null = null;
+
+export function engineStatus(): EngineStatus | null {
+  return latestStatus;
+}
+
+/**
  * Send the whole document.
  *
  * The engine only needs the project, but the Variable Positions, Snapshots and
@@ -183,6 +227,100 @@ export function installPluginBridge(): void {
       if (message && isChannelMessage(message)) receive(message);
     }
   });
+
+  // What the engine played. With the engine in the processor, this is the only
+  // way the interface's Midi View can show anything: it is a monitor, and what
+  // it monitors now happens on the other side of the bridge.
+  juce.addEventListener("mclassic-played", (payload) => {
+    if (!Array.isArray(payload)) return;
+
+    const notes = [];
+
+    for (let i = 0; i + 6 < payload.length; i += 7) {
+      notes.push({
+        voice: Number(payload[i]),
+        note: Number(payload[i + 1]),
+        velocity: Number(payload[i + 2]),
+        channel: Number(payload[i + 3]),
+        atTick: Number(payload[i + 4]),
+        durationTicks: Number(payload[i + 5]),
+        startSec: Number(payload[i + 6]),
+        durationSec: 0,
+      });
+    }
+
+    if (notes.length > 0) useM.getState().recordMidiNotes(notes);
+  });
+
+  // The host's transport, so M's own Start light follows Ableton rather than
+  // sitting dark while it plays.
+  juce.addEventListener("mclassic-transport", (payload) => {
+    if (!Array.isArray(payload) || payload.length < 1) return;
+    useM.getState().setPlaying(Boolean(payload[0]));
+  });
+
+  // Everything the engine has to say comes back through one poll. Pulled
+  // rather than pushed, because JUCE's push API drops events whenever a host
+  // does not consider the plugin's webview visible — which is exactly the
+  // silent failure that made this look broken for days.
+  const poll = async () => {
+    const reply = (await callNativeForResult("poll")) as Record<string, unknown> | null;
+
+    if (reply) {
+      latestStatus = {
+        playing: Boolean(reply.playing),
+        tempo: Number(reply.tempo ?? 120),
+        notesSent: Number(reply.notesSent ?? 0),
+        port: String(reply.port ?? ""),
+        standalone: Boolean(reply.standalone),
+      };
+
+      const played = reply.played;
+
+      if (Array.isArray(played) && played.length >= 7) {
+        const notes = [];
+
+        for (let i = 0; i + 6 < played.length; i += 7) {
+          notes.push({
+            voice: Number(played[i]), note: Number(played[i + 1]),
+            velocity: Number(played[i + 2]), channel: Number(played[i + 3]),
+            atTick: Number(played[i + 4]), durationTicks: Number(played[i + 5]),
+            startSec: Number(played[i + 6]), durationSec: 0,
+          });
+        }
+
+        if (notes.length > 0) useM.getState().recordMidiNotes(notes);
+      }
+
+      const midiIn = reply.midiIn;
+
+      if (Array.isArray(midiIn)) {
+        const receive = useM.getState().receiveMidi;
+
+        for (let i = 0; i + 2 < midiIn.length; i += 3) {
+          const message = decodeMidiMessage(Uint8Array.from([
+            Number(midiIn[i]), Number(midiIn[i + 1]), Number(midiIn[i + 2]),
+          ]));
+
+          if (message && isChannelMessage(message)) receive(message);
+        }
+      }
+
+      useM.getState().setPlaying(Boolean(reply.playing));
+
+      if (typeof reply.document === "string" && reply.document.length > 0) {
+        try {
+          useM.getState().importDocument(JSON.parse(reply.document));
+        } catch {
+          // A malformed blob costs a restore, not the session.
+        }
+      }
+    }
+
+    setTimeout(poll, 50);
+  };
+
+  void poll();
 
   // The processor starts on its own default project; this replaces it with
   // whatever the interface actually has.

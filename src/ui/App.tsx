@@ -34,6 +34,7 @@ import {
   copiedNumericalValue, draggedNumericalValue, setNumericalInput,
 } from "./numericalgesture";
 import { isDetached } from "../plugin/detached";
+import { engineStatus, isPlugin } from "../plugin/bridge";
 
 type Theme = "light" | "dark";
 
@@ -117,6 +118,40 @@ function useElementSize() {
  * Absent — which is how M-Clone's own entry point mounts this — nothing about
  * the app changes.
  */
+/**
+ * What the engine is doing, on screen.
+ *
+ * Both plugin formats hand MIDI to the host through a gate the host controls
+ * and never reports: VST3 sends only once the host activates the event output
+ * bus, AU only once it installs a MIDI output callback. When a host declines,
+ * the notes vanish inside the wrapper and every surface stays silent — which is
+ * indistinguishable from an engine that is not running.
+ *
+ * So the engine says what it did. If this counts up and the DAW shows nothing,
+ * the fault is the routing, not the music.
+ */
+function EngineStatusReadout() {
+  const [status, setStatus] = useState(engineStatus);
+
+  useEffect(() => {
+    const timer = setInterval(() => setStatus(engineStatus()), 250);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!status) return null;
+
+  return (
+    <span className="app__engine" title={status.port
+      ? `M is also publishing a MIDI port called "${status.port}" that any app can receive`
+      : "No virtual MIDI port on this platform; MIDI leaves through the host"}>
+      <span className={"app__engine-led" + (status.playing ? " is-on" : "")} aria-hidden="true" />
+      <span>{status.playing ? "playing" : "stopped"}</span>
+      <span className="app__engine-count">{status.notesSent} notes</span>
+      {status.port && <span className="app__engine-port">{status.port}</span>}
+    </span>
+  );
+}
+
 export function App({ onExitToPatch, extraControls }: {
   onExitToPatch?: () => void;
   /** Rendered at the right of the menu bar. idMLab puts its theme and kit
@@ -407,6 +442,7 @@ export function App({ onExitToPatch, extraControls }: {
             <button type="button" onClick={() => setWorkspaceZoom(100)}
               title="Actual size">1:1</button>
           </div>
+          {isPlugin() && <EngineStatusReadout />}
           <label className="theme-picker">
             <span className="visually-hidden">Channels</span>
             <select aria-label="Channel color preset" value={channelPreset}

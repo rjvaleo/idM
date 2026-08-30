@@ -2,3 +2,7 @@
 	path = plugin/JUCE
 	url = https://github.com/juce-framework/JUCE
 	shallow = true
+[submodule "plugin/clap-juce-extensions"]
+	path = plugin/clap-juce-extensions
+	url = https://github.com/free-audio/clap-juce-extensions
+	shallow = true

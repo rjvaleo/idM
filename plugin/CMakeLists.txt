@@ -11,6 +11,14 @@ endif()
 
 add_subdirectory(JUCE)
 
+# CLAP, from the same sources as everything else.
+#
+# Worth the extra target because CLAP's note output is first-class rather than
+# a legacy afterthought: VST3 carries notes reliably but Steinberg marked CC and
+# pitch bend legacy, and hosts implement them inconsistently. Bitwig, Reaper and
+# Studio One take CLAP natively.
+add_subdirectory(clap-juce-extensions EXCLUDE_FROM_ALL)
+
 # The UI is the browser app's own single-file build, inlined whole: one HTML
 # document carrying the React bundle, the CSS and the fonts. Nothing about the
 # windows is reimplemented here.
@@ -96,6 +104,59 @@ juce_add_plugin(MClassicPlugin
   NEEDS_WEB_BROWSER         TRUE
   EDITOR_WANTS_KEYBOARD_FOCUS TRUE
   COPY_PLUGIN_AFTER_BUILD   TRUE)
+
+
+# ---------------------------------------------------------------------------
+# The same plugin as an AU MIDI processor, for Logic.
+#
+# AU only, deliberately. A VST3 built with IS_MIDI_EFFECT has no audio buses,
+# and Ableton rejects it outright — its log says "plugin processor successfully
+# loaded" and then "Failed". The JUCE forum's guidance is the same: for MIDI out
+# in Live, tick MIDI Input and MIDI Output and do NOT tick MIDI Effect.
+#
+# Live takes MIDI from the instrument build instead, through track routing:
+# a second MIDI track with MIDI From set to the plugin's track, the plugin
+# chosen in the chooser below it, and Monitor set to In. That is Ableton's own
+# documented mechanism, and it needs an instrument, not a MIDI effect.
+# ---------------------------------------------------------------------------
+
+juce_add_plugin(MClassicMidiPlugin
+  PRODUCT_NAME              "M Classic MIDI"
+  COMPANY_NAME              "rjvaleo"
+  BUNDLE_ID                 "com.rjvaleo.mclassicmidi"
+  PLUGIN_MANUFACTURER_CODE  Rjvl
+  PLUGIN_CODE               Mclm
+  FORMATS                   AU
+  IS_SYNTH                  FALSE
+  NEEDS_MIDI_INPUT          TRUE
+  NEEDS_MIDI_OUTPUT         TRUE
+  IS_MIDI_EFFECT            TRUE
+  NEEDS_WEB_BROWSER         TRUE
+  EDITOR_WANTS_KEYBOARD_FOCUS TRUE
+  COPY_PLUGIN_AFTER_BUILD   TRUE)
+
+target_sources(MClassicMidiPlugin PRIVATE
+  src/ProjectJson.cpp
+  src/PopOutWindow.cpp
+  src/PluginProcessor.cpp
+  src/PluginEditor.cpp)
+
+target_compile_definitions(MClassicMidiPlugin PUBLIC
+  JUCE_WEB_BROWSER=1
+  JUCE_USE_CURL=0
+  JUCE_VST3_CAN_REPLACE_VST2=0)
+
+target_link_libraries(MClassicMidiPlugin
+  PRIVATE
+    MClassicEngine
+    MClassicUI
+    juce::juce_audio_devices
+    juce::juce_audio_utils
+    juce::juce_gui_extra
+  PUBLIC
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags)
 
 target_sources(MClassicPlugin PRIVATE
   src/ProjectJson.cpp
@@ -189,3 +250,7 @@ target_compile_definitions(MClassicMidiListen PRIVATE JUCE_USE_CURL=0 JUCE_WEB_B
 target_link_libraries(MClassicMidiListen PRIVATE
   juce::juce_audio_devices
   juce::juce_recommended_config_flags)
+
+clap_juce_extensions_plugin(TARGET MClassicPlugin
+  CLAP_ID "com.rjvaleo.mclassic"
+  CLAP_FEATURES instrument "note effect" sequencer generative algorithmic)

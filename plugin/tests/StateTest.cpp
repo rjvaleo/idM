@@ -257,6 +257,41 @@ int main()
         require (legacy.projectsReceived() > 0, "a session without window state still opens");
     }
 
+    // Program changes are opt-in. A stray one silently repatches whatever is
+    // downstream, and VST3 delivery of non-note events is unreliable anyway.
+    {
+        std::printf ("\nProgram changes\n");
+
+        MClassicProcessor pc;
+        require (! pc.sendsProgramChanges(), "off by default");
+
+        pc.setSendProgramChanges (true);
+        require (pc.sendsProgramChanges(), "can be switched on");
+        pc.setSendProgramChanges (false);
+        require (! pc.sendsProgramChanges(), "and back off");
+    }
+
+    // The virtual port is the one route that does not depend on the host
+    // deciding to take our MIDI, so it has to actually open.
+    {
+        std::printf ("\nVirtual MIDI port\n");
+
+        MClassicProcessor port;
+        port.prepareToPlay (48000.0, 512);
+
+        const auto name = port.portName();
+        std::printf ("    port name: \"%s\"\n", name.toRawUTF8());
+
+        require (name.isNotEmpty(), "a port is published");
+        require (name.startsWith ("M Classic"), "under a name a user would recognise");
+
+        // Whether other processes can see it is checked by MClassicMidiListen,
+        // from outside: a process does not reliably enumerate its own virtual
+        // sources, so asserting it here would test CoreMIDI's opinion of us
+        // rather than the port.
+        port.releaseResources();
+    }
+
     std::printf ("\n%s  %d failures\n", failures == 0 ? "PASS" : "FAIL", failures);
     return failures == 0 ? 0 : 1;
 }

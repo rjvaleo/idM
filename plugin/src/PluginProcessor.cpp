@@ -7,14 +7,26 @@
 
 #include <cmath>
 
+/** A MIDI effect has no audio buses at all; an instrument has a stereo output.
+
+    M generates MIDI, and it is built both ways because hosts disagree about
+    which shape may send MIDI onward: Ableton does not route MIDI out of an
+    instrument, and takes it from a MIDI effect.
+*/
+juce::AudioProcessor::BusesProperties MClassicProcessor::busesForThisBuild()
+{
+   #if JucePlugin_IsMidiEffect
+    return {};
+   #else
+    return BusesProperties().withOutput ("Output", juce::AudioChannelSet::stereo(), true);
+   #endif
+}
+
 MClassicProcessor::MClassicProcessor()
-    : AudioProcessor (BusesProperties()
-                          .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
+    : AudioProcessor (busesForThisBuild())
 {
     projects[0] = mclassic::createDefaultProject();
     projects[1] = projects[0];
-
-    openStandalonePort();
 
     planned.reserve (1024);
     nextCursors.reserve (16);
@@ -32,13 +44,31 @@ MClassicProcessor::MClassicProcessor()
 */
 void MClassicProcessor::openStandalonePort()
 {
-    if (wrapperType != wrapperType_Standalone)
+    if (portOpened)
         return;
 
-    midiOut = juce::MidiOutput::createNewDevice ("M Classic");
+    portOpened = true;
 
-    if (midiOut == nullptr)
+    // The first instance gets the plain name; a second copy in the same set
+    // takes the next one. Counting instances instead would make the name depend
+    // on how many processors happened to be built first, so the port a user is
+    // told to select would not be the one they see.
+    for (int attempt = 1; attempt <= 16 && midiOut == nullptr; ++attempt)
     {
+        const auto name = attempt == 1 ? juce::String ("M Classic")
+                                       : "M Classic " + juce::String (attempt);
+
+        midiOut = juce::MidiOutput::createNewDevice (name);
+    }
+
+    // Virtual ports are macOS, iOS and Linux only - JUCE's own header says so.
+    // On Windows there is no fallback: the host path is the only route, which
+    // is why it has to work rather than merely usually work.
+    if (midiOut == nullptr && wrapperType == wrapperType_Standalone)
+    {
+        // The standalone has nowhere else to go, so the first real output beats
+        // silence. A plugin does not do this: hijacking whatever hardware the
+        // user happens to own would be worse than relying on the host.
         const auto devices = juce::MidiOutput::getAvailableDevices();
 
         if (! devices.isEmpty())
@@ -51,6 +81,11 @@ void MClassicProcessor::openStandalonePort()
 
 void MClassicProcessor::prepareToPlay (double newSampleRate, int)
 {
+    // Not in the constructor: JUCE assigns wrapperType after the processor is
+    // built, so anything that depends on it has to wait until the host is
+    // actually preparing us.
+    openStandalonePort();
+
     sampleRate = newSampleRate > 0.0 ? newSampleRate : 44100.0;
     wasPlaying = false;
     rewind (0.0);
@@ -240,6 +275,9 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
             sendRealtime (midi, playing ? 0xfa : 0xfc, 0);
     }
 
+    publishedPlaying.store (playing, std::memory_order_relaxed);
+    publishedTempo.store (bpm, std::memory_order_relaxed);
+
     wasPlaying = playing;
 
     if (! playing)
@@ -280,6 +318,18 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
                            offset);
             emitted.fetch_add (1, std::memory_order_relaxed);
 
+            // Back to the interface, so its Midi View shows what M generated.
+            // The engine is in the processor now, so this is the only way it
+            // can know.
+            {
+                const auto scope = playedFifo.write (1);
+
+                if (scope.blockSize1 > 0)
+                    played[(size_t) scope.startIndex1] =
+                        { (int) event.voice, note, event.velocity, channel,
+                          event.atTick, 0.0, event.atSec };
+            }
+
             for (auto& slot : sounding)
             {
                 if (slot.channel != 0)
@@ -302,7 +352,7 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
                 }
             }
         }
-        else
+        else if (sendPrograms.load (std::memory_order_acquire))
         {
             midi.addEvent (juce::MidiMessage::programChange (channel,
                                                              juce::jlimit (0, 127, event.program)),
@@ -312,9 +362,9 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
 
     lastPpq = ppq;
 
-    // Standalone: the buffer we just filled has no host to collect it, so it
-    // goes out of our own port. The background thread does the sending, so the
-    // audio thread only hands it over.
+    // Out of our own port as well as into the host's buffer. The host's copy
+    // may never leave the wrapper - both formats gate it on a host decision
+    // that is never reported - and this one is not subject to that.
     if (midiOut != nullptr && ! midi.isEmpty())
         midiOut->sendBlockOfMessages (midi, juce::Time::getMillisecondCounterHiRes(), sampleRate);
 }
@@ -348,6 +398,25 @@ int MClassicProcessor::drainIncoming (IncomingMidi* destination, int capacity)
 
     for (int i = 0; i < scope.blockSize2; ++i)
         destination[written++] = incoming[(size_t) (scope.startIndex2 + i)];
+
+    return written;
+}
+
+int MClassicProcessor::drainPlayed (PlayedNote* destination, int capacity)
+{
+    const auto ready = juce::jmin (capacity, playedFifo.getNumReady());
+
+    if (ready <= 0)
+        return 0;
+
+    const auto scope = playedFifo.read (ready);
+    auto written = 0;
+
+    for (int i = 0; i < scope.blockSize1; ++i)
+        destination[written++] = played[(size_t) (scope.startIndex1 + i)];
+
+    for (int i = 0; i < scope.blockSize2; ++i)
+        destination[written++] = played[(size_t) (scope.startIndex2 + i)];
 
     return written;
 }

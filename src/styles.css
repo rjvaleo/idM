@@ -3181,3 +3181,27 @@ body.dark-bg { background: rgb(var(--s-body, 25 25 25)); }
 
 /* The OS window is the frame, so the window does not draw a second one. */
 .app--detached .uwin[data-detached-target="true"] { border: 0; }
+
+/* ===== Engine readout (plugin only) ==========================================
+   Both plugin formats drop MIDI when the host declines the output bus, and
+   neither reports it. This says what the engine did, so a silent DAW can be
+   told apart from a silent engine. */
+.app__engine {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font: 9px var(--font);
+  color: var(--ink);
+  opacity: 0.75;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+.app__engine-led {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--line);
+  background: transparent;
+}
+.app__engine-led.is-on { background: #00c92c; }
+.app__engine-count { font-variant-numeric: tabular-nums; }
+.app__engine-port { opacity: 0.6; }

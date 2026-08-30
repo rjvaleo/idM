@@ -23,6 +23,23 @@ struct IncomingMidi
     uint8_t data2 = 0;
 };
 
+/** A note the engine played, on its way back to the interface.
+
+    The interface's Midi View is a monitor: it shows what M generated. With the
+    engine in the processor, the interface has no other way to know — so what
+    was played travels back, purely to be displayed.
+*/
+struct PlayedNote
+{
+    int voice = 0;
+    int note = 0;
+    int velocity = 0;
+    int channel = 1;
+    double atTick = 0.0;
+    double durationTicks = 0.0;
+    double startSec = 0.0;
+};
+
 /** A note the processor is holding open, so it can always be closed again. */
 struct SoundingNote
 {
@@ -48,7 +65,11 @@ public:
 
     bool acceptsMidi() const override { return true; }
     bool producesMidi() const override { return true; }
+   #if defined (JucePlugin_IsMidiEffect)
+    bool isMidiEffect() const override { return JucePlugin_IsMidiEffect != 0; }
+   #else
     bool isMidiEffect() const override { return false; }
+   #endif
     double getTailLengthSeconds() const override { return 0.0; }
 
     int getNumPrograms() override { return 1; }
@@ -69,6 +90,10 @@ public:
         opened, which is not fatal: the interface still runs.
     */
     juce::MidiOutput* standalonePort() const noexcept { return midiOut.get(); }
+
+    /** The name of the port M is publishing, or empty if none opened. Shown in
+        the interface so "where is my MIDI" has an answer on screen. */
+    juce::String portName() const { return midiOut != nullptr ? midiOut->getName() : juce::String(); }
 
     /** How many notes this instance has emitted since it was loaded. Lets the
         editor answer "is it actually playing" without a DAW. */
@@ -91,6 +116,25 @@ public:
         this is that something, and without it the standalone renders an
         interface that never plays.
     */
+    /** Whether program changes are sent at all.
+
+        Off by default. M emits one per Voice when the patch changes, and a
+        stray program change silently repatches whatever is downstream — a
+        real cost for a message the product does not depend on. VST3 delivery
+        of them is unreliable besides: Steinberg marked non-note events legacy
+        and hosts implement them inconsistently, so a plugin that relies on
+        them behaves differently in every DAW.
+    */
+    void setSendProgramChanges (bool on) noexcept
+    {
+        sendPrograms.store (on, std::memory_order_release);
+    }
+
+    bool sendsProgramChanges() const noexcept
+    {
+        return sendPrograms.load (std::memory_order_acquire);
+    }
+
     void setStandaloneTransport (bool running) noexcept
     {
         standaloneRunning.store (running, std::memory_order_release);
@@ -132,7 +176,17 @@ public:
     */
     int drainIncoming (IncomingMidi* destination, int capacity);
 
+    /** Take the notes played since the last call, for the interface to show.
+        Message thread only. */
+    int drainPlayed (PlayedNote* destination, int capacity);
+
+    /** What the host's transport is doing, for the interface's own lights. */
+    bool hostIsPlaying() const noexcept { return publishedPlaying.load (std::memory_order_relaxed); }
+    double hostTempo() const noexcept { return publishedTempo.load (std::memory_order_relaxed); }
+
 private:
+    static BusesProperties busesForThisBuild();
+
     void allNotesOff (juce::MidiBuffer&, int samplePosition);
     void rewind (double ppq);
 
@@ -169,10 +223,12 @@ private:
     void scheduleClock (juce::MidiBuffer&, double ppqStart, double ppqEnd,
                         double samplesPerPpq, int numSamples);
 
-    /** Only opened when running standalone. */
+    /** Our own MIDI destination, in the plugin as well as the standalone. */
     std::unique_ptr<juce::MidiOutput> midiOut;
+    bool portOpened = false;
 
     std::atomic<bool> standaloneRunning { false };
+    std::atomic<bool> sendPrograms { false };
     /** The standalone's own position, advanced by the block size. */
     double freePpq = 0.0;
     /** The next MIDI Clock pulse, in beats. 24 per quarter note. */
@@ -183,6 +239,15 @@ private:
     double originPpq = 0.0;
     double lastPpq = 0.0;
     bool wasPlaying = false;
+
+    /** Played notes on their way to the interface's monitor. Dropped rather
+        than blocking: a missing line in a display beats a stalled audio thread. */
+    static constexpr int playedCapacity = 2048;
+    juce::AbstractFifo playedFifo { playedCapacity };
+    std::array<PlayedNote, playedCapacity> played {};
+
+    std::atomic<bool> publishedPlaying { false };
+    std::atomic<double> publishedTempo { 120.0 };
 
     std::atomic<int> emitted { 0 };
     std::atomic<int> received { 0 };

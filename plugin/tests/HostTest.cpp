@@ -414,6 +414,26 @@ int main()
 
     std::printf ("Loading the built plugin as a host would.\n");
 
+    // The MIDI-effect build is the one a host may route MIDI out of, so it is
+    // tested first: it is the shape the product depends on.
+    juce::VST3PluginFormat midiVst3;
+    const auto midiVst3Path = artefacts.getParentDirectory()
+                                       .getParentDirectory()
+                                       .getChildFile ("MClassicMidiPlugin_artefacts/Release/VST3/M Classic MIDI.vst3");
+
+    if (midiVst3Path.exists())
+        testFormat (midiVst3, midiVst3Path.getFullPathName());
+
+   #if JUCE_PLUGINHOST_AU && JUCE_MAC
+    juce::AudioUnitPluginFormat midiAu;
+    const auto midiAuPath = artefacts.getParentDirectory()
+                                     .getParentDirectory()
+                                     .getChildFile ("MClassicMidiPlugin_artefacts/Release/AU/M Classic MIDI.component");
+
+    if (midiAuPath.exists())
+        testFormat (midiAu, midiAuPath.getFullPathName());
+   #endif
+
     juce::VST3PluginFormat vst3;
     const auto vst3Path = artefacts.getChildFile ("VST3/M Classic.vst3");
 

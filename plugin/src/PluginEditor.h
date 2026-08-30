@@ -27,17 +27,13 @@ public:
 /** Hosts the browser app's own UI. The windows are not reimplemented here and
     must not be: this class serves the single-file bundle to a WebBrowserComponent
     and gets out of the way. Fixed at the measured 1000 x 460. */
-class MClassicEditor final : public juce::AudioProcessorEditor,
-                             private juce::Timer
+class MClassicEditor final : public juce::AudioProcessorEditor
 {
 public:
     explicit MClassicEditor (MClassicProcessor&);
     ~MClassicEditor() override = default;
 
     void resized() override;
-
-    /** Pumps host MIDI across to the interface. */
-    void timerCallback() override;
 
 private:
     static std::optional<juce::WebBrowserComponent::Resource> provide (const juce::String& path);
@@ -49,7 +45,8 @@ private:
 
     void openPopOut (const juce::String& id, const juce::String& title);
     void closePopOut (const juce::String& id);
-    void tellUiPopOutClosed (const juce::String& id);
+    juce::var pollEngine();
+    juce::StringArray closedPopOuts;
 
    #if MCLASSIC_UI_PROBE
     /** How many auxiliary windows are open as real OS windows. */
@@ -59,6 +56,7 @@ private:
 
     MClassicProcessor& processorRef;
     MClassicWebView webView;
+
 
     /** Owned by the editor, so closing the plugin window takes them with it.
         A leaked window outlives its engine and is unreachable. */

@@ -122,14 +122,44 @@ void MClassicEditor::probeTheme()
                         {
                             juce::Timer::callAfterDelay (2500, [safe]
                             {
-                                if (safe != nullptr)
-                                    probeLog ("MCLASSIC_UI_PROBE popouts count="
-                                              + juce::String (safe->popOutCount())
-                                              + " titles=" + safe->popOutTitles());
-
-                                juce::Timer::callAfterDelay (5000, []
+                                if (safe == nullptr)
                                 {
                                     juce::JUCEApplicationBase::quit();
+                                    return;
+                                }
+
+                                probeLog ("MCLASSIC_UI_PROBE popouts count="
+                                          + juce::String (safe->popOutCount())
+                                          + " titles=" + safe->popOutTitles());
+
+                                // Does the interface see what the engine played?
+                                // This is what a user looks at to decide whether
+                                // the plugin is doing anything.
+                                static constexpr const char* monitor = R"JS(
+                                  JSON.stringify({
+                                    midiViewText: (function () {
+                                      var el = document.querySelector('.mv__count, .mvcount')
+                                            || Array.from(document.querySelectorAll('*'))
+                                                   .find(function (e) {
+                                                     return e.children.length === 0
+                                                         && /messages?$/.test((e.textContent||'').trim());
+                                                   });
+                                      return el ? el.textContent.trim() : null;
+                                    })(),
+                                    rows: document.querySelectorAll('.mv__row, .mvrow, [data-midi-row]').length,
+                                    transportOn: !!document.querySelector('.uconduct__tone--start.is-on, .is-playing')
+                                  })
+                                )JS";
+
+                                safe->webView.evaluateJavascript (monitor, [] (auto seen)
+                                {
+                                    if (const auto* v = seen.getResult())
+                                        probeLog ("MCLASSIC_UI_PROBE monitor " + v->toString());
+
+                                    juce::Timer::callAfterDelay (3000, []
+                                    {
+                                        juce::JUCEApplicationBase::quit();
+                                    });
                                 });
                             });
                         });
@@ -185,6 +215,12 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
 
                                             complete (juce::var());
                                         })
+                   .withNativeFunction ("poll",
+                                        [this] (const juce::Array<juce::var>&,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion complete)
+                                        {
+                                            complete (pollEngine());
+                                        })
                    .withNativeFunction ("openWindow",
                                         [this] (const juce::Array<juce::var>& args,
                                                 juce::WebBrowserComponent::NativeFunctionCompletion complete)
@@ -237,31 +273,12 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
     };
    #endif
 
-   #if ! MCLASSIC_UI_PROBE
-    // A restored session reaches the engine before the window exists, so the
-    // interface has to be told once it does. `pageFinishedLoading` is the only
-    // point at which the page can receive it.
-    webView.onPageLoaded = [this]
-    {
-        if (! processorRef.takeRestoredFlag())
-            return;
-
-        webView.emitEventIfBrowserIsVisible ("mclassic-document",
-                                             processorRef.restoredDocument());
-        webView.emitEventIfBrowserIsVisible ("mclassic-windows",
-                                             processorRef.restoredWindows());
-    };
-   #endif
-
     webView.goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
 
     setSize (1000, 460);
     setResizable (false, false);
 
-    // The host's MIDI reaches the interface here, not on the audio thread.
-    // 20ms is well inside what a player notices for note entry, and it keeps
-    // the bridge from being hammered a message at a time.
-    startTimerHz (50);
+    // The interface polls; nothing is pushed at it. See pollEngine.
 }
 
 /** Open one auxiliary window, or bring it forward if it is already open. */
@@ -278,7 +295,7 @@ void MClassicEditor::openPopOut (const juce::String& id, const juce::String& tit
 
     popOuts.push_back (std::make_unique<PopOutWindow> (
         id, title, provide,
-        [this, id] { tellUiPopOutClosed (id); closePopOut (id); }));
+        [this, id] { closedPopOuts.add (id); closePopOut (id); }));
 }
 
 void MClassicEditor::closePopOut (const juce::String& id)
@@ -295,13 +312,6 @@ void MClassicEditor::closePopOut (const juce::String& id)
         juce::MessageManager::callAsync ([doomed] { delete doomed; });
         return;
     }
-}
-
-/** The interface tracks which windows are open, and the OS close button is a
-    way of closing one that the interface never hears about otherwise. */
-void MClassicEditor::tellUiPopOutClosed (const juce::String& id)
-{
-    webView.emitEventIfBrowserIsVisible ("mclassic-window-closed", id);
 }
 
 #if MCLASSIC_UI_PROBE
@@ -321,29 +331,95 @@ void MClassicEditor::resized()
     webView.setBounds (getLocalBounds());
 }
 
-void MClassicEditor::timerCallback()
+/** Everything the interface needs from the engine, in one answer.
+
+    Pulled rather than pushed. JUCE's only push API is
+    `emitEventIfBrowserIsVisible`, and the name is literal: inside a host the
+    plugin editor's webview is not always considered visible, and the event is
+    dropped with no error anywhere. A Midi View that silently stays empty in
+    Ableton while working in the standalone is exactly that failure. A poll's
+    reply comes back as the native call's own result, which has no such gate.
+*/
+juce::var MClassicEditor::pollEngine()
 {
-    std::array<IncomingMidi, 256> messages {};
-    const auto count = processorRef.drainIncoming (messages.data(), (int) messages.size());
+    auto* object = new juce::DynamicObject();
 
-    if (count <= 0)
-        return;
-
-    // One array of triples rather than one event per message: a held chord and
-    // a controller sweep both arrive as bursts, and crossing the bridge once is
-    // cheaper than crossing it forty times.
-    juce::Array<juce::var> payload;
-    payload.ensureStorageAllocated (count * 3);
-
-    for (int i = 0; i < count; ++i)
+    // What the engine played, so Midi View can show it.
     {
-        payload.add ((int) messages[(size_t) i].status);
-        payload.add ((int) messages[(size_t) i].data1);
-        payload.add ((int) messages[(size_t) i].data2);
+        std::array<PlayedNote, 512> notes {};
+        const auto count = processorRef.drainPlayed (notes.data(), (int) notes.size());
+
+        juce::Array<juce::var> flat;
+        flat.ensureStorageAllocated (count * 7);
+
+        for (int i = 0; i < count; ++i)
+        {
+            const auto& n = notes[(size_t) i];
+            flat.add (n.voice);
+            flat.add (n.note);
+            flat.add (n.velocity);
+            flat.add (n.channel);
+            flat.add (n.atTick);
+            flat.add (n.durationTicks);
+            flat.add (n.startSec);
+        }
+
+        object->setProperty ("played", flat);
     }
 
-    webView.emitEventIfBrowserIsVisible ("mclassic-midi-in", juce::var (payload));
+    // The host's MIDI, on its way to the Input Control System.
+    {
+        std::array<IncomingMidi, 256> messages {};
+        const auto count = processorRef.drainIncoming (messages.data(), (int) messages.size());
+
+        juce::Array<juce::var> flat;
+        flat.ensureStorageAllocated (count * 3);
+
+        for (int i = 0; i < count; ++i)
+        {
+            flat.add ((int) messages[(size_t) i].status);
+            flat.add ((int) messages[(size_t) i].data1);
+            flat.add ((int) messages[(size_t) i].data2);
+        }
+
+        object->setProperty ("midiIn", flat);
+    }
+
+    object->setProperty ("playing", processorRef.hostIsPlaying());
+    object->setProperty ("tempo", processorRef.hostTempo());
+
+    // What the interface needs to answer "is this working" without a DAW's
+    // help. Both plugin formats drop MIDI when the host declines the output,
+    // and neither says so; a count the engine can vouch for is the difference
+    // between diagnosing that and arguing about it.
+    object->setProperty ("notesSent", processorRef.notesEmitted());
+    object->setProperty ("port", processorRef.portName());
+    object->setProperty ("standalone", processorRef.isStandalone());
+
+    // A session the host restored, handed over once.
+    if (processorRef.takeRestoredFlag())
+    {
+        object->setProperty ("document", processorRef.restoredDocument());
+        object->setProperty ("windows", processorRef.restoredWindows());
+    }
+
+    // Windows closed by their own title bar, which the interface has no other
+    // way of hearing about.
+    if (! closedPopOuts.isEmpty())
+    {
+        juce::Array<juce::var> ids;
+
+        for (const auto& id : closedPopOuts)
+            ids.add (id);
+
+        object->setProperty ("closed", ids);
+        closedPopOuts.clear();
+    }
+
+    return juce::var (object);
 }
+
+
 
 #if MCLASSIC_UI_PROBE
 
