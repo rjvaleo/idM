@@ -84,6 +84,10 @@ void walk (const std::string& name,
 // Each module contributes one of these.
 void checkRandom();
 void checkTimeMap();
-void checkStepSource();
+void checkMusic();
+void checkCyclic();
+void checkTransform();
+void checkPlanner();
+void checkEvents();
 
 } // namespace mclassic::conformance

@@ -1,28 +1,51 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-#include "../engine/StepSource.h"
-
 #include <cmath>
-
-
 
 MClassicProcessor::MClassicProcessor()
     : AudioProcessor (BusesProperties()
-                          .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
+                          .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
+      project (mclassic::createDefaultProject())
 {
+    planned.reserve (1024);
+    nextCursors.reserve (16);
+    steps.reserve (1024);
+    rewind (0.0);
 }
 
 void MClassicProcessor::prepareToPlay (double newSampleRate, int)
 {
     sampleRate = newSampleRate > 0.0 ? newSampleRate : 44100.0;
-    lastPpq = 0.0;
     wasPlaying = false;
-    sounding.fill ({});
+    rewind (0.0);
 }
 
 void MClassicProcessor::releaseResources()
 {
+}
+
+/** Put the engine back to the top and anchor its clock to `ppq`.
+
+    Called on transport start and on any discontinuity — a loop wrap or a
+    locate. The RNGs are re-seeded exactly as `traceProject` seeds them, so a
+    performance is reproducible from its seed rather than from how long the
+    transport happened to be running.
+*/
+void MClassicProcessor::rewind (double ppq)
+{
+    originPpq = ppq;
+    lastPpq = ppq;
+
+    cursors = mclassic::makeCursors (project, 0.0);
+
+    rngs.clear();
+    rngs.reserve (project.voices.size());
+
+    for (size_t voice = 0; voice < project.voices.size(); ++voice)
+        rngs.push_back (mclassic::Random { project.seed ^ ((uint32_t) (voice + 1) * 0x9e3779b1u) });
+
+    lifecycle.reset();
 }
 
 void MClassicProcessor::allNotesOff (juce::MidiBuffer& midi, int samplePosition)
@@ -46,23 +69,6 @@ void MClassicProcessor::allNotesOff (juce::MidiBuffer& midi, int samplePosition)
     }
 }
 
-void MClassicProcessor::closeNotesDueBefore (juce::MidiBuffer& midi, double ppqEnd,
-                                             double ppqStart, double samplesPerPpq,
-                                             int numSamples)
-{
-    for (auto& slot : sounding)
-    {
-        if (slot.channel == 0 || slot.offPpq >= ppqEnd)
-            continue;
-
-        auto offset = (int) std::floor ((slot.offPpq - ppqStart) * samplesPerPpq);
-        offset = juce::jlimit (0, juce::jmax (0, numSamples - 1), offset);
-
-        midi.addEvent (juce::MidiMessage::noteOff (slot.channel, slot.note), offset);
-        slot = {};
-    }
-}
-
 void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -76,7 +82,7 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     const auto numSamples = buffer.getNumSamples();
 
     auto playing = false;
-    auto bpm = 120.0;
+    auto bpm = project.tempo;
     auto ppq = lastPpq;
 
     if (auto* head = getPlayHead())
@@ -93,15 +99,15 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         }
     }
 
-    // Stopped, or the transport jumped — a loop wrap or a locate. Either way
-    // every sounding note has to be released, because the position it was going
-    // to be released at no longer arrives.
-    const auto jumped = std::abs (ppq - lastPpq) > 1.0;
+    const auto started = playing && ! wasPlaying;
+    const auto jumped = playing && std::abs (ppq - lastPpq) > 1.0;
 
-    if ((wasPlaying && ! playing) || (playing && jumped))
+    if ((wasPlaying && ! playing) || started || jumped)
     {
         allNotesOff (midi, 0);
-        lastPpq = ppq;
+
+        if (playing)
+            rewind (ppq);
     }
 
     wasPlaying = playing;
@@ -112,44 +118,65 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         return;
     }
 
+    // The engine keeps its own clock in seconds, zeroed where the transport
+    // started. The host's tempo turns beats into that.
     const auto secondsPerBeat = 60.0 / juce::jmax (1.0, bpm);
-    const auto samplesPerPpq = sampleRate * secondsPerBeat;
-    const auto blockPpq = (double) numSamples / samplesPerPpq;
-    const auto ppqStart = ppq;
-    const auto ppqEnd = ppq + blockPpq;
+    const auto blockStartSec = (ppq - originPpq) * secondsPerBeat;
+    const auto blockEndSec = blockStartSec + (double) numSamples / sampleRate;
 
-    closeNotesDueBefore (midi, ppqEnd, ppqStart, samplesPerPpq, numSamples);
+    // M's own planner decides what plays. This is the whole point of the port.
+    mclassic::planWindow (project, cursors, rngs, blockStartSec, blockEndSec,
+                          planned, nextCursors, steps);
+    cursors = nextCursors;
 
-    // What plays in this span is a pure question, answered away from the audio
-    // thread's concerns. This is the seam the ported engine replaces.
-    pending.clear();
-    steps.collect (ppqStart, ppqEnd, pending);
+    lifecycle.ingest (planned, destinations);
 
-    for (const auto& event : pending)
+    for (const auto& event : lifecycle.drainBefore (blockEndSec))
     {
-        if (! event.isOn)
-            continue;
-
-        auto offset = (int) std::floor ((event.atPpq - ppqStart) * samplesPerPpq);
+        auto offset = (int) std::floor ((event.atSec - blockStartSec) * sampleRate);
         offset = juce::jlimit (0, juce::jmax (0, numSamples - 1), offset);
 
-        midi.addEvent (juce::MidiMessage::noteOn (event.channel, event.note,
-                                                  (juce::uint8) event.velocity),
-                       offset);
-        emitted.fetch_add (1, std::memory_order_relaxed);
+        const auto channel = juce::jlimit (1, 16, event.channel);
+        const auto note = juce::jlimit (0, 127, event.note);
 
-        for (auto& slot : sounding)
+        if (event.kind == mclassic::EventKind::noteOn)
         {
-            if (slot.channel != 0)
-                continue;
+            midi.addEvent (juce::MidiMessage::noteOn (channel, note,
+                                                      (juce::uint8) juce::jlimit (0, 127, event.velocity)),
+                           offset);
+            emitted.fetch_add (1, std::memory_order_relaxed);
 
-            slot = { event.channel, event.note,
-                     event.atPpq + mclassic::StepSource::stepPpq * mclassic::StepSource::gateFraction };
-            break;
+            for (auto& slot : sounding)
+            {
+                if (slot.channel != 0)
+                    continue;
+
+                slot = { channel, note };
+                break;
+            }
+        }
+        else if (event.kind == mclassic::EventKind::noteOff)
+        {
+            midi.addEvent (juce::MidiMessage::noteOff (channel, note), offset);
+
+            for (auto& slot : sounding)
+            {
+                if (slot.channel == channel && slot.note == note)
+                {
+                    slot = {};
+                    break;
+                }
+            }
+        }
+        else
+        {
+            midi.addEvent (juce::MidiMessage::programChange (channel,
+                                                             juce::jlimit (0, 127, event.program)),
+                           offset);
         }
     }
 
-    lastPpq = ppqEnd;
+    lastPpq = ppq;
 }
 
 void MClassicProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,

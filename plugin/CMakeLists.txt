@@ -32,7 +32,12 @@ endif()
 add_library(MClassicEngine STATIC
   engine/Random.cpp
   engine/TimeMap.cpp
-  engine/StepSource.cpp)
+  engine/Music.cpp
+  engine/Cyclic.cpp
+  engine/Transform.cpp
+  engine/Planner.cpp
+  engine/Events.cpp
+  engine/Project.cpp)
 
 target_include_directories(MClassicEngine PUBLIC engine)
 
@@ -53,9 +58,15 @@ add_executable(MClassicConformance
   tests/Harness.cpp
   tests/CheckRandom.cpp
   tests/CheckTimeMap.cpp
-  tests/CheckStepSource.cpp)
+  tests/CheckMusic.cpp
+  tests/CheckCyclic.cpp
+  tests/CheckTransform.cpp
+  tests/CheckPlanner.cpp
+  tests/CheckEvents.cpp
+  tests/ProjectLoader.cpp)
 
-target_link_libraries(MClassicConformance PRIVATE MClassicEngine)
+# juce_core only, for its JSON parser. The engine itself stays free of JUCE.
+target_link_libraries(MClassicConformance PRIVATE MClassicEngine juce::juce_core)
 
 target_compile_features(MClassicConformance PRIVATE cxx_std_20)
 

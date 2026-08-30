@@ -1,8 +1,10 @@
 #pragma once
 
-#include <juce_audio_processors/juce_audio_processors.h>
+#include "../engine/Events.h"
+#include "../engine/Planner.h"
+#include "../engine/Project.h"
 
-#include "../engine/StepSource.h"
+#include <juce_audio_processors/juce_audio_processors.h>
 
 #include <array>
 #include <atomic>
@@ -13,7 +15,6 @@ struct SoundingNote
 {
     int channel = 0;   // 1..16, 0 when the slot is free
     int note = 0;      // 0..127
-    double offPpq = 0.0;
 };
 
 class MClassicProcessor : public juce::AudioProcessor
@@ -46,25 +47,32 @@ public:
     void getStateInformation (juce::MemoryBlock&) override;
     void setStateInformation (const void*, int) override;
 
-    /** How many notes this instance has emitted since it was loaded. Read by
-        the editor so "is it actually playing" is answerable without a DAW. */
+    /** How many notes this instance has emitted since it was loaded. Lets the
+        editor answer "is it actually playing" without a DAW. */
     int notesEmitted() const noexcept { return emitted.load (std::memory_order_relaxed); }
 
 private:
     void allNotesOff (juce::MidiBuffer&, int samplePosition);
-    void closeNotesDueBefore (juce::MidiBuffer&, double ppqEnd, double ppqStart,
-                              double samplesPerPpq, int numSamples);
+    void rewind (double ppq);
 
-    /** Sixteen slots is one per MIDI channel, which is the most the engine can
-        sound at once per pitch. Fixed so nothing allocates on the audio thread. */
-    static constexpr int maxSounding = 128;
+    mclassic::ProjectState project;
+    std::vector<mclassic::VoiceCursor> cursors;
+    std::vector<mclassic::Random> rngs;
+    mclassic::NoteLifecycle lifecycle;
+
+    // Reused every block so the steady state does not allocate.
+    std::vector<mclassic::PlannedNote> planned;
+    std::vector<mclassic::VoiceCursor> nextCursors;
+    std::vector<mclassic::PlannedStep> steps;
+    std::vector<mclassic::OutputDestination> destinations { mclassic::OutputDestination::midi };
+
+    /** One slot per pitch per channel is more than the engine can sound at once. */
+    static constexpr int maxSounding = 256;
     std::array<SoundingNote, maxSounding> sounding {};
 
-    mclassic::StepSource steps;
-    /** Reused every block so the audio thread never allocates. */
-    std::vector<mclassic::TimedMidi> pending;
-
     double sampleRate = 44100.0;
+    /** Where the engine's own clock was zeroed, in host beats. */
+    double originPpq = 0.0;
     double lastPpq = 0.0;
     bool wasPlaying = false;
 

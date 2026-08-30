@@ -9,7 +9,11 @@ int main()
 
     checkRandom();
     checkTimeMap();
-    checkStepSource();
+    checkMusic();
+    checkCyclic();
+    checkTransform();
+    checkPlanner();
+    checkEvents();
 
     const auto& t = totals();
     std::printf ("%s  %d values checked, %d failures\n",
