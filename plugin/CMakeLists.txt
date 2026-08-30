@@ -136,6 +136,7 @@ juce_add_plugin(MClassicMidiPlugin
   COPY_PLUGIN_AFTER_BUILD   TRUE)
 
 target_sources(MClassicMidiPlugin PRIVATE
+  src/Diagnostics.cpp
   src/ProjectJson.cpp
   src/PopOutWindow.cpp
   src/PluginProcessor.cpp
@@ -159,6 +160,7 @@ target_link_libraries(MClassicMidiPlugin
     juce::juce_recommended_warning_flags)
 
 target_sources(MClassicPlugin PRIVATE
+  src/Diagnostics.cpp
   src/ProjectJson.cpp
   src/PopOutWindow.cpp
   src/PluginProcessor.cpp
@@ -218,6 +220,7 @@ juce_add_console_app(MClassicStateTest PRODUCT_NAME "MClassicStateTest")
 
 target_sources(MClassicStateTest PRIVATE
   tests/StateTest.cpp
+  src/Diagnostics.cpp
   src/PluginProcessor.cpp
   src/ProjectJson.cpp)
 

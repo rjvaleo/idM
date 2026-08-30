@@ -2,7 +2,7 @@
 // reads current project state (that's what makes live tweaking work).
 
 import { MRuntime } from "../engine/runtime";
-import { isPlugin, setHostedTransport } from "../plugin/bridge";
+import { engineStatus, isPlugin, setHostedTransport } from "../plugin/bridge";
 import { useM } from "../state/store";
 import { decodeMidiMessage, isChannelMessage, mapAssignedInputChannel } from "../engine/midiinput";
 
@@ -27,6 +27,19 @@ export function transportIsHosted(): boolean {
  * In the plugin this goes nowhere — the host decides. In the standalone it is
  * what makes the Start button do anything at all.
  */
+/**
+ * How long the transport has been running, whoever owns it.
+ *
+ * The interface's displays scroll on elapsed time. In the plugin the local
+ * runtime is deliberately never started — there is exactly one engine, and it
+ * is in the processor — so asking it would return zero forever and the readouts
+ * would sit still while the music played.
+ */
+export function transportElapsedSec(): number {
+  if (isPlugin()) return engineStatus()?.elapsed ?? 0;
+  return getRuntime().transportElapsedSec();
+}
+
 export function hostedTransport(running: boolean): void {
   if (isPlugin()) setHostedTransport(running);
 }

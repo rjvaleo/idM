@@ -79,6 +79,8 @@ function callNativeForResult(name: string, ...params: unknown[]): Promise<unknow
 export type EngineStatus = {
   playing: boolean;
   tempo: number;
+  /** Seconds since the host's transport started. */
+  elapsed: number;
   notesSent: number;
   port: string;
   standalone: boolean;
@@ -181,13 +183,22 @@ export function installPluginBridge(): void {
     sendDocument();
   };
 
+  /*
+   * Coalesced on a timer rather than a microtask.
+   *
+   * A document is tens of kilobytes and the engine parses it synchronously on
+   * the message thread. A microtask meant one of those per store write, so
+   * dragging a slider sent dozens a second and the interface fought the engine
+   * for the same thread. A tenth of a second is imperceptible for an edit and
+   * an order of magnitude less work.
+   */
   useM.subscribe((state) => {
     if (state.project === last) return;
     last = state.project;
 
     if (queued) return;
     queued = true;
-    queueMicrotask(flush);
+    setTimeout(flush, 100);
   });
 
   // A session the host restored reached the engine before this window existed.
@@ -270,6 +281,7 @@ export function installPluginBridge(): void {
       latestStatus = {
         playing: Boolean(reply.playing),
         tempo: Number(reply.tempo ?? 120),
+        elapsed: Number(reply.elapsed ?? 0),
         notesSent: Number(reply.notesSent ?? 0),
         port: String(reply.port ?? ""),
         standalone: Boolean(reply.standalone),

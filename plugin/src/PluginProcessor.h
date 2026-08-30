@@ -184,6 +184,15 @@ public:
     bool hostIsPlaying() const noexcept { return publishedPlaying.load (std::memory_order_relaxed); }
     double hostTempo() const noexcept { return publishedTempo.load (std::memory_order_relaxed); }
 
+    /** Seconds since the transport started, on the engine's own clock.
+
+        The interface's displays scroll on elapsed time. Outside a plugin they
+        take it from the local runtime; in a plugin that runtime is deliberately
+        never started, so without this they would sit at zero and show nothing
+        while the engine played perfectly.
+    */
+    double elapsedSeconds() const noexcept { return publishedElapsed.load (std::memory_order_relaxed); }
+
 private:
     static BusesProperties busesForThisBuild();
 
@@ -248,6 +257,7 @@ private:
 
     std::atomic<bool> publishedPlaying { false };
     std::atomic<double> publishedTempo { 120.0 };
+    std::atomic<double> publishedElapsed { 0.0 };
 
     std::atomic<int> emitted { 0 };
     std::atomic<int> received { 0 };

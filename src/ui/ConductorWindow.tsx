@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useM } from "../state/store";
-import { getRuntime, hostedTransport, transportIsHosted } from "./runtime";
+import { getRuntime, hostedTransport, transportElapsedSec, transportIsHosted } from "./runtime";
 import { ConductingArrow } from "./ConductingArrow";
 import { runSnapshotGesture } from "./snapshotgesture";
 import { positionFromBaton } from "../engine/conductor";
@@ -115,7 +115,7 @@ export function ConductorWindow() {
   const sync = () => runSnapshotGesture({
     quantize: useM.getState().snapshotQuantize,
     tempo: useM.getState().project.tempo,
-    elapsedSec: getRuntime().transportElapsedSec(),
+    elapsedSec: transportElapsedSec(),
     recall: () => getRuntime().sync(),
   });
 
@@ -160,7 +160,7 @@ export function ConductorWindow() {
     const quantized = {
       quantize: state.snapshotQuantize,
       tempo: state.project.tempo,
-      elapsedSec: getRuntime().transportElapsedSec(),
+      elapsedSec: transportElapsedSec(),
     };
     if (event.shiftKey) {
       runSnapshotGesture({

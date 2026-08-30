@@ -13,7 +13,7 @@
 
 import { useEffect } from "react";
 import { useM } from "../state/store";
-import { getRuntime } from "./runtime";
+import { getRuntime, transportElapsedSec } from "./runtime";
 import { QUANTIZE_VALUES, SNAPSHOT_LETTERS, quantizeDelay } from "../engine/snapshot";
 import { runSnapshotGesture } from "./snapshotgesture";
 import {
@@ -68,7 +68,7 @@ export function SnapshotWindow() {
     runSnapshotGesture({
       quantize: useM.getState().snapshotQuantize,
       tempo: useM.getState().project.tempo,
-      elapsedSec: getRuntime().transportElapsedSec(),
+      elapsedSec: transportElapsedSec(),
       recall: () => useM.getState().recallSnapshot(index),
       forceSync,
       sync: () => getRuntime().sync(),
@@ -92,7 +92,7 @@ export function SnapshotWindow() {
           quantizeDelay(
             useM.getState().snapshotQuantize,
             useM.getState().project.tempo,
-            getRuntime().transportElapsedSec(),
+            transportElapsedSec(),
           ),
         );
         return;
@@ -155,7 +155,7 @@ export function SnapshotWindow() {
             runSnapshotGesture({
               quantize,
               tempo,
-              elapsedSec: getRuntime().transportElapsedSec(),
+              elapsedSec: transportElapsedSec(),
               recall: doHold,
             });
           } else doHold();
@@ -259,7 +259,7 @@ export function SnapshotWindow() {
                 if (event.altKey) recordSlideshow(slot, now);
                 else playSlideshow(
                   slot, now,
-                  quantizeDelay(quantize, tempo, getRuntime().transportElapsedSec()),
+                  quantizeDelay(quantize, tempo, transportElapsedSec()),
                 );
               }} />;
           })}

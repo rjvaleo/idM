@@ -1,5 +1,7 @@
 #include "PluginEditor.h"
 
+#include "Diagnostics.h"
+
 #include <MClassicUI.h>
 
 #include <array>
@@ -146,7 +148,15 @@ void MClassicEditor::probeTheme()
                                                    });
                                       return el ? el.textContent.trim() : null;
                                     })(),
-                                    rows: document.querySelectorAll('.mv__row, .mvrow, [data-midi-row]').length,
+                                    rows: document.querySelectorAll('.midiview__row').length,
+                                    noteBlocks: (function () {
+                                      var n = document.querySelector('.midiview__notes');
+                                      return n ? n.childElementCount : -1;
+                                    })(),
+                                    currentRowClass: (function () {
+                                      var r = document.querySelector('.midiview__row.is-current, .midiview__row[data-current]');
+                                      return r ? r.className : null;
+                                    })(),
                                     transportOn: !!document.querySelector('.uconduct__tone--start.is-on, .is-playing')
                                   })
                                 )JS";
@@ -175,9 +185,14 @@ void MClassicEditor::probeTheme()
 std::optional<juce::WebBrowserComponent::Resource>
 MClassicEditor::provide (const juce::String& path)
 {
-    // The bundle is one document; every navigation resolves to it.
-    if (path != "/" && path != "/index.html")
-        return std::nullopt;
+    // The bundle is one document, so every navigation resolves to it.
+    //
+    // Deliberately permissive. A pop-out loads the same bundle with a fragment
+    // saying which window it is, and a provider that only answered "/" would
+    // return nothing for anything else and the webview would show an error
+    // frame instead of a window. Serving the document for any path is correct
+    // here: there is only one document to serve.
+    juce::ignoreUnused (path);
 
     int size = 0;
 
@@ -264,6 +279,8 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
 
     addAndMakeVisible (webView);
 
+    mclassic::Diagnostics::get().log ("editor constructed");
+
    #if MCLASSIC_UI_PROBE
     probeLog ("MCLASSIC_UI_PROBE stage=editor-constructed");
     webView.onPageLoaded = [this]
@@ -342,6 +359,18 @@ void MClassicEditor::resized()
 */
 juce::var MClassicEditor::pollEngine()
 {
+    // Every reply to the interface, including this one, is delivered through
+    // WebBrowserComponent::emitEventIfBrowserIsVisible - which drops it when
+    // isVisible() is false and says nothing. If the interface looks dead inside
+    // a host, this line is where to look first.
+    mclassic::Diagnostics::get().logThrottled (
+        "poll",
+        "poll  webViewVisible=" + juce::String ((int) webView.isVisible())
+        + "  editorVisible=" + juce::String ((int) isVisible())
+        + "  showing=" + juce::String ((int) isShowing())
+        + "  playing=" + juce::String ((int) processorRef.hostIsPlaying())
+        + "  notesSent=" + juce::String (processorRef.notesEmitted()));
+
     auto* object = new juce::DynamicObject();
 
     // What the engine played, so Midi View can show it.
@@ -387,6 +416,7 @@ juce::var MClassicEditor::pollEngine()
 
     object->setProperty ("playing", processorRef.hostIsPlaying());
     object->setProperty ("tempo", processorRef.hostTempo());
+    object->setProperty ("elapsed", processorRef.elapsedSeconds());
 
     // What the interface needs to answer "is this working" without a DAW's
     // help. Both plugin formats drop MIDI when the host declines the output,

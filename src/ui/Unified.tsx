@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { useM } from "../state/store";
-import { getRuntime } from "./runtime";
+import { getRuntime, transportElapsedSec } from "./runtime";
 import { PatternEditor } from "./PatternEditor";
 import { VarThumb } from "./VarThumb";
 import { TimeDistortEditor } from "./TimeDistortEditor";
@@ -1015,7 +1015,7 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
                       else runSnapshotGesture({
                         quantize: useM.getState().snapshotQuantize,
                         tempo: useM.getState().project.tempo,
-                        elapsedSec: getRuntime().transportElapsedSec(),
+                        elapsedSec: transportElapsedSec(),
                         recall: () => useM.getState().activatePosition(editingVar, position),
                       });
                     }}

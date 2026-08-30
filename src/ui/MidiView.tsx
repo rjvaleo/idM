@@ -23,7 +23,7 @@ import {
 } from "../engine/midiscroll";
 import { PPQN } from "../engine/planner";
 import { useM } from "../state/store";
-import { getRuntime } from "./runtime";
+import { transportElapsedSec } from "./runtime";
 
 /** Rows of empty grid kept above the newest one, so it is not flush to the top. */
 const LEAD_ROWS = 1;
@@ -61,7 +61,7 @@ export function MidiView() {
     if (!isPlaying) return;
     let frame = 0;
     const poll = () => {
-      const beat = beatsElapsed(getRuntime().transportElapsedSec(), tempo);
+      const beat = beatsElapsed(transportElapsedSec(), tempo);
       const row = Math.floor(beat * speed.rowsPerBeat);
       setCurrentRow((previous) => (previous === row ? previous : row));
       setCurrentBeat((previous) => (previous === beat ? previous : beat));

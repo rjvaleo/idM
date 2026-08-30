@@ -3,6 +3,7 @@
  #include "PluginEditor.h"
 #endif
 
+#include "Diagnostics.h"
 #include "ProjectJson.h"
 
 #include <cmath>
@@ -85,6 +86,13 @@ void MClassicProcessor::prepareToPlay (double newSampleRate, int)
     // built, so anything that depends on it has to wait until the host is
     // actually preparing us.
     openStandalonePort();
+
+    mclassic::Diagnostics::get().log (
+        juce::String ("prepareToPlay  host=\"") + juce::PluginHostType().getHostDescription()
+        + "\"  wrapper=" + getWrapperTypeDescription (wrapperType)
+        + "  sampleRate=" + juce::String (newSampleRate)
+        + "  port=" + (midiOut != nullptr ? midiOut->getName() : juce::String ("none"))
+        + "  producesMidi=" + juce::String ((int) producesMidi()));
 
     sampleRate = newSampleRate > 0.0 ? newSampleRate : 44100.0;
     wasPlaying = false;
@@ -213,9 +221,24 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     // live half is a single assignment; nothing is copied on this thread.
     if (projectPending.load (std::memory_order_acquire))
     {
+        const auto voicesBefore = project().voices.size();
+
         liveProject = 1 - liveProject;
         projectPending.store (false, std::memory_order_release);
-        rewind (lastPpq);
+
+        // An edit is not a transport event. M is played by tweaking it while it
+        // runs, so changing a density or a Note Order mix must not restart the
+        // pattern - and must not rewind(), which resets the note lifecycle and
+        // would drop the note-off for everything currently sounding. That is
+        // what made notes hang while the interface was being used.
+        if (project().voices.size() != voicesBefore)
+        {
+            // A different number of Voices does need new cursors, and the notes
+            // sounding belong to Voices that may no longer exist. Release them
+            // by name first: the lifecycle is about to forget they exist.
+            allNotesOff (midi, 0);
+            rewind (lastPpq);
+        }
     }
 
     const auto numSamples = buffer.getNumSamples();
@@ -278,10 +301,21 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     publishedPlaying.store (playing, std::memory_order_relaxed);
     publishedTempo.store (bpm, std::memory_order_relaxed);
 
+    // The one fact everything else depends on: is the host telling us it is
+    // playing, and where. If this says stopped while the DAW is running, the
+    // playhead is the problem and nothing downstream matters.
+    mclassic::Diagnostics::get().logThrottled (
+        "transport",
+        "transport  playing=" + juce::String ((int) playing)
+        + "  ppq=" + juce::String (ppq, 3)
+        + "  bpm=" + juce::String (bpm, 2)
+        + "  notesSent=" + juce::String (emitted.load (std::memory_order_relaxed)));
+
     wasPlaying = playing;
 
     if (! playing)
     {
+        publishedElapsed.store (0.0, std::memory_order_relaxed);
         lastPpq = ppq;
         return;
     }
@@ -291,6 +325,8 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     const auto secondsPerBeat = 60.0 / juce::jmax (1.0, bpm);
     const auto blockStartSec = (ppq - originPpq) * secondsPerBeat;
     const auto blockEndSec = blockStartSec + (double) numSamples / sampleRate;
+
+    publishedElapsed.store (blockStartSec, std::memory_order_relaxed);
 
     if (isStandalone())
         scheduleClock (midi, ppq, ppq + blockEndSec / secondsPerBeat - blockStartSec / secondsPerBeat,

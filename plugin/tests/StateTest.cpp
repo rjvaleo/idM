@@ -292,6 +292,67 @@ int main()
         port.releaseResources();
     }
 
+    // Editing while it plays must not strand a note. M is played by tweaking
+    // it as it runs, and a swap that reset the lifecycle would drop the
+    // note-off for whatever was sounding.
+    {
+        std::printf ("\nEditing while playing\n");
+
+        MClassicProcessor live;
+        live.prepareToPlay (48000.0, 512);
+
+        FakePlayHead head;
+        live.setPlayHead (&head);
+
+        juce::AudioBuffer<float> audio (2, 512);
+        juce::MidiBuffer midi;
+        std::map<std::pair<int, int>, int> open;
+
+        const auto beatsPerBlock = (512.0 / 48000.0) / 0.5;
+
+        const auto runBlocks = [&] (int count, bool editEachBlock)
+        {
+            for (int block = 0; block < count; ++block)
+            {
+                head.ppq += beatsPerBlock;
+
+                // What the interface does when a slider moves: send the whole
+                // document, every time.
+                if (editEachBlock)
+                    live.setProjectFromJson (document);
+
+                audio.clear();
+                midi.clear();
+                live.processBlock (audio, midi);
+
+                for (const auto metadata : midi)
+                {
+                    const auto message = metadata.getMessage();
+
+                    if (message.isNoteOn())
+                        ++open[{ message.getChannel(), message.getNoteNumber() }];
+                    else if (message.isNoteOff())
+                    {
+                        const auto key = std::make_pair (message.getChannel(), message.getNoteNumber());
+                        if (--open[key] <= 0) open.erase (key);
+                    }
+                }
+            }
+        };
+
+        runBlocks (100, false);
+        runBlocks (300, true);   // 300 edits while it plays
+        runBlocks (200, false);
+
+        std::printf ("    notes still sounding after 300 edits: %d\n", (int) open.size());
+
+        // Some notes are legitimately mid-flight; a leak grows without bound.
+        require (open.size() < 24, "editing while playing does not strand notes");
+
+        live.releaseResources();
+        live.setPlayHead (nullptr);
+    }
+
     std::printf ("\n%s  %d failures\n", failures == 0 ? "PASS" : "FAIL", failures);
     return failures == 0 ? 0 : 1;
 }
