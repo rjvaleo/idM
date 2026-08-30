@@ -108,6 +108,23 @@ target that keeps the browser app on the same engine.
 One engine, three consumers: `wasm32` for the browser app, and a static library
 for both the plugin and the standalone.
 
+*Amended 2026-08-30: **the engine ports to C++, not Rust.** The justification
+above rests on one engine serving three consumers, the third being the browser
+app via `wasm32`. The browser app does not need replacing — it works, it is
+what ships today, and it keeps its TypeScript engine. Remove that consumer and
+Rust buys a second language, a second toolchain, a C ABI to marshal project
+state across, and Corrosion wiring Cargo into CMake on three platforms, in a
+plugin that is C++ from top to bottom.*
+
+*What survives the change is the part that mattered: the conformance fixtures
+in `src/engine/__goldens__/` are plain text emitted by the TypeScript engine,
+so they gate a C++ port exactly as well as they gated the Rust one. The Rust
+modules are parked at `engine-rust-parked/` as a tested reference to translate
+from, not deleted.*
+
+*Recorded because a day and a half went into the Rust port before this was
+reconsidered, and the next person should not have to rediscover why it stopped.*
+
 **D2 — JUCE 9 for the plugin shell; the engine stays Rust behind a C ABI.**
 Decided against the all-Rust alternative (`nih-plug` for CLAP, `clap-wrapper`
 re-exporting as AUv2) for one reason: AU is the hard requirement, and in that

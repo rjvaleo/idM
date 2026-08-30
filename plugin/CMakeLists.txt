@@ -22,6 +22,28 @@ if(NOT EXISTS "${MCLASSIC_UI_HTML}")
     "Build it first, from the repository root:\n  npm run build:single")
 endif()
 
+# ---------------------------------------------------------------------------
+# The engine, in C++, and the gate that keeps it honest.
+#
+# The same fixtures the TypeScript engine emits. They are plain text, so the
+# check is a comparison of values rather than of implementations.
+# ---------------------------------------------------------------------------
+
+add_library(MClassicEngine STATIC
+  engine/Random.cpp)
+
+target_include_directories(MClassicEngine PUBLIC engine)
+
+add_executable(MClassicConformance tests/Conformance.cpp)
+
+target_link_libraries(MClassicConformance PRIVATE MClassicEngine)
+
+target_compile_definitions(MClassicConformance PRIVATE
+  MCLASSIC_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
+
+enable_testing()
+add_test(NAME conformance COMMAND MClassicConformance)
+
 juce_add_binary_data(MClassicUI
   NAMESPACE   MClassicUI
   HEADER_NAME MClassicUI.h
@@ -53,6 +75,7 @@ target_compile_definitions(MClassicPlugin PUBLIC
 
 target_link_libraries(MClassicPlugin
   PRIVATE
+    MClassicEngine
     MClassicUI
     juce::juce_audio_utils
     juce::juce_gui_extra
