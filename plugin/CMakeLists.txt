@@ -1,13 +1,24 @@
 cmake_minimum_required(VERSION 3.22)
 
+# Both of these have to come before project(), and the deployment target used
+# to sit after it. CMake creates these cache entries while it works out the
+# compiler, and a later set(... CACHE ...) is a no-op against an entry that
+# already exists — so the line read 11.0 while the binaries it produced were
+# stamped with the SDK's own minimum, macOS 26. Anything moved below project()
+# here silently stops taking effect.
+#
+# arm64;x86_64 is JUCE's documented way to build universal — "CMake API.md",
+# "Building universal binaries for macOS". Both slices are wanted: Intel Macs
+# run plenty of DAWs, and a host under Rosetta will only load an x86_64 plugin.
+if(CMAKE_HOST_APPLE)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version")
+  set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Architectures to build")
+endif()
+
 project(MClassic VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-if(APPLE)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version")
-endif()
 
 add_subdirectory(JUCE)
 

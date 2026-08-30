@@ -49,7 +49,7 @@ Settled, and not to be relitigated without reading the sources above:
 
 | Host | Format | Status |
 |---|---|---|
-| Ableton Live 12 (macOS) | AU / VST3 | **loads.** MIDI out requires routing: a second MIDI track, *MIDI From* → the M Classic track, the chooser below it → **M Classic**, Monitor **In**. That routing is what makes Live activate the bus. **Not yet confirmed by the user.** |
+| Ableton Live 12 (macOS) | AU / VST3 | **loads.** MIDI out requires routing: a second MIDI track, *MIDI From* → the M Classic track, the chooser below it → **M Classic**, Monitor **In**. That routing is what makes Live activate the bus. **Confirmed by the user, 2026-08-30** — notes reach a synth on a second track. |
 | Ableton Live | VST3 MIDI-effect build | **rejected.** Do not ship one. |
 | Logic Pro | AU | untested |
 | Bitwig, Reaper, Studio One | CLAP / VST3 | untested |
