@@ -4,6 +4,7 @@
 #include "../engine/Planner.h"
 #include "../engine/Project.h"
 
+#include <juce_audio_devices/juce_audio_devices.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include <array>
@@ -59,6 +60,16 @@ public:
     void getStateInformation (juce::MemoryBlock&) override;
     void setStateInformation (const void*, int) override;
 
+    /** The MIDI destination when there is no host to hand notes to.
+
+        A plugin's notes leave through the buffer the host passes in. The
+        standalone has no such host, so it opens a port of its own — a virtual
+        one where the platform allows it, so anything on the machine can receive
+        M without a cable. Null in a plugin, and null if no port could be
+        opened, which is not fatal: the interface still runs.
+    */
+    juce::MidiOutput* standalonePort() const noexcept { return midiOut.get(); }
+
     /** How many notes this instance has emitted since it was loaded. Lets the
         editor answer "is it actually playing" without a DAW. */
     int notesEmitted() const noexcept { return emitted.load (std::memory_order_relaxed); }
@@ -72,6 +83,20 @@ public:
         checks the flag before writing.
     */
     void setProjectFromJson (const juce::String& json);
+
+    /** Start or stop the standalone's own transport.
+
+        A plugin takes its transport from the host and ignores this. The
+        standalone has no host, so its Start button has to drive something —
+        this is that something, and without it the standalone renders an
+        interface that never plays.
+    */
+    void setStandaloneTransport (bool running) noexcept
+    {
+        standaloneRunning.store (running, std::memory_order_release);
+    }
+
+    bool isStandalone() const noexcept { return wrapperType == wrapperType_Standalone; }
 
     /** How many projects the interface has sent. Zero means the bridge never
         fired, which looks identical to a working plugin until you change
@@ -131,6 +156,20 @@ private:
     std::array<SoundingNote, maxSounding> sounding {};
 
     const mclassic::ProjectState& project() const noexcept { return projects[liveProject]; }
+
+    void openStandalonePort();
+    void sendRealtime (juce::MidiBuffer&, uint8_t status, int samplePosition);
+    void scheduleClock (juce::MidiBuffer&, double ppqStart, double ppqEnd,
+                        double samplesPerPpq, int numSamples);
+
+    /** Only opened when running standalone. */
+    std::unique_ptr<juce::MidiOutput> midiOut;
+
+    std::atomic<bool> standaloneRunning { false };
+    /** The standalone's own position, advanced by the block size. */
+    double freePpq = 0.0;
+    /** The next MIDI Clock pulse, in beats. 24 per quarter note. */
+    double nextPulsePpq = 0.0;
 
     double sampleRate = 44100.0;
     /** Where the engine's own clock was zeroed, in host beats. */

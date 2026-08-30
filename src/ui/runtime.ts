@@ -2,7 +2,7 @@
 // reads current project state (that's what makes live tweaking work).
 
 import { MRuntime } from "../engine/runtime";
-import { isPlugin } from "../plugin/bridge";
+import { isPlugin, setHostedTransport } from "../plugin/bridge";
 import { useM } from "../state/store";
 import { decodeMidiMessage, isChannelMessage, mapAssignedInputChannel } from "../engine/midiinput";
 
@@ -19,6 +19,16 @@ let runtime: MRuntime | null = null;
  */
 export function transportIsHosted(): boolean {
   return isPlugin();
+}
+
+/**
+ * Tell the engine the transport moved.
+ *
+ * In the plugin this goes nowhere — the host decides. In the standalone it is
+ * what makes the Start button do anything at all.
+ */
+export function hostedTransport(running: boolean): void {
+  if (isPlugin()) setHostedTransport(running);
 }
 
 export function getRuntime(): MRuntime {

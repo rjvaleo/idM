@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useM } from "../state/store";
-import { getRuntime, transportIsHosted } from "./runtime";
+import { getRuntime, hostedTransport, transportIsHosted } from "./runtime";
 import { ConductingArrow } from "./ConductingArrow";
 import { runSnapshotGesture } from "./snapshotgesture";
 import { positionFromBaton } from "../engine/conductor";
@@ -86,15 +86,17 @@ export function ConductorWindow() {
   const start = async () => {
     // In the plugin the host is the transport; starting a second engine here
     // would give two clocks and one of them no output.
-    if (!transportIsHosted()) {
-      if (isPaused) await getRuntime().resume();
-      else await getRuntime().start();
-    }
+    if (transportIsHosted()) hostedTransport(true);
+    else if (isPaused) await getRuntime().resume();
+    else await getRuntime().start();
+
     setPaused(false);
     setPlaying(true);
   };
   const stop = () => {
-    if (!transportIsHosted()) getRuntime().stop();
+    if (transportIsHosted()) hostedTransport(false);
+    else getRuntime().stop();
+
     stopMovieRecording();
     setPaused(false);
     setPlaying(false);
@@ -103,7 +105,9 @@ export function ConductorWindow() {
     if (!isPlaying && !isPaused) return;
     if (isPaused) void start();
     else {
-      if (!transportIsHosted()) getRuntime().pause();
+      if (transportIsHosted()) hostedTransport(false);
+      else getRuntime().pause();
+
       setPaused(true);
       setPlaying(false);
     }

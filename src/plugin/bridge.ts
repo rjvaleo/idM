@@ -68,6 +68,17 @@ function sendDocument(): void {
  * coalesced onto a microtask so a gesture produces one message rather than
  * hundreds.
  */
+/**
+ * Start or stop the transport.
+ *
+ * Ignored by the plugin build, where the host owns the transport. The
+ * standalone has no host, so its Start button has to drive something — without
+ * this it would render an interface that never plays.
+ */
+export function setHostedTransport(running: boolean): void {
+  callNative("setTransport", running);
+}
+
 export function installPluginBridge(): void {
   const juce = backend();
   if (!juce) return;

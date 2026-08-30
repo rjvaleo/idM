@@ -14,10 +14,39 @@ MClassicProcessor::MClassicProcessor()
     projects[0] = mclassic::createDefaultProject();
     projects[1] = projects[0];
 
+    openStandalonePort();
+
     planned.reserve (1024);
     nextCursors.reserve (16);
     steps.reserve (1024);
     rewind (0.0);
+}
+
+/** Open a MIDI destination when there is no host to hand notes to.
+
+    A virtual port first, because it costs the user nothing: M appears as a MIDI
+    source that any DAW or synth on the machine can select. Where the platform
+    has no virtual ports, the first real output is better than silence. Failing
+    to open one is not fatal — the interface still runs, and the plugin builds
+    still have their host.
+*/
+void MClassicProcessor::openStandalonePort()
+{
+    if (wrapperType != wrapperType_Standalone)
+        return;
+
+    midiOut = juce::MidiOutput::createNewDevice ("M Classic");
+
+    if (midiOut == nullptr)
+    {
+        const auto devices = juce::MidiOutput::getAvailableDevices();
+
+        if (! devices.isEmpty())
+            midiOut = juce::MidiOutput::openDevice (devices[0].identifier);
+    }
+
+    if (midiOut != nullptr)
+        midiOut->startBackgroundThread();
 }
 
 void MClassicProcessor::prepareToPlay (double newSampleRate, int)
@@ -52,6 +81,36 @@ void MClassicProcessor::rewind (double ppq)
         rngs.push_back (mclassic::Random { project().seed ^ ((uint32_t) (voice + 1) * 0x9e3779b1u) });
 
     lifecycle.reset();
+}
+
+void MClassicProcessor::sendRealtime (juce::MidiBuffer& midi, uint8_t status, int samplePosition)
+{
+    const auto byte = status;
+    midi.addEvent (juce::MidiMessage (&byte, 1), samplePosition);
+}
+
+/** MIDI Clock, at the 24 pulses per quarter note the spec fixes.
+
+    Standalone only. A plugin follows the host's transport, and a follower also
+    broadcasting its own clock is how two devices end up each thinking they lead.
+*/
+void MClassicProcessor::scheduleClock (juce::MidiBuffer& midi, double ppqStart, double ppqEnd,
+                                       double samplesPerPpq, int numSamples)
+{
+    constexpr double pulsesPerQuarter = 24.0;
+    constexpr double pulsePpq = 1.0 / pulsesPerQuarter;
+
+    if (nextPulsePpq < ppqStart)
+        nextPulsePpq = std::ceil (ppqStart / pulsePpq) * pulsePpq;
+
+    while (nextPulsePpq < ppqEnd)
+    {
+        auto offset = (int) std::floor ((nextPulsePpq - ppqStart) * samplesPerPpq);
+        offset = juce::jlimit (0, juce::jmax (0, numSamples - 1), offset);
+
+        sendRealtime (midi, 0xf8, offset);
+        nextPulsePpq += pulsePpq;
+    }
 }
 
 void MClassicProcessor::allNotesOff (juce::MidiBuffer& midi, int samplePosition)
@@ -144,6 +203,24 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         }
     }
 
+    // No host means no transport to follow, so the standalone runs its own,
+    // driven by the interface's Start button and advanced by the block size.
+    if (isStandalone())
+    {
+        playing = standaloneRunning.load (std::memory_order_acquire);
+
+        if (playing)
+        {
+            ppq = freePpq;
+            freePpq += ((double) numSamples / sampleRate) / (60.0 / juce::jmax (1.0, bpm));
+        }
+        else
+        {
+            freePpq = 0.0;
+            ppq = 0.0;
+        }
+    }
+
     const auto started = playing && ! wasPlaying;
     const auto jumped = playing && std::abs (ppq - lastPpq) > 1.0;
 
@@ -152,7 +229,15 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         allNotesOff (midi, 0);
 
         if (playing)
+        {
             rewind (ppq);
+            nextPulsePpq = ppq;
+        }
+
+        // Transport bytes are the standalone's business: it leads, so it says
+        // so. A plugin is following and stays quiet.
+        if (isStandalone())
+            sendRealtime (midi, playing ? 0xfa : 0xfc, 0);
     }
 
     wasPlaying = playing;
@@ -168,6 +253,10 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     const auto secondsPerBeat = 60.0 / juce::jmax (1.0, bpm);
     const auto blockStartSec = (ppq - originPpq) * secondsPerBeat;
     const auto blockEndSec = blockStartSec + (double) numSamples / sampleRate;
+
+    if (isStandalone())
+        scheduleClock (midi, ppq, ppq + blockEndSec / secondsPerBeat - blockStartSec / secondsPerBeat,
+                       sampleRate * secondsPerBeat, numSamples);
 
     // M's own planner decides what plays. This is the whole point of the port.
     mclassic::planWindow (project(), cursors, rngs, blockStartSec, blockEndSec,
@@ -222,6 +311,12 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     }
 
     lastPpq = ppq;
+
+    // Standalone: the buffer we just filled has no host to collect it, so it
+    // goes out of our own port. The background thread does the sending, so the
+    // audio thread only hands it over.
+    if (midiOut != nullptr && ! midi.isEmpty())
+        midiOut->sendBlockOfMessages (midi, juce::Time::getMillisecondCounterHiRes(), sampleRate);
 }
 
 void MClassicProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,
@@ -233,6 +328,9 @@ void MClassicProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,
     // Bypass must not strand a note. It is one of the four ways a plugin leaves
     // something sounding forever.
     allNotesOff (midi, 0);
+
+    if (midiOut != nullptr && ! midi.isEmpty())
+        midiOut->sendBlockOfMessages (midi, juce::Time::getMillisecondCounterHiRes(), sampleRate);
 }
 
 int MClassicProcessor::drainIncoming (IncomingMidi* destination, int capacity)

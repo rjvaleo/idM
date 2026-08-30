@@ -173,6 +173,51 @@ int main()
         input.releaseResources();
     }
 
+    // The plugin must not emit MIDI Clock or transport bytes. It follows the
+    // host, and a follower that also broadcasts a clock is how two devices end
+    // up each thinking they lead.
+    {
+        std::printf ("\nClock discipline\n");
+
+        MClassicProcessor plugin;
+        require (! plugin.isStandalone(), "a bare processor is not the standalone wrapper");
+
+        plugin.prepareToPlay (48000.0, 512);
+        plugin.setStandaloneTransport (true); // must be ignored
+
+        FakePlayHead head;
+        plugin.setPlayHead (&head);
+
+        juce::AudioBuffer<float> audio (2, 512);
+        juce::MidiBuffer midi;
+        auto realtime = 0;
+
+        const auto beatsPerBlock = (512.0 / 48000.0) / 0.5;
+
+        for (int block = 0; block < 200; ++block)
+        {
+            head.ppq = block * beatsPerBlock;
+            audio.clear();
+            midi.clear();
+            plugin.processBlock (audio, midi);
+
+            for (const auto metadata : midi)
+            {
+                const auto message = metadata.getMessage();
+
+                if (message.isMidiClock() || message.isMidiStart() || message.isMidiStop()
+                    || message.isMidiContinue())
+                    ++realtime;
+            }
+        }
+
+        std::printf ("    realtime bytes emitted by the plugin: %d\n", realtime);
+        require (realtime == 0, "the plugin emits no clock or transport bytes");
+
+        plugin.releaseResources();
+        plugin.setPlayHead (nullptr);
+    }
+
     std::printf ("\n%s  %d failures\n", failures == 0 ? "PASS" : "FAIL", failures);
     return failures == 0 ? 0 : 1;
 }

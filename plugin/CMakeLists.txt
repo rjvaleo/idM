@@ -110,6 +110,7 @@ target_compile_definitions(MClassicPlugin PUBLIC
 target_link_libraries(MClassicPlugin
   PRIVATE
     MClassicEngine
+    juce::juce_audio_devices
     MClassicUI
     juce::juce_audio_utils
     juce::juce_gui_extra
@@ -166,5 +167,24 @@ target_compile_definitions(MClassicStateTest PRIVATE
 
 target_link_libraries(MClassicStateTest PRIVATE
   MClassicEngine
+  juce::juce_audio_devices
   juce::juce_audio_processors
+  juce::juce_recommended_config_flags)
+
+# Lists MIDI ports, so the standalone's virtual output can be seen from outside
+# the process that created it.
+juce_add_console_app(MClassicMidiPorts PRODUCT_NAME "MClassicMidiPorts")
+target_sources(MClassicMidiPorts PRIVATE tests/MidiPorts.cpp)
+target_compile_definitions(MClassicMidiPorts PRIVATE JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
+target_link_libraries(MClassicMidiPorts PRIVATE
+  juce::juce_audio_devices
+  juce::juce_recommended_config_flags)
+
+# Opens the standalone's virtual port from outside, which is the only way to
+# show that notes actually leave the process.
+juce_add_console_app(MClassicMidiListen PRODUCT_NAME "MClassicMidiListen")
+target_sources(MClassicMidiListen PRIVATE tests/MidiListen.cpp)
+target_compile_definitions(MClassicMidiListen PRIVATE JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
+target_link_libraries(MClassicMidiListen PRIVATE
+  juce::juce_audio_devices
   juce::juce_recommended_config_flags)

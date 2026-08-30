@@ -72,12 +72,43 @@ void MClassicEditor::probeTheme()
                 if (safe == nullptr)
                     return;
 
-                safe->webView.evaluateJavascript (read, [] (auto after)
+                safe->webView.evaluateJavascript (read, [safe] (auto after)
                 {
                     if (const auto* v = after.getResult())
                         probeLog ("MCLASSIC_UI_PROBE theme=dark " + v->toString());
 
-                    juce::JUCEApplicationBase::quit();
+                    if (safe == nullptr)
+                    {
+                        juce::JUCEApplicationBase::quit();
+                        return;
+                    }
+
+                    // Press Start, then stay alive long enough for a listener
+                    // on the virtual port to hear something. Proving notes
+                    // leave the process needs the process to still be running.
+                    static constexpr const char* press = R"JS(
+                      (function () {
+                        var b = Array.from(document.querySelectorAll('button'))
+                                     .find(function (e) {
+                                       var l = (e.getAttribute('aria-label') || e.title || '').toLowerCase();
+                                       return l.indexOf('start') === 0;
+                                     });
+                        if (!b) { return 'no-start-button'; }
+                        b.click();
+                        return 'started';
+                      })()
+                    )JS";
+
+                    safe->webView.evaluateJavascript (press, [] (auto pressed)
+                    {
+                        if (const auto* v = pressed.getResult())
+                            probeLog ("MCLASSIC_UI_PROBE transport " + v->toString());
+
+                        juce::Timer::callAfterDelay (7000, []
+                        {
+                            juce::JUCEApplicationBase::quit();
+                        });
+                    });
                 });
             });
         });
@@ -126,6 +157,18 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
                                             // hold a half-applied edit.
                                             if (! args.isEmpty())
                                                 p.setProjectFromJson (args[0].toString());
+
+                                            complete (juce::var());
+                                        })
+                   .withNativeFunction ("setTransport",
+                                        [&p] (const juce::Array<juce::var>& args,
+                                              juce::WebBrowserComponent::NativeFunctionCompletion complete)
+                                        {
+                                            // Ignored in a plugin: the host owns
+                                            // the transport there, and taking
+                                            // this would give two of them.
+                                            if (! args.isEmpty() && p.isStandalone())
+                                                p.setStandaloneTransport ((bool) args[0]);
 
                                             complete (juce::var());
                                         }))
