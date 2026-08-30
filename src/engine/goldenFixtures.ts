@@ -7,7 +7,7 @@
 import { Rng, BrownianWalk } from "./rng";
 import {
   traceDefaultProject, traceFixture, traceRichProject, traceRichFixture,
-  traceGuardProject, traceGuardFixture, traceDetailProject,
+  traceGuardProject, traceGuardFixture, traceDetailProject, traceLifecycleProject,
 } from "./goldenTrace";
 import {
   neutralTimeMap, normalizeTimeMap, isNeutralTimeMap, realToClock, clockToReal,
@@ -429,6 +429,9 @@ export function goldenFiles(): Record<string, string> {
 
     // Seconds and the Rhythm multiplier, as exact bits.
     files[`detail-${padded}.txt`] = traceDetailProject(voices) + "\n";
+
+    // What an output adapter actually receives, after the note lifecycle.
+    files[`lifecycle-${padded}.txt`] = traceLifecycleProject(voices) + "\n";
   }
 
   return files;

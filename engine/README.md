@@ -3,10 +3,12 @@
 The port of `src/engine` from TypeScript. One engine, three consumers: `wasm32`
 for the browser app, a static library for the plugin and the standalone.
 
-**Status: the planner reproduces the TypeScript engine's traces byte for byte.**
-`rng`, `timemap`, `music`, `cyclic`, `transform` and `planner` are ported and
-conformant. `document` is not, and nothing is wired to anything yet — no C ABI,
-no wasm, no CMake. The TypeScript engine remains the only *running* one.
+**Status: the planner and the note lifecycle reproduce the TypeScript engine
+exactly.** `rng`, `timemap`, `music`, `cyclic`, `transform`, `planner` and
+`events` are ported and conformant — which is the whole path from project state
+to the events an output adapter receives. `document` is not ported, and nothing
+is wired to anything yet: no C ABI, no wasm, no CMake. The TypeScript engine
+remains the only *running* one.
 
 ## The gate
 
@@ -54,8 +56,11 @@ double. Ticks are integers and carry the same musical fact.
 3. **`music`, `cyclic`, `transform` — done.** Scales and snapping, the cyclic
    level ranges, and the per-step chain: velocity, density gate, note order.
 4. **`planner` — done.** The traces pass at 1, 4, 8 and 16 Voices.
-5. `document` — encode and decode, checked against the same v3 fixtures.
-6. C ABI and `wasm32`, then Corrosion wires it into the CMake build.
+5. **`events` — done.** The note lifecycle: generated releases, retrigger
+   resolution, and the total order an adapter receives. `lifecycle-NN.txt`
+   records what a trace cannot see.
+6. `document` — encode and decode, checked against the same v3 fixtures.
+7. C ABI and `wasm32`, then Corrosion wires it into the CMake build.
 
 ## What mutation testing found
 
@@ -152,3 +157,21 @@ that survived were each run down:
 
 Re-probing after the fix, Chord Tones, a 1e-7 nudge to `startSec` and a 1e-7
 nudge to the Rhythm multiplier are all caught.
+
+### The lifecycle round
+
+Six of eight mutations failed the test, including every part of the retrigger
+rule: not withdrawing the stale future note-off, not issuing the early one, and
+clearing the active entry without checking the note id — the check that stops an
+older note's release forgetting the newer one that replaced it. Reordering the
+kinds so an attack precedes a release at one instant, reversing the destination
+tie-break, and moving the drain boundary from `<` to `<=` all fail too.
+
+The two survivors are equivalences, both for reasons specific to this engine.
+Breaking an onset tie by Voice is redundant because `plan_window` emits
+voice-major and the sort is stable, so ties already come out in Voice order —
+33 instants in `detail-16.txt` are shared by more than one Voice, so the path is
+reached, it simply cannot disagree. And clamping a negative `duration_sec`
+cannot fire because `onset_interval_sec` is already clamped at zero and every
+legato multiplier is positive. Both stay: they are cheap, and they stop being
+equivalences the moment either of those upstream facts changes.

@@ -36,6 +36,7 @@ private:
 
    #if MCLASSIC_UI_PROBE
     void probe (int attempt);
+    void probeTheme();
    #endif
 
     MClassicProcessor& processorRef;

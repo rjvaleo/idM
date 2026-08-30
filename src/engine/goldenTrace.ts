@@ -15,6 +15,7 @@
 // can be required to emit these same bytes — not "sound the same".
 
 import { Rng } from "./rng";
+import { NoteLifecycle, type OutputDestination } from "./events";
 import { makeCursors, planWindow } from "./planner";
 import { createDefaultProject } from "./project";
 import type { ProjectState, CyclicStep } from "./types";
@@ -287,6 +288,73 @@ export function traceDetail(
 
 export function traceDetailProject(voices: number, seed = 1, options: TraceOptions = {}): string {
   return traceDetail(traceRichFixture(voices), seed, options);
+}
+
+/**
+ * The note lifecycle's output, which is what an adapter actually receives.
+ *
+ * Traces stop at planned notes. Everything that decides what reaches a MIDI
+ * port happens after that, in `NoteLifecycle`: note-offs are generated, an
+ * overlapping retrigger has its stale future off withdrawn and an early one
+ * issued at the replacement's onset, and the whole batch is put in a total
+ * order. None of that is observable in a trace, so it is recorded here.
+ *
+ * Two destinations, because the ordering rule sorts on the destination name
+ * and a single destination cannot show that it does.
+ */
+export function traceLifecycle(
+  project: ProjectState,
+  seed: number,
+  { spanSec = 8, windows = 4 }: TraceOptions = {},
+): string {
+  const rngs = project.voices.map((_, voice) =>
+    new Rng((seed ^ Math.imul(voice + 1, 0x9e3779b1)) >>> 0));
+  let cursors = makeCursors(project, 0);
+  const lifecycle = new NoteLifecycle();
+  const destinations: OutputDestination[] = ["synth", "midi"];
+  const rows: string[] = [];
+  const step = spanSec / windows;
+
+  // Programs are enqueued once, before any note, the way the runtime does it.
+  lifecycle.addProgramChanges(0, 0, project.voices.flatMap((voice, index) =>
+    voice.outputChannels.map((channel) => ({
+      voice: index, channel, program: (index * 7) % 128,
+    }))));
+
+  for (let w = 0; w < windows; w++) {
+    const end = step * (w + 1);
+    const planned = planWindow(project, cursors, rngs, step * w, end);
+    cursors = planned.cursors;
+
+    lifecycle.ingest(planned.notes, destinations);
+
+    for (const event of lifecycle.drainBefore(end)) {
+      rows.push([
+        event.type,
+        f64Hex(event.atSec),
+        event.atTick,
+        event.sequence,
+        event.destination,
+        event.voice,
+        event.channel,
+        event.type === "program-change" ? -1 : event.noteId,
+        event.type === "program-change" ? -1 : event.note,
+        event.type === "program-change" ? -1 : event.velocity,
+        event.type === "program-change" ? event.program : -1,
+      ].join(","));
+    }
+    rows.push(`# window ${w} drained, ${lifecycle.pendingCount()} pending`);
+  }
+
+  return rows.join("\n");
+}
+
+export function traceLifecycleProject(
+  voices: number,
+  seed = 1,
+  options: TraceOptions = {},
+): string {
+  return traceLifecycle(traceRichFixture(voices), seed, options);
 }
 
 /** A trace of the rich fixture at a given Voice count. */

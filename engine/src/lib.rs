@@ -5,6 +5,7 @@
 //! See the tests in `tests/`.
 
 pub mod cyclic;
+pub mod events;
 pub mod music;
 pub mod planner;
 pub mod num;
@@ -15,6 +16,9 @@ pub mod trace;
 pub mod transform;
 
 pub use cyclic::{pick_cyclic_level, CyclicLevelRange, CyclicStep};
+pub use events::{
+    compare_engine_events, EngineEvent, EventKind, NoteLifecycle, OutputDestination, ProgramChange,
+};
 pub use music::{clamp_midi, diatonic_transpose, snap_to_chord, snap_to_scale, Scale};
 pub use rng::{brownian_step, BrownianWalk, Rng};
 pub use planner::{make_cursors, plan_window, PlannedNote, VoiceCursor, PPQN};

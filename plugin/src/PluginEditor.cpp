@@ -19,6 +19,70 @@ namespace
             juce::File (path).appendText (text + "\n");
     }
 }
+
+/// Clicking a control and reading the result back is the only way to tell a
+/// theme switch that works from one that merely renders.
+void MClassicEditor::probeTheme()
+{
+    static constexpr const char* click = R"JS(
+      (function () {
+        var tab = Array.from(document.querySelectorAll('.vtab'))
+                       .find(function (e) { return (e.textContent || '').trim() === 'Dark'; });
+        if (!tab) { return 'no-dark-tab'; }
+        tab.click();
+        return 'clicked';
+      })()
+    )JS";
+
+    static constexpr const char* read = R"JS(
+      JSON.stringify({
+        appClass:  (document.querySelector('.app') || {}).className || null,
+        bodyClass: document.body.className || null,
+        onTab:     (function () {
+          var on = document.querySelector('.vtab--on');
+          return on ? on.textContent.trim() : null;
+        })(),
+        windowInk: (function () {
+          var w = document.querySelector('.uwin');
+          return w ? getComputedStyle(w).backgroundColor : null;
+        })()
+      })
+    )JS";
+
+    const juce::Component::SafePointer<MClassicEditor> safe { this };
+
+    // Before, so the two can be compared rather than taken on trust.
+    webView.evaluateJavascript (read, [safe] (auto before)
+    {
+        if (safe == nullptr)
+            return;
+
+        if (const auto* v = before.getResult())
+            probeLog ("MCLASSIC_UI_PROBE theme=light " + v->toString());
+
+        safe->webView.evaluateJavascript (click, [safe] (auto)
+        {
+            if (safe == nullptr)
+                return;
+
+            // React re-renders on its own schedule; give it a frame.
+            juce::Timer::callAfterDelay (500, [safe]
+            {
+                if (safe == nullptr)
+                    return;
+
+                safe->webView.evaluateJavascript (read, [] (auto after)
+                {
+                    if (const auto* v = after.getResult())
+                        probeLog ("MCLASSIC_UI_PROBE theme=dark " + v->toString());
+
+                    juce::JUCEApplicationBase::quit();
+                });
+            });
+        });
+    });
+}
+
 #endif
 
 std::optional<juce::WebBrowserComponent::Resource>
@@ -103,6 +167,16 @@ void MClassicEditor::probe (int attempt)
           return { left: Math.round(l), top: Math.round(t),
                    width: Math.round(r - l), height: Math.round(b - t) };
         })(),
+        menubar: (function () {
+          var m = document.querySelector('.app__menubar, .menubar, .app > header, .app__bar');
+          if (m) { return m.className || m.tagName; }
+          var t = document.querySelector('.vtab');
+          return t ? 'vtab-row:' + (t.parentElement && t.parentElement.className) : null;
+        })(),
+        themeControls: Array.from(document.querySelectorAll('.vtab, .theme-picker'))
+                            .map(function (e) { return (e.textContent || '').trim(); })
+                            .filter(function (s) { return s.length > 0; }),
+        themeClass: (document.querySelector('.app') || {}).className || null,
         viewport: window.innerWidth + 'x' + window.innerHeight,
         scrollable: document.documentElement.scrollWidth + 'x'
                   + document.documentElement.scrollHeight,
@@ -131,7 +205,10 @@ void MClassicEditor::probe (int attempt)
         if (rendered || attempt >= 40)
         {
             probeLog ("MCLASSIC_UI_PROBE attempts=" + juce::String (attempt) + " " + line);
-            juce::JUCEApplicationBase::quit();
+
+            if (safe != nullptr)
+                safe->probeTheme();
+
             return;
         }
 
