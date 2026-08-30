@@ -2,6 +2,7 @@
 
 #include <MClassicUI.h>
 
+#include <array>
 #include <cstring>
 
 #if MCLASSIC_UI_PROBE
@@ -141,15 +142,56 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
     };
    #endif
 
+   #if ! MCLASSIC_UI_PROBE
+    // A restored session reaches the engine before the window exists, so the
+    // interface has to be told once it does. `pageFinishedLoading` is the only
+    // point at which the page can receive it.
+    webView.onPageLoaded = [this]
+    {
+        if (processorRef.takeRestoredFlag())
+            webView.emitEventIfBrowserIsVisible ("mclassic-document",
+                                                 processorRef.restoredDocument());
+    };
+   #endif
+
     webView.goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
 
     setSize (1000, 460);
     setResizable (false, false);
+
+    // The host's MIDI reaches the interface here, not on the audio thread.
+    // 20ms is well inside what a player notices for note entry, and it keeps
+    // the bridge from being hammered a message at a time.
+    startTimerHz (50);
 }
 
 void MClassicEditor::resized()
 {
     webView.setBounds (getLocalBounds());
+}
+
+void MClassicEditor::timerCallback()
+{
+    std::array<IncomingMidi, 256> messages {};
+    const auto count = processorRef.drainIncoming (messages.data(), (int) messages.size());
+
+    if (count <= 0)
+        return;
+
+    // One array of triples rather than one event per message: a held chord and
+    // a controller sweep both arrive as bursts, and crossing the bridge once is
+    // cheaper than crossing it forty times.
+    juce::Array<juce::var> payload;
+    payload.ensureStorageAllocated (count * 3);
+
+    for (int i = 0; i < count; ++i)
+    {
+        payload.add ((int) messages[(size_t) i].status);
+        payload.add ((int) messages[(size_t) i].data1);
+        payload.add ((int) messages[(size_t) i].data2);
+    }
+
+    webView.emitEventIfBrowserIsVisible ("mclassic-midi-in", juce::var (payload));
 }
 
 #if MCLASSIC_UI_PROBE

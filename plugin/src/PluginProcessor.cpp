@@ -1,5 +1,7 @@
 #include "PluginProcessor.h"
-#include "PluginEditor.h"
+#if ! MCLASSIC_NO_EDITOR
+ #include "PluginEditor.h"
+#endif
 
 #include "ProjectJson.h"
 
@@ -79,8 +81,38 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
 
     buffer.clear();
 
-    // The host's incoming MIDI is not ours to echo. Clearing keeps it from
-    // leaving again as if this plugin had generated it.
+    // Take what the host sent before clearing. It is not ours to echo — the
+    // buffer is where our own notes go — but destroying it would take M's whole
+    // Input Control System with it, which is what used to happen here.
+    if (! midi.isEmpty())
+    {
+        const auto scope = incomingFifo.write (midi.getNumEvents());
+        auto written = 0;
+
+        for (const auto metadata : midi)
+        {
+            if (written >= scope.blockSize1 + scope.blockSize2)
+                break; // the interface is not draining; drop rather than stall
+
+            const auto* raw = metadata.data;
+            const auto bytes = metadata.numBytes;
+
+            if (bytes < 1 || bytes > 3)
+                continue; // SysEx is not forwarded
+
+            const IncomingMidi message { (uint8_t) raw[0],
+                                         (uint8_t) (bytes > 1 ? raw[1] : 0),
+                                         (uint8_t) (bytes > 2 ? raw[2] : 0) };
+
+            const auto index = written < scope.blockSize1
+                ? scope.startIndex1 + written
+                : scope.startIndex2 + (written - scope.blockSize1);
+
+            incoming[(size_t) index] = message;
+            ++written;
+        }
+    }
+
     midi.clear();
 
     // Take a waiting edit at a block boundary, never mid-block. Swapping the
@@ -203,6 +235,25 @@ void MClassicProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,
     allNotesOff (midi, 0);
 }
 
+int MClassicProcessor::drainIncoming (IncomingMidi* destination, int capacity)
+{
+    const auto ready = juce::jmin (capacity, incomingFifo.getNumReady());
+
+    if (ready <= 0)
+        return 0;
+
+    const auto scope = incomingFifo.read (ready);
+    auto written = 0;
+
+    for (int i = 0; i < scope.blockSize1; ++i)
+        destination[written++] = incoming[(size_t) (scope.startIndex1 + i)];
+
+    for (int i = 0; i < scope.blockSize2; ++i)
+        destination[written++] = incoming[(size_t) (scope.startIndex2 + i)];
+
+    return written;
+}
+
 void MClassicProcessor::setProjectFromJson (const juce::String& json)
 {
     // A change is already waiting; the newer state wins, so overwrite the same
@@ -211,18 +262,55 @@ void MClassicProcessor::setProjectFromJson (const juce::String& json)
     const auto spare = 1 - liveProject;
     projects[spare] = mclassic::projectFromJson (juce::JSON::parse (json));
 
+    // Kept verbatim. What the host stores is exactly what the interface
+    // produced, so a round trip cannot lose a field this port does not read.
+    documentJson = json;
+
     projectPending.store (true, std::memory_order_release);
     received.fetch_add (1, std::memory_order_relaxed);
 }
 
 juce::AudioProcessorEditor* MClassicProcessor::createEditor()
 {
+   #if MCLASSIC_NO_EDITOR
+    // The state test links the processor without the webview, which would drag
+    // in the whole UI bundle for a check that never opens a window.
+    return nullptr;
+   #else
     return new MClassicEditor (*this);
+   #endif
 }
 
-void MClassicProcessor::getStateInformation (juce::MemoryBlock&) {}
+void MClassicProcessor::getStateInformation (juce::MemoryBlock& destination)
+{
+    // Empty until the interface has sent something. Saving a default project
+    // over a session that never opened its window would be worse than saving
+    // nothing.
+    if (documentJson.isEmpty())
+        return;
 
-void MClassicProcessor::setStateInformation (const void*, int) {}
+    destination.replaceAll (documentJson.toRawUTF8(),
+                            (size_t) documentJson.getNumBytesAsUTF8());
+}
+
+void MClassicProcessor::setStateInformation (const void* data, int size)
+{
+    if (data == nullptr || size <= 0)
+        return;
+
+    const juce::String json { juce::CharPointer_UTF8 (static_cast<const char*> (data)),
+                              (size_t) size };
+
+    if (json.isEmpty())
+        return;
+
+    setProjectFromJson (json);
+
+    // The engine has it; the interface has not. The editor may not exist yet —
+    // a host restores state before opening the window, and often never opens it
+    // at all — so this is a flag rather than a call.
+    restoredPending.store (true, std::memory_order_release);
+}
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {

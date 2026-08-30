@@ -79,6 +79,19 @@ export class MRuntime {
   private nextClockAt = 0;
   private nextMetronomeAt = 0;
 
+  /**
+   * Set when the transport belongs to a host.
+   *
+   * There is exactly one engine. In the plugin it lives in the processor and
+   * follows the host's clock; this one must never also run, or two engines
+   * disagree about the time and this one's output has nowhere to go — a plugin
+   * webview has no Web MIDI and no audio device of its own.
+   *
+   * Guarded here rather than at the call sites, because a call site can be
+   * added and a guard forgotten.
+   */
+  private hosted = false;
+
   constructor(
     getState: () => ProjectState,
     onPlannedNotes: ((notes: readonly import("./planner").PlannedNote[]) => void) | null = null,
@@ -203,6 +216,16 @@ export class MRuntime {
     this.midi!.setChannelAssignments(assignments);
   }
 
+  /** Hand the transport to a host. Nothing here starts audio afterwards. */
+  setHosted(on: boolean): void {
+    this.hosted = on;
+    if (on) this.stop();
+  }
+
+  isHosted(): boolean {
+    return this.hosted;
+  }
+
   setSynthEnabled(on: boolean): void {
     this.synthEnabled = on;
   }
@@ -244,6 +267,7 @@ export class MRuntime {
     durationSec = 0.35,
     voice = 0,
   ): void {
+    if (this.hosted) return;
     if (pitches.length === 0 || channels.length === 0) return;
     const ctx = this.ensure();
     if (ctx.state === "suspended") void ctx.resume();
@@ -265,6 +289,7 @@ export class MRuntime {
   }
 
   async start(): Promise<void> {
+    if (this.hosted) return;
     if (this.timer !== null) return;
     const ctx = this.ensure();
     if (ctx.state === "suspended") await ctx.resume();
@@ -290,6 +315,7 @@ export class MRuntime {
 
   /** Pause scheduling without discarding the musical cursor. */
   pause(): void {
+    if (this.hosted) return;
     if (this.timer === null || !this.ctx) return;
     this.scheduler.cancel(this.timer);
     this.timer = null;
@@ -302,6 +328,7 @@ export class MRuntime {
 
   /** Continue from the paused cursor instead of restarting at step one. */
   async resume(): Promise<void> {
+    if (this.hosted) return;
     if (this.pausedAt === null) {
       await this.start();
       return;
@@ -323,6 +350,7 @@ export class MRuntime {
 
   /** Reset all voices to the top (M's Sync). */
   sync(): void {
+    if (this.hosted) return;
     if (!this.ctx) return;
     this.synth?.cancelScheduled();
     this.midi?.cancelScheduled();

@@ -134,10 +134,37 @@ target_compile_definitions(MClassicHostTest PRIVATE
   JUCE_PLUGINHOST_AU=1
   JUCE_USE_CURL=0
   JUCE_WEB_BROWSER=0
-  MCLASSIC_ARTEFACTS_DIR="${CMAKE_CURRENT_BINARY_DIR}/MClassicPlugin_artefacts/Release")
+  MCLASSIC_ARTEFACTS_DIR="${CMAKE_CURRENT_BINARY_DIR}/MClassicPlugin_artefacts/Release"
+  MCLASSIC_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
 
 target_link_libraries(MClassicHostTest PRIVATE
   juce::juce_audio_utils
   juce::juce_recommended_config_flags)
 
 add_dependencies(MClassicHostTest MClassicPlugin_VST3 MClassicPlugin_AU)
+
+# ---------------------------------------------------------------------------
+# Session persistence, against the processor itself.
+#
+# A hosted instance's setStateInformation goes through the format wrapper,
+# which frames the blob its own way — so testing ours through it would test the
+# wrapper's error handling instead.
+# ---------------------------------------------------------------------------
+
+juce_add_console_app(MClassicStateTest PRODUCT_NAME "MClassicStateTest")
+
+target_sources(MClassicStateTest PRIVATE
+  tests/StateTest.cpp
+  src/PluginProcessor.cpp
+  src/ProjectJson.cpp)
+
+target_compile_definitions(MClassicStateTest PRIVATE
+  MCLASSIC_NO_EDITOR=1
+  JUCE_USE_CURL=0
+  JUCE_WEB_BROWSER=0
+  MCLASSIC_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
+
+target_link_libraries(MClassicStateTest PRIVATE
+  MClassicEngine
+  juce::juce_audio_processors
+  juce::juce_recommended_config_flags)

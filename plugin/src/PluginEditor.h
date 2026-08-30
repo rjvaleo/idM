@@ -23,13 +23,17 @@ public:
 /** Hosts the browser app's own UI. The windows are not reimplemented here and
     must not be: this class serves the single-file bundle to a WebBrowserComponent
     and gets out of the way. Fixed at the measured 1000 x 460. */
-class MClassicEditor final : public juce::AudioProcessorEditor
+class MClassicEditor final : public juce::AudioProcessorEditor,
+                             private juce::Timer
 {
 public:
     explicit MClassicEditor (MClassicProcessor&);
     ~MClassicEditor() override = default;
 
     void resized() override;
+
+    /** Pumps host MIDI across to the interface. */
+    void timerCallback() override;
 
 private:
     static std::optional<juce::WebBrowserComponent::Resource> provide (const juce::String& path);

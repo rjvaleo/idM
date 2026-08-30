@@ -134,12 +134,19 @@ VoiceState voiceOf (const juce::var& v)
 
 } // namespace
 
-ProjectState projectFromJson (const juce::var& root)
+ProjectState projectFromJson (const juce::var& document)
 {
     ProjectState state = createDefaultProject();
 
-    if (! root.isObject())
+    if (! document.isObject())
         return state;
+
+    // The interface sends a whole `.mclone` document — the musical project plus
+    // the Variable Positions, Snapshots and Slideshows around it. Only the
+    // project concerns the engine, but the rest has to survive a session, so
+    // the document is what crosses the bridge and this reaches inside it.
+    const auto nested = document.getProperty ("project", juce::var());
+    const auto& root = nested.isObject() ? nested : document;
 
     state.tempo = num (root, "tempo", state.tempo);
     state.root = (int) num (root, "root", state.root);

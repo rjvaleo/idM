@@ -10,6 +10,18 @@
 #include <atomic>
 #include <vector>
 
+/** One incoming MIDI message, on its way to the interface.
+
+    Three bytes covers every channel message and every realtime byte, which is
+    all M's Input Control System reads. SysEx is not forwarded.
+*/
+struct IncomingMidi
+{
+    uint8_t status = 0;
+    uint8_t data1 = 0;
+    uint8_t data2 = 0;
+};
+
 /** A note the processor is holding open, so it can always be closed again. */
 struct SoundingNote
 {
@@ -69,6 +81,25 @@ public:
     /** Voices in the project the engine is currently playing. */
     int liveVoiceCount() const noexcept { return (int) projects[liveProject].voices.size(); }
 
+    /** The document the host should hand back next time, or empty if the
+        interface has not sent one yet. Read on the message thread only. */
+    juce::String restoredDocument() const { return documentJson; }
+
+    /** True when a session was restored and the interface has not yet been told
+        about it. Cleared by the editor once it has pushed it into the UI. */
+    bool takeRestoredFlag() noexcept { return restoredPending.exchange (false); }
+
+    /** Take everything the host has sent us since the last call.
+
+        The interface owns M's Input Control System — note input, Echo Map,
+        Keyboard Transpose, Step Advance — and all of it edits the project,
+        which then reaches the engine the ordinary way. So input crosses to the
+        interface rather than being handled here.
+
+        Called from the message thread. Returns how many messages were written.
+    */
+    int drainIncoming (IncomingMidi* destination, int capacity);
+
 private:
     void allNotesOff (juce::MidiBuffer&, int samplePosition);
     void rewind (double ppq);
@@ -88,6 +119,13 @@ private:
     std::vector<mclassic::PlannedStep> steps;
     std::vector<mclassic::OutputDestination> destinations { mclassic::OutputDestination::midi };
 
+    /** Host input on its way to the interface. Dropped rather than blocking if
+        the interface is not draining — losing a controller move is better than
+        stalling the audio thread. */
+    static constexpr int incomingCapacity = 1024;
+    juce::AbstractFifo incomingFifo { incomingCapacity };
+    std::array<IncomingMidi, incomingCapacity> incoming {};
+
     /** One slot per pitch per channel is more than the engine can sound at once. */
     static constexpr int maxSounding = 256;
     std::array<SoundingNote, maxSounding> sounding {};
@@ -102,6 +140,11 @@ private:
 
     std::atomic<int> emitted { 0 };
     std::atomic<int> received { 0 };
+
+    /** The document verbatim, so what the host stores is exactly what the
+        interface produced — no re-serialising, nothing to drift. */
+    juce::String documentJson;
+    std::atomic<bool> restoredPending { false };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MClassicProcessor)
 };

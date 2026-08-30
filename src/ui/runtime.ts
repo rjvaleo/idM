@@ -2,10 +2,24 @@
 // reads current project state (that's what makes live tweaking work).
 
 import { MRuntime } from "../engine/runtime";
+import { isPlugin } from "../plugin/bridge";
 import { useM } from "../state/store";
 import { decodeMidiMessage, isChannelMessage, mapAssignedInputChannel } from "../engine/midiinput";
 
 let runtime: MRuntime | null = null;
+
+/**
+ * Inside the plugin the transport belongs to the host.
+ *
+ * The engine that makes the music lives in the processor and follows Ableton's
+ * clock. If this one also ran, there would be two engines disagreeing about the
+ * time - and this one's output has nowhere to go, since a plugin webview has no
+ * Web MIDI and no audio device of its own. So in plugin mode the local runtime
+ * is never started, and the interface's Start button defers to the host.
+ */
+export function transportIsHosted(): boolean {
+  return isPlugin();
+}
 
 export function getRuntime(): MRuntime {
   if (!runtime) {
@@ -83,6 +97,9 @@ export function getRuntime(): MRuntime {
       },
     );
   }
+  // Set every time, not only on creation: the guard has to hold no matter
+  // which call site reached the runtime first.
+  runtime.setHosted(isPlugin());
   runtime.setSynthSettings(useM.getState().synthSettings);
   return runtime;
 }

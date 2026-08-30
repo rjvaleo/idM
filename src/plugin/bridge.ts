@@ -10,6 +10,7 @@
 // window is closed.
 
 import { useM } from "../state/store";
+import { decodeMidiMessage, isChannelMessage } from "../engine/midiinput";
 
 /** JUCE's low-level frontend API, as it appears on the page. */
 type JuceBackend = {
@@ -45,10 +46,18 @@ function callNative(name: string, ...params: unknown[]): void {
   juce.emitEvent("__juce__invoke", { name, params, resultId: nextCallId++ });
 }
 
-/** Send the whole project. Small enough to send whole, and sending whole means
- *  the engine can never hold a half-applied edit. */
-function sendProject(): void {
-  callNative("setProject", JSON.stringify(useM.getState().project));
+/**
+ * Send the whole document.
+ *
+ * The engine only needs the project, but the Variable Positions, Snapshots and
+ * Slideshows have to survive a session too, and the host stores exactly one
+ * blob. So the document is what crosses, the processor keeps it verbatim for
+ * the host, and reaches inside it for the project.
+ *
+ * Whole rather than a diff, so the engine can never hold a half-applied edit.
+ */
+function sendDocument(): void {
+  callNative("setProject", JSON.stringify(useM.getState().exportDocument()));
 }
 
 /**
@@ -60,14 +69,15 @@ function sendProject(): void {
  * hundreds.
  */
 export function installPluginBridge(): void {
-  if (!isPlugin()) return;
+  const juce = backend();
+  if (!juce) return;
 
   let queued = false;
   let last = useM.getState().project;
 
   const flush = () => {
     queued = false;
-    sendProject();
+    sendDocument();
   };
 
   useM.subscribe((state) => {
@@ -79,7 +89,45 @@ export function installPluginBridge(): void {
     queueMicrotask(flush);
   });
 
+  // A session the host restored reached the engine before this window existed.
+  // Applying it here is what makes the windows show the project that is
+  // actually playing rather than a default that is not.
+  juce.addEventListener("mclassic-document", (payload) => {
+    try {
+      const raw = typeof payload === "string" ? JSON.parse(payload) : payload;
+      const result = useM.getState().importDocument(raw);
+
+      if (!result.ok) return;
+
+      // Restoring is not an edit. Send it straight back so the engine and the
+      // interface agree on which document is live.
+      last = useM.getState().project;
+    } catch {
+      // A malformed blob is not worth taking the interface down for; the
+      // engine keeps whatever it already had.
+    }
+  });
+
+  // The host's MIDI. M's Input Control System lives here — note input, Echo
+  // Map, Keyboard Transpose, Step Advance — and all of it edits the project,
+  // which then reaches the engine the ordinary way. Arrives as a flat array of
+  // status/data1/data2 triples, because a chord or a controller sweep crosses
+  // as one burst rather than one message at a time.
+  juce.addEventListener("mclassic-midi-in", (payload) => {
+    if (!Array.isArray(payload)) return;
+
+    const receive = useM.getState().receiveMidi;
+
+    for (let i = 0; i + 2 < payload.length; i += 3) {
+      const message = decodeMidiMessage(
+        Uint8Array.from([Number(payload[i]), Number(payload[i + 1]), Number(payload[i + 2])]),
+      );
+
+      if (message && isChannelMessage(message)) receive(message);
+    }
+  });
+
   // The processor starts on its own default project; this replaces it with
-  // whatever the interface actually has, including a restored session.
-  sendProject();
+  // whatever the interface actually has.
+  sendDocument();
 }
