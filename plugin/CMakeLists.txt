@@ -115,3 +115,27 @@ target_link_libraries(MClassicPlugin
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
+
+# ---------------------------------------------------------------------------
+# A host, so "it works in a DAW" is measured rather than assumed.
+#
+# Loads the built bundle through JUCE's plugin format managers - the same path
+# Live and Logic take - drives a transport at it, and reports the MIDI it emits.
+# ---------------------------------------------------------------------------
+
+juce_add_console_app(MClassicHostTest PRODUCT_NAME "MClassicHostTest")
+
+target_sources(MClassicHostTest PRIVATE tests/HostTest.cpp)
+
+target_compile_definitions(MClassicHostTest PRIVATE
+  JUCE_PLUGINHOST_VST3=1
+  JUCE_PLUGINHOST_AU=1
+  JUCE_USE_CURL=0
+  JUCE_WEB_BROWSER=0
+  MCLASSIC_ARTEFACTS_DIR="${CMAKE_CURRENT_BINARY_DIR}/MClassicPlugin_artefacts/Release")
+
+target_link_libraries(MClassicHostTest PRIVATE
+  juce::juce_audio_utils
+  juce::juce_recommended_config_flags)
+
+add_dependencies(MClassicHostTest MClassicPlugin_VST3 MClassicPlugin_AU)
