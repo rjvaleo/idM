@@ -2,7 +2,7 @@
 
 #include "Num.h"
 
-namespace mclassic
+namespace idm
 {
 
 namespace
@@ -38,4 +38,4 @@ int pickCyclicLevel (CyclicStep step, Random& rng) noexcept
     return range.min + (int) rng.intBelow ((uint32_t) (range.max - range.min + 1));
 }
 
-} // namespace mclassic
+} // namespace idm

@@ -9,7 +9,7 @@
 
 #include <map>
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 namespace
 {
@@ -115,4 +115,4 @@ void checkTimeMap()
     expect (maps.size(), size_t { 12 }, "timemap.txt: expected 12 maps");
 }
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

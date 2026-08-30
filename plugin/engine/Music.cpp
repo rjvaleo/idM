@@ -5,7 +5,7 @@
 #include <array>
 #include <cstdlib>
 
-namespace mclassic
+namespace idm
 {
 
 namespace
@@ -212,4 +212,4 @@ int clampMidi (double note) noexcept
     return (int) clampTo (jsRound (note), 0.0, 127.0);
 }
 
-} // namespace mclassic
+} // namespace idm

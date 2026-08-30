@@ -6,7 +6,7 @@
 #include <cmath>
 #include <cstring>
 
-namespace mclassic
+namespace idm
 {
 
 bool noteOrderFromName (const char* name, NoteOrder& out) noexcept
@@ -162,4 +162,4 @@ int nextMixedStepIndex (NoteOrderMix mix, NoteOrderCursor cursor, int length,
     return index;
 }
 
-} // namespace mclassic
+} // namespace idm

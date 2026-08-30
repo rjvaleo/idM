@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 #
-# M-Clone control script — start/stop the dev server and open the app.
+# idM control script — start/stop the dev server and open the app.
 #
-#   ./mclone.sh start     start the server (installs deps if needed) + open browser
-#   ./mclone.sh stop      stop the server
-#   ./mclone.sh restart   stop then start
-#   ./mclone.sh status    show whether it's running
+#   ./idm.sh start     start the server (installs deps if needed) + open browser
+#   ./idm.sh stop      stop the server
+#   ./idm.sh restart   stop then start
+#   ./idm.sh status    show whether it's running
 #
-# Override the port with:  MCLONE_PORT=5200 ./mclone.sh start
+# Override the port with:  IDM_PORT=5200 ./idm.sh start
 #
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
-PORT="${MCLONE_PORT:-5174}"
+PORT="${IDM_PORT:-5174}"
 URL="http://localhost:${PORT}/"
-PIDFILE="$DIR/.mclone-dev.pid"
-LOG="$DIR/.mclone-dev.log"
+PIDFILE="$DIR/.idm-dev.pid"
+LOG="$DIR/.idm-dev.log"
 
 open_url() {
   if command -v open >/dev/null 2>&1; then open "$URL"            # macOS
@@ -32,7 +32,7 @@ is_running() {
 
 start() {
   if is_running; then
-    echo "M-Clone already running (pid $(cat "$PIDFILE")) at $URL"
+    echo "idM already running (pid $(cat "$PIDFILE")) at $URL"
     open_url
     return 0
   fi
@@ -42,14 +42,14 @@ start() {
     npm install
   fi
 
-  echo "Starting M-Clone dev server on port ${PORT}…"
+  echo "Starting idM dev server on port ${PORT}…"
   nohup npx vite --port "$PORT" --strictPort --no-open >"$LOG" 2>&1 &
   echo $! >"$PIDFILE"
 
   # Wait for the server to answer (up to ~30s).
   for _ in $(seq 1 60); do
     if curl -sf -o /dev/null "$URL"; then
-      echo "M-Clone is running at $URL (pid $(cat "$PIDFILE"))"
+      echo "idM is running at $URL (pid $(cat "$PIDFILE"))"
       open_url
       return 0
     fi
@@ -86,7 +86,7 @@ stop() {
   fi
   pkill -f "vite --port ${PORT}" 2>/dev/null || true
 
-  if [ "$stopped" = 1 ]; then echo "M-Clone stopped."; else echo "M-Clone was not running."; fi
+  if [ "$stopped" = 1 ]; then echo "idM stopped."; else echo "idM was not running."; fi
 }
 
 status() {
@@ -102,5 +102,5 @@ case "${1:-start}" in
   stop) stop ;;
   restart) stop || true; start ;;
   status) status ;;
-  *) echo "usage: $0 {start|stop|restart|status}   (port via MCLONE_PORT)"; exit 1 ;;
+  *) echo "usage: $0 {start|stop|restart|status}   (port via IDM_PORT)"; exit 1 ;;
 esac

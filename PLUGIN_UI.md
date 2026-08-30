@@ -1,6 +1,6 @@
 # The plugin window
 
-How M Classic's interface becomes a plugin. Branch: `plugin-host`.
+How idM's interface becomes a plugin. Branch: `plugin-host`.
 
 ## The rule
 
@@ -97,6 +97,6 @@ Pop-out state belongs in the plugin's own state blob — the one the host asks f
 and hands back — alongside the project.
 
 Worth keeping separate inside that blob, though: the project is the musical
-document and already has its own `.mclone` format, while open-windows-and-where
+document and already has its own `.idm` format, while open-windows-and-where
 is interface state. Restoring a session should not be able to corrupt a project
 because a window moved.

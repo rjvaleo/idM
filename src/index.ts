@@ -1,12 +1,12 @@
 /**
- * The public surface of M Classic.
+ * The public surface of idM.
  *
- * M Classic is two layers, and this file is the seam between them. `src/engine`
+ * idM is two layers, and this file is the seam between them. `src/engine`
  * is the generative core — 5,700 lines with no React, no Zustand and no browser
  * API in it, which is what makes a VST3/AU port possible at all. `src/ui` is one
  * presentation of that core, for the browser.
  *
- * idMLab consumes this package to run M Classic as a module rather than
+ * idMLab consumes this package to run idM as a module rather than
  * reimplementing it, so what is exported here is a contract: anything idMLab
  * reaches for must appear below, and removing something from this list is a
  * breaking change even when the file it came from is untouched.

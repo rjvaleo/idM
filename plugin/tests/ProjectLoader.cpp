@@ -3,7 +3,7 @@
 
 #include "../src/ProjectJson.h"
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 
 ProjectState loadProject (const std::string& fixtureName)
@@ -19,4 +19,4 @@ ProjectState loadProject (const std::string& fixtureName)
     return projectFromJson (root);
 }
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

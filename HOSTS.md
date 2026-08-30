@@ -1,6 +1,6 @@
-# Where M Classic's MIDI works, and where it is untested
+# Where idM's MIDI works, and where it is untested
 
-M Classic generates MIDI. Everything here is about whether that MIDI reaches
+idM generates MIDI. Everything here is about whether that MIDI reaches
 anything, which is a property of the host as much as of the plugin.
 
 Nothing in this file is a guess. Anything unverified says so.
@@ -35,12 +35,24 @@ Settled, and not to be relitigated without reading the sources above:
 - The `aumi` AU MIDI-processor build exists for Logic's MIDI FX slot only, and is
   built as **AU only** for that reason.
 
+## Builds
+
+macOS binaries are **universal** — `arm64` and `x86_64` in one bundle, minimum
+macOS 11.0 — and the Intel slice is checked rather than assumed: the conformance
+runner built universal and run under Rosetta (`arch -x86_64`) reports the same
+13,225 values as the native one.
+
+The AU plugin codes are `idMa` (instrument) and `idMm` (MIDI FX). Both pass
+`auval`. Both begin with a lower-case letter, which departs from the GarageBand
+10.3 convention JUCE's docs mention; if a GarageBand report ever comes back
+showing the plugin missing, that is the first thing to change.
+
 ## Formats built
 
 | Format | Built | Validated |
 |---|---|---|
-| AU (`aumu`, instrument) | yes | `auval -v aumu Mcls Rjvl` passes |
-| AU (`aumi`, MIDI FX) | yes | `auval -v aumi Mclm Rjvl` passes |
+| AU (`aumu`, instrument) | yes | `auval -v aumu idMa Rjvl` passes |
+| AU (`aumi`, MIDI FX) | yes | `auval -v aumi idMm Rjvl` passes |
 | VST3 | yes | loads and emits under JUCE's VST3 host |
 | CLAP | yes | builds; **not yet loaded in a CLAP host** |
 | Standalone | yes | emits notes and 24-PPQN clock through its own port, heard from another process |
@@ -49,7 +61,7 @@ Settled, and not to be relitigated without reading the sources above:
 
 | Host | Format | Status |
 |---|---|---|
-| Ableton Live 12 (macOS) | AU / VST3 | **loads.** MIDI out requires routing: a second MIDI track, *MIDI From* → the M Classic track, the chooser below it → **M Classic**, Monitor **In**. That routing is what makes Live activate the bus. **Confirmed by the user, 2026-08-30** — notes reach a synth on a second track. |
+| Ableton Live 12 (macOS) | AU / VST3 | **loads.** MIDI out requires routing: a second MIDI track, *MIDI From* → the idM track, the chooser below it → **idM**, Monitor **In**. That routing is what makes Live activate the bus. **Confirmed 2026-08-30** — notes reach a synth on a second track. |
 | Ableton Live | VST3 MIDI-effect build | **rejected.** Do not ship one. |
 | Logic Pro | AU | untested |
 | Bitwig, Reaper, Studio One | CLAP / VST3 | untested |

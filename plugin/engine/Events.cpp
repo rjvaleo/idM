@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace mclassic
+namespace idm
 {
 
 const char* nameOf (OutputDestination destination) noexcept
@@ -172,4 +172,4 @@ void NoteLifecycle::reset()
     active.clear();
 }
 
-} // namespace mclassic
+} // namespace idm

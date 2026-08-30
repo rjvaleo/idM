@@ -15,7 +15,7 @@ if(CMAKE_HOST_APPLE)
   set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Architectures to build")
 endif()
 
-project(MClassic VERSION 0.1.0 LANGUAGES C CXX)
+project(Idm VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -33,11 +33,11 @@ add_subdirectory(clap-juce-extensions EXCLUDE_FROM_ALL)
 # The UI is the browser app's own single-file build, inlined whole: one HTML
 # document carrying the React bundle, the CSS and the fonts. Nothing about the
 # windows is reimplemented here.
-set(MCLASSIC_UI_HTML "${CMAKE_CURRENT_SOURCE_DIR}/../dist-single/index.html")
+set(IDM_UI_HTML "${CMAKE_CURRENT_SOURCE_DIR}/../dist-single/index.html")
 
-if(NOT EXISTS "${MCLASSIC_UI_HTML}")
+if(NOT EXISTS "${IDM_UI_HTML}")
   message(FATAL_ERROR
-    "The UI bundle is missing:\n  ${MCLASSIC_UI_HTML}\n"
+    "The UI bundle is missing:\n  ${IDM_UI_HTML}\n"
     "Build it first, from the repository root:\n  npm run build:single")
 endif()
 
@@ -48,7 +48,7 @@ endif()
 # check is a comparison of values rather than of implementations.
 # ---------------------------------------------------------------------------
 
-add_library(MClassicEngine STATIC
+add_library(IdmEngine STATIC
   engine/Random.cpp
   engine/TimeMap.cpp
   engine/Music.cpp
@@ -58,7 +58,7 @@ add_library(MClassicEngine STATIC
   engine/Events.cpp
   engine/Project.cpp)
 
-target_include_directories(MClassicEngine PUBLIC engine)
+target_include_directories(IdmEngine PUBLIC engine)
 
 # The engine must agree with the TypeScript bit for bit, and the default here
 # does not. Clang contracts `a + b * c` into a fused multiply-add, which rounds
@@ -67,12 +67,12 @@ target_include_directories(MClassicEngine PUBLIC engine)
 # because the headers carry inline arithmetic that consumers compile
 # themselves.
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-  target_compile_options(MClassicEngine PUBLIC -ffp-contract=off)
+  target_compile_options(IdmEngine PUBLIC -ffp-contract=off)
 elseif(MSVC)
-  target_compile_options(MClassicEngine PUBLIC /fp:precise)
+  target_compile_options(IdmEngine PUBLIC /fp:precise)
 endif()
 
-add_executable(MClassicConformance
+add_executable(IdmConformance
   tests/Runner.cpp
   tests/Harness.cpp
   tests/CheckRandom.cpp
@@ -86,27 +86,27 @@ add_executable(MClassicConformance
   src/ProjectJson.cpp)
 
 # juce_core only, for its JSON parser. The engine itself stays free of JUCE.
-target_link_libraries(MClassicConformance PRIVATE MClassicEngine juce::juce_core)
+target_link_libraries(IdmConformance PRIVATE IdmEngine juce::juce_core)
 
-target_compile_features(MClassicConformance PRIVATE cxx_std_20)
+target_compile_features(IdmConformance PRIVATE cxx_std_20)
 
-target_compile_definitions(MClassicConformance PRIVATE
-  MCLASSIC_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
+target_compile_definitions(IdmConformance PRIVATE
+  IDM_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
 
 enable_testing()
-add_test(NAME conformance COMMAND MClassicConformance)
+add_test(NAME conformance COMMAND IdmConformance)
 
-juce_add_binary_data(MClassicUI
-  NAMESPACE   MClassicUI
-  HEADER_NAME MClassicUI.h
-  SOURCES     "${MCLASSIC_UI_HTML}")
+juce_add_binary_data(IdmUI
+  NAMESPACE   IdmUI
+  HEADER_NAME IdmUI.h
+  SOURCES     "${IDM_UI_HTML}")
 
-juce_add_plugin(MClassicPlugin
-  PRODUCT_NAME              "M Classic"
+juce_add_plugin(IdmPlugin
+  PRODUCT_NAME              "idM"
   COMPANY_NAME              "rjvaleo"
-  BUNDLE_ID                 "com.rjvaleo.mclassic"
+  BUNDLE_ID                 "com.rjvaleo.idm"
   PLUGIN_MANUFACTURER_CODE  Rjvl
-  PLUGIN_CODE               Mcls
+  PLUGIN_CODE               idMa
   FORMATS                   AU VST3 Standalone
   IS_SYNTH                  TRUE
   NEEDS_MIDI_INPUT          TRUE
@@ -131,12 +131,12 @@ juce_add_plugin(MClassicPlugin
 # documented mechanism, and it needs an instrument, not a MIDI effect.
 # ---------------------------------------------------------------------------
 
-juce_add_plugin(MClassicMidiPlugin
-  PRODUCT_NAME              "M Classic MIDI"
+juce_add_plugin(IdmMidiPlugin
+  PRODUCT_NAME              "idM MIDI"
   COMPANY_NAME              "rjvaleo"
-  BUNDLE_ID                 "com.rjvaleo.mclassicmidi"
+  BUNDLE_ID                 "com.rjvaleo.idmmidi"
   PLUGIN_MANUFACTURER_CODE  Rjvl
-  PLUGIN_CODE               Mclm
+  PLUGIN_CODE               idMm
   FORMATS                   AU
   IS_SYNTH                  FALSE
   NEEDS_MIDI_INPUT          TRUE
@@ -146,22 +146,22 @@ juce_add_plugin(MClassicMidiPlugin
   EDITOR_WANTS_KEYBOARD_FOCUS TRUE
   COPY_PLUGIN_AFTER_BUILD   TRUE)
 
-target_sources(MClassicMidiPlugin PRIVATE
+target_sources(IdmMidiPlugin PRIVATE
   src/Diagnostics.cpp
   src/ProjectJson.cpp
   src/PopOutWindow.cpp
   src/PluginProcessor.cpp
   src/PluginEditor.cpp)
 
-target_compile_definitions(MClassicMidiPlugin PUBLIC
+target_compile_definitions(IdmMidiPlugin PUBLIC
   JUCE_WEB_BROWSER=1
   JUCE_USE_CURL=0
   JUCE_VST3_CAN_REPLACE_VST2=0)
 
-target_link_libraries(MClassicMidiPlugin
+target_link_libraries(IdmMidiPlugin
   PRIVATE
-    MClassicEngine
-    MClassicUI
+    IdmEngine
+    IdmUI
     juce::juce_audio_devices
     juce::juce_audio_utils
     juce::juce_gui_extra
@@ -170,23 +170,23 @@ target_link_libraries(MClassicMidiPlugin
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
 
-target_sources(MClassicPlugin PRIVATE
+target_sources(IdmPlugin PRIVATE
   src/Diagnostics.cpp
   src/ProjectJson.cpp
   src/PopOutWindow.cpp
   src/PluginProcessor.cpp
   src/PluginEditor.cpp)
 
-target_compile_definitions(MClassicPlugin PUBLIC
+target_compile_definitions(IdmPlugin PUBLIC
   JUCE_WEB_BROWSER=1
   JUCE_USE_CURL=0
   JUCE_VST3_CAN_REPLACE_VST2=0)
 
-target_link_libraries(MClassicPlugin
+target_link_libraries(IdmPlugin
   PRIVATE
-    MClassicEngine
+    IdmEngine
     juce::juce_audio_devices
-    MClassicUI
+    IdmUI
     juce::juce_audio_utils
     juce::juce_gui_extra
   PUBLIC
@@ -201,23 +201,23 @@ target_link_libraries(MClassicPlugin
 # Live and Logic take - drives a transport at it, and reports the MIDI it emits.
 # ---------------------------------------------------------------------------
 
-juce_add_console_app(MClassicHostTest PRODUCT_NAME "MClassicHostTest")
+juce_add_console_app(IdmHostTest PRODUCT_NAME "IdmHostTest")
 
-target_sources(MClassicHostTest PRIVATE tests/HostTest.cpp)
+target_sources(IdmHostTest PRIVATE tests/HostTest.cpp)
 
-target_compile_definitions(MClassicHostTest PRIVATE
+target_compile_definitions(IdmHostTest PRIVATE
   JUCE_PLUGINHOST_VST3=1
   JUCE_PLUGINHOST_AU=1
   JUCE_USE_CURL=0
   JUCE_WEB_BROWSER=0
-  MCLASSIC_ARTEFACTS_DIR="${CMAKE_CURRENT_BINARY_DIR}/MClassicPlugin_artefacts/Release"
-  MCLASSIC_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
+  IDM_ARTEFACTS_DIR="${CMAKE_CURRENT_BINARY_DIR}/IdmPlugin_artefacts/Release"
+  IDM_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
 
-target_link_libraries(MClassicHostTest PRIVATE
+target_link_libraries(IdmHostTest PRIVATE
   juce::juce_audio_utils
   juce::juce_recommended_config_flags)
 
-add_dependencies(MClassicHostTest MClassicPlugin_VST3 MClassicPlugin_AU)
+add_dependencies(IdmHostTest IdmPlugin_VST3 IdmPlugin_AU)
 
 # ---------------------------------------------------------------------------
 # Session persistence, against the processor itself.
@@ -227,44 +227,44 @@ add_dependencies(MClassicHostTest MClassicPlugin_VST3 MClassicPlugin_AU)
 # wrapper's error handling instead.
 # ---------------------------------------------------------------------------
 
-juce_add_console_app(MClassicStateTest PRODUCT_NAME "MClassicStateTest")
+juce_add_console_app(IdmStateTest PRODUCT_NAME "IdmStateTest")
 
-target_sources(MClassicStateTest PRIVATE
+target_sources(IdmStateTest PRIVATE
   tests/StateTest.cpp
   src/Diagnostics.cpp
   src/PluginProcessor.cpp
   src/ProjectJson.cpp)
 
-target_compile_definitions(MClassicStateTest PRIVATE
-  MCLASSIC_NO_EDITOR=1
+target_compile_definitions(IdmStateTest PRIVATE
+  IDM_NO_EDITOR=1
   JUCE_USE_CURL=0
   JUCE_WEB_BROWSER=0
-  MCLASSIC_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
+  IDM_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
 
-target_link_libraries(MClassicStateTest PRIVATE
-  MClassicEngine
+target_link_libraries(IdmStateTest PRIVATE
+  IdmEngine
   juce::juce_audio_devices
   juce::juce_audio_processors
   juce::juce_recommended_config_flags)
 
 # Lists MIDI ports, so the standalone's virtual output can be seen from outside
 # the process that created it.
-juce_add_console_app(MClassicMidiPorts PRODUCT_NAME "MClassicMidiPorts")
-target_sources(MClassicMidiPorts PRIVATE tests/MidiPorts.cpp)
-target_compile_definitions(MClassicMidiPorts PRIVATE JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
-target_link_libraries(MClassicMidiPorts PRIVATE
+juce_add_console_app(IdmMidiPorts PRODUCT_NAME "IdmMidiPorts")
+target_sources(IdmMidiPorts PRIVATE tests/MidiPorts.cpp)
+target_compile_definitions(IdmMidiPorts PRIVATE JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
+target_link_libraries(IdmMidiPorts PRIVATE
   juce::juce_audio_devices
   juce::juce_recommended_config_flags)
 
 # Opens the standalone's virtual port from outside, which is the only way to
 # show that notes actually leave the process.
-juce_add_console_app(MClassicMidiListen PRODUCT_NAME "MClassicMidiListen")
-target_sources(MClassicMidiListen PRIVATE tests/MidiListen.cpp)
-target_compile_definitions(MClassicMidiListen PRIVATE JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
-target_link_libraries(MClassicMidiListen PRIVATE
+juce_add_console_app(IdmMidiListen PRODUCT_NAME "IdmMidiListen")
+target_sources(IdmMidiListen PRIVATE tests/MidiListen.cpp)
+target_compile_definitions(IdmMidiListen PRIVATE JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
+target_link_libraries(IdmMidiListen PRIVATE
   juce::juce_audio_devices
   juce::juce_recommended_config_flags)
 
-clap_juce_extensions_plugin(TARGET MClassicPlugin
-  CLAP_ID "com.rjvaleo.mclassic"
+clap_juce_extensions_plugin(TARGET IdmPlugin
+  CLAP_ID "com.rjvaleo.idm"
   CLAP_FEATURES instrument "note effect" sequencer generative algorithmic)

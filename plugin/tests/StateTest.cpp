@@ -42,7 +42,7 @@ struct FakePlayHead : juce::AudioPlayHead
 
 /** Which MIDI channels the engine uses over four bars. The default project
     uses one; the rich fixture spreads sixteen Voices over many. */
-std::set<int> channelsPlayed (MClassicProcessor& processor)
+std::set<int> channelsPlayed (IdmProcessor& processor)
 {
     constexpr double sampleRate = 48000.0;
     constexpr int blockSize = 512;
@@ -80,7 +80,7 @@ int main()
 {
     juce::ScopedJuceInitialiser_GUI juceInit;
 
-    const juce::File goldens { juce::String (MCLASSIC_GOLDENS_DIR) };
+    const juce::File goldens { juce::String (IDM_GOLDENS_DIR) };
     const auto document = goldens.getChildFile ("rich-project-16.json").loadFileAsString();
 
     if (document.isEmpty())
@@ -95,14 +95,14 @@ int main()
     // default over a session whose window was never opened would be worse than
     // writing nothing at all.
     {
-        MClassicProcessor fresh;
+        IdmProcessor fresh;
         juce::MemoryBlock empty;
         fresh.getStateInformation (empty);
         require (empty.getSize() == 0, "a plugin with no document saves nothing");
     }
 
     // What the interface sends is what the host is given, byte for byte.
-    MClassicProcessor saving;
+    IdmProcessor saving;
     saving.setProjectFromJson (document);
 
     juce::MemoryBlock saved;
@@ -120,7 +120,7 @@ int main()
              "the document is carried verbatim inside the session blob");
 
     // And reopening plays it.
-    MClassicProcessor restoring;
+    IdmProcessor restoring;
     const auto before = channelsPlayed (restoring);
 
     restoring.setStateInformation (saved.getData(), (int) saved.getSize());
@@ -143,7 +143,7 @@ int main()
     {
         std::printf ("\nMIDI input\n");
 
-        MClassicProcessor input;
+        IdmProcessor input;
         input.prepareToPlay (48000.0, 512);
 
         juce::AudioBuffer<float> audio (2, 512);
@@ -184,7 +184,7 @@ int main()
     {
         std::printf ("\nClock discipline\n");
 
-        MClassicProcessor plugin;
+        IdmProcessor plugin;
         require (! plugin.isStandalone(), "a bare processor is not the standalone wrapper");
 
         plugin.prepareToPlay (48000.0, 512);
@@ -229,7 +229,7 @@ int main()
     {
         std::printf ("\nWindow state\n");
 
-        MClassicProcessor withWindows;
+        IdmProcessor withWindows;
         withWindows.setProjectFromJson (document);
         withWindows.setWindowsJson ("[\"cyclic-editor\",\"synth\"]");
 
@@ -244,7 +244,7 @@ int main()
         require (parsed.hasProperty ("document"), "it carries the musical document");
         require (parsed.hasProperty ("popouts"), "it carries the open windows separately");
 
-        MClassicProcessor restored;
+        IdmProcessor restored;
         restored.setStateInformation (blob.getData(), (int) blob.getSize());
 
         require (restored.restoredWindows().contains ("cyclic-editor"),
@@ -252,7 +252,7 @@ int main()
         require (restored.liveVoiceCount() == 0 || true, "the project came back too");
 
         // Sessions written before window state existed hold a bare document.
-        MClassicProcessor legacy;
+        IdmProcessor legacy;
         legacy.setStateInformation (document.toRawUTF8(), (int) document.getNumBytesAsUTF8());
         require (legacy.projectsReceived() > 0, "a session without window state still opens");
     }
@@ -262,7 +262,7 @@ int main()
     {
         std::printf ("\nProgram changes\n");
 
-        MClassicProcessor pc;
+        IdmProcessor pc;
         require (! pc.sendsProgramChanges(), "off by default");
 
         pc.setSendProgramChanges (true);
@@ -276,16 +276,16 @@ int main()
     {
         std::printf ("\nVirtual MIDI port\n");
 
-        MClassicProcessor port;
+        IdmProcessor port;
         port.prepareToPlay (48000.0, 512);
 
         const auto name = port.portName();
         std::printf ("    port name: \"%s\"\n", name.toRawUTF8());
 
         require (name.isNotEmpty(), "a port is published");
-        require (name.startsWith ("M Classic"), "under a name a user would recognise");
+        require (name.startsWith ("idM"), "under a name a user would recognise");
 
-        // Whether other processes can see it is checked by MClassicMidiListen,
+        // Whether other processes can see it is checked by IdmMidiListen,
         // from outside: a process does not reliably enumerate its own virtual
         // sources, so asserting it here would test CoreMIDI's opinion of us
         // rather than the port.
@@ -298,7 +298,7 @@ int main()
     {
         std::printf ("\nEditing while playing\n");
 
-        MClassicProcessor live;
+        IdmProcessor live;
         live.prepareToPlay (48000.0, 512);
 
         FakePlayHead head;

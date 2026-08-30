@@ -1,6 +1,6 @@
 #include "ProjectJson.h"
 
-namespace mclassic
+namespace idm
 {
 
 namespace
@@ -141,7 +141,7 @@ ProjectState projectFromJson (const juce::var& document)
     if (! document.isObject())
         return state;
 
-    // The interface sends a whole `.mclone` document — the musical project plus
+    // The interface sends a whole `.idm` document — the musical project plus
     // the Variable Positions, Snapshots and Slideshows around it. Only the
     // project concerns the engine, but the rest has to survive a session, so
     // the document is what crosses the bridge and this reaches inside it.
@@ -201,4 +201,4 @@ ProjectState projectFromJson (const juce::var& document)
     return state;
 }
 
-} // namespace mclassic
+} // namespace idm

@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace mclassic
+namespace idm
 {
 
 /** Pulses per quarter note on the shared transport timeline. */
@@ -72,4 +72,4 @@ void planWindow (const ProjectState& state,
                  std::vector<VoiceCursor>& nextCursors,
                  std::vector<PlannedStep>& steps);
 
-} // namespace mclassic
+} // namespace idm

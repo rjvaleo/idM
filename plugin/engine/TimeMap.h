@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace mclassic
+namespace idm
 {
 
 /** A breakpoint inside the unit square. */
@@ -57,4 +57,4 @@ struct TimeMap
     double distortClockSeconds (double tempo, double clockSec) const;
 };
 
-} // namespace mclassic
+} // namespace idm

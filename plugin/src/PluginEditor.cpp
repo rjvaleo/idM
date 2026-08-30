@@ -2,12 +2,12 @@
 
 #include "Diagnostics.h"
 
-#include <MClassicUI.h>
+#include <IdmUI.h>
 
 #include <array>
 #include <cstring>
 
-#if MCLASSIC_UI_PROBE
+#if IDM_UI_PROBE
  #include <iostream>
 
 namespace
@@ -16,7 +16,7 @@ namespace
     {
         std::cout << text << std::endl;
 
-        const auto path = juce::SystemStats::getEnvironmentVariable ("MCLASSIC_UI_PROBE_OUT", {});
+        const auto path = juce::SystemStats::getEnvironmentVariable ("IDM_UI_PROBE_OUT", {});
 
         if (path.isNotEmpty())
             juce::File (path).appendText (text + "\n");
@@ -25,7 +25,7 @@ namespace
 
 /// Clicking a control and reading the result back is the only way to tell a
 /// theme switch that works from one that merely renders.
-void MClassicEditor::probeTheme()
+void IdmEditor::probeTheme()
 {
     static constexpr const char* click = R"JS(
       (function () {
@@ -52,7 +52,7 @@ void MClassicEditor::probeTheme()
       })
     )JS";
 
-    const juce::Component::SafePointer<MClassicEditor> safe { this };
+    const juce::Component::SafePointer<IdmEditor> safe { this };
 
     // Before, so the two can be compared rather than taken on trust.
     webView.evaluateJavascript (read, [safe] (auto before)
@@ -61,7 +61,7 @@ void MClassicEditor::probeTheme()
             return;
 
         if (const auto* v = before.getResult())
-            probeLog ("MCLASSIC_UI_PROBE theme=light " + v->toString());
+            probeLog ("IDM_UI_PROBE theme=light " + v->toString());
 
         safe->webView.evaluateJavascript (click, [safe] (auto)
         {
@@ -77,7 +77,7 @@ void MClassicEditor::probeTheme()
                 safe->webView.evaluateJavascript (read, [safe] (auto after)
                 {
                     if (const auto* v = after.getResult())
-                        probeLog ("MCLASSIC_UI_PROBE theme=dark " + v->toString());
+                        probeLog ("IDM_UI_PROBE theme=dark " + v->toString());
 
                     if (safe == nullptr)
                     {
@@ -104,7 +104,7 @@ void MClassicEditor::probeTheme()
                     safe->webView.evaluateJavascript (press, [safe] (auto pressed)
                     {
                         if (const auto* v = pressed.getResult())
-                            probeLog ("MCLASSIC_UI_PROBE transport " + v->toString());
+                            probeLog ("IDM_UI_PROBE transport " + v->toString());
 
                         if (safe == nullptr)
                         {
@@ -115,7 +115,7 @@ void MClassicEditor::probeTheme()
                         // Ask the interface to open an auxiliary window the way
                         // the Windows menu does, then look for the OS window.
                         static constexpr const char* popOut = R"JS(
-                          window.dispatchEvent(new CustomEvent('mclone:open-window',
+                          window.dispatchEvent(new CustomEvent('idm:open-window',
                                                                { detail: 'cyclic-editor' }));
                           'requested'
                         )JS";
@@ -130,7 +130,7 @@ void MClassicEditor::probeTheme()
                                     return;
                                 }
 
-                                probeLog ("MCLASSIC_UI_PROBE popouts count="
+                                probeLog ("IDM_UI_PROBE popouts count="
                                           + juce::String (safe->popOutCount())
                                           + " titles=" + safe->popOutTitles());
 
@@ -164,7 +164,7 @@ void MClassicEditor::probeTheme()
                                 safe->webView.evaluateJavascript (monitor, [] (auto seen)
                                 {
                                     if (const auto* v = seen.getResult())
-                                        probeLog ("MCLASSIC_UI_PROBE monitor " + v->toString());
+                                        probeLog ("IDM_UI_PROBE monitor " + v->toString());
 
                                     juce::Timer::callAfterDelay (3000, []
                                     {
@@ -183,7 +183,7 @@ void MClassicEditor::probeTheme()
 #endif
 
 std::optional<juce::WebBrowserComponent::Resource>
-MClassicEditor::provide (const juce::String& path)
+IdmEditor::provide (const juce::String& path)
 {
     // The bundle is one document, so every navigation resolves to it.
     //
@@ -196,7 +196,7 @@ MClassicEditor::provide (const juce::String& path)
 
     int size = 0;
 
-    if (const auto* data = MClassicUI::getNamedResource ("index_html", size))
+    if (const auto* data = IdmUI::getNamedResource ("index_html", size))
     {
         std::vector<std::byte> bytes ((size_t) size);
         std::memcpy (bytes.data(), data, (size_t) size);
@@ -208,7 +208,7 @@ MClassicEditor::provide (const juce::String& path)
     return std::nullopt;
 }
 
-MClassicEditor::MClassicEditor (MClassicProcessor& p)
+IdmEditor::IdmEditor (IdmProcessor& p)
     : AudioProcessorEditor (&p),
       processorRef (p),
       webView (juce::WebBrowserComponent::Options {}
@@ -279,13 +279,13 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
 
     addAndMakeVisible (webView);
 
-    mclassic::Diagnostics::get().log ("editor constructed");
+    idm::Diagnostics::get().log ("editor constructed");
 
-   #if MCLASSIC_UI_PROBE
-    probeLog ("MCLASSIC_UI_PROBE stage=editor-constructed");
+   #if IDM_UI_PROBE
+    probeLog ("IDM_UI_PROBE stage=editor-constructed");
     webView.onPageLoaded = [this]
     {
-        probeLog ("MCLASSIC_UI_PROBE stage=page-loaded");
+        probeLog ("IDM_UI_PROBE stage=page-loaded");
         probe (0);
     };
    #endif
@@ -299,7 +299,7 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
 }
 
 /** Open one auxiliary window, or bring it forward if it is already open. */
-void MClassicEditor::openPopOut (const juce::String& id, const juce::String& title)
+void IdmEditor::openPopOut (const juce::String& id, const juce::String& title)
 {
     for (auto& window : popOuts)
     {
@@ -315,7 +315,7 @@ void MClassicEditor::openPopOut (const juce::String& id, const juce::String& tit
         [this, id] { closedPopOuts.add (id); closePopOut (id); }));
 }
 
-void MClassicEditor::closePopOut (const juce::String& id)
+void IdmEditor::closePopOut (const juce::String& id)
 {
     for (auto it = popOuts.begin(); it != popOuts.end(); ++it)
     {
@@ -331,8 +331,8 @@ void MClassicEditor::closePopOut (const juce::String& id)
     }
 }
 
-#if MCLASSIC_UI_PROBE
-juce::String MClassicEditor::popOutTitles() const
+#if IDM_UI_PROBE
+juce::String IdmEditor::popOutTitles() const
 {
     juce::String out;
 
@@ -343,7 +343,7 @@ juce::String MClassicEditor::popOutTitles() const
 }
 #endif
 
-void MClassicEditor::resized()
+void IdmEditor::resized()
 {
     webView.setBounds (getLocalBounds());
 }
@@ -357,13 +357,13 @@ void MClassicEditor::resized()
     Ableton while working in the standalone is exactly that failure. A poll's
     reply comes back as the native call's own result, which has no such gate.
 */
-juce::var MClassicEditor::pollEngine()
+juce::var IdmEditor::pollEngine()
 {
     // Every reply to the interface, including this one, is delivered through
     // WebBrowserComponent::emitEventIfBrowserIsVisible - which drops it when
     // isVisible() is false and says nothing. If the interface looks dead inside
     // a host, this line is where to look first.
-    mclassic::Diagnostics::get().logThrottled (
+    idm::Diagnostics::get().logThrottled (
         "poll",
         "poll  webViewVisible=" + juce::String ((int) webView.isVisible())
         + "  editorVisible=" + juce::String ((int) isVisible())
@@ -451,11 +451,11 @@ juce::var MClassicEditor::pollEngine()
 
 
 
-#if MCLASSIC_UI_PROBE
+#if IDM_UI_PROBE
 
 // Reports what the webview actually rendered, so "the UI loads" is a measured
-// claim rather than an assumed one. Compiled out unless MCLASSIC_UI_PROBE is set.
-void MClassicEditor::probe (int attempt)
+// claim rather than an assumed one. Compiled out unless IDM_UI_PROBE is set.
+void IdmEditor::probe (int attempt)
 {
     static constexpr const char* script = R"JS(
       JSON.stringify({
@@ -500,7 +500,7 @@ void MClassicEditor::probe (int attempt)
       })
     )JS";
 
-    const juce::Component::SafePointer<MClassicEditor> safe { this };
+    const juce::Component::SafePointer<IdmEditor> safe { this };
 
     webView.evaluateJavascript (script, [safe, attempt] (auto result)
     {
@@ -519,8 +519,8 @@ void MClassicEditor::probe (int attempt)
 
         if (rendered || attempt >= 40)
         {
-            probeLog ("MCLASSIC_UI_PROBE attempts=" + juce::String (attempt) + " " + line);
-            probeLog ("MCLASSIC_UI_PROBE bridge projectsReceived="
+            probeLog ("IDM_UI_PROBE attempts=" + juce::String (attempt) + " " + line);
+            probeLog ("IDM_UI_PROBE bridge projectsReceived="
                       + juce::String (safe->processorRef.projectsReceived())
                       + " liveVoices=" + juce::String (safe->processorRef.liveVoiceCount()));
 

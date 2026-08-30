@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-namespace mclassic
+namespace idm
 {
 
 namespace
@@ -220,4 +220,4 @@ void planWindow (const ProjectState& state,
     }
 }
 
-} // namespace mclassic
+} // namespace idm

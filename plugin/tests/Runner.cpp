@@ -5,7 +5,7 @@
 
 int main()
 {
-    using namespace mclassic::conformance;
+    using namespace idm::conformance;
 
     checkRandom();
     checkTimeMap();

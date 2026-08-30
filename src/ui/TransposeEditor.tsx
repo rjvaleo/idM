@@ -61,12 +61,12 @@ export function TransposeEditor({ slot, onChange, onTransfer }: {
             <div className={`utr__row ${voiceColorClass("transposition", voice)}`} key={voice}>
               <span className="utr__voice" draggable
                 onDragStart={(event) => event.dataTransfer.setData(
-                  "application/x-mclone-voice", String(voice),
+                  "application/x-idm-voice", String(voice),
                 )}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={(event) => {
                   event.preventDefault();
-                  const source = Number(event.dataTransfer.getData("application/x-mclone-voice"));
+                  const source = Number(event.dataTransfer.getData("application/x-idm-voice"));
                   if (Number.isInteger(source)) onTransfer(source, voice, event.altKey);
                 }}>{voice + 1}</span>
               <Numerical

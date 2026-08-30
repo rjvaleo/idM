@@ -349,13 +349,13 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
           current,
         ));
     const openMidiAssignment = () => showWindow("midi-assignment");
-    window.addEventListener("mclone:open-window", openRequestedWindow);
-    window.addEventListener("mclone:close-edit-windows", closeEditWindows);
-    window.addEventListener("mclone:open-midi-assignment", openMidiAssignment);
+    window.addEventListener("idm:open-window", openRequestedWindow);
+    window.addEventListener("idm:close-edit-windows", closeEditWindows);
+    window.addEventListener("idm:open-midi-assignment", openMidiAssignment);
     return () => {
-      window.removeEventListener("mclone:open-window", openRequestedWindow);
-      window.removeEventListener("mclone:close-edit-windows", closeEditWindows);
-      window.removeEventListener("mclone:open-midi-assignment", openMidiAssignment);
+      window.removeEventListener("idm:open-window", openRequestedWindow);
+      window.removeEventListener("idm:close-edit-windows", closeEditWindows);
+      window.removeEventListener("idm:open-midi-assignment", openMidiAssignment);
     };
   });
   const showVariableEditor = (id: PositionVarId) => showWindow(id);
@@ -791,14 +791,14 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
                         aria-label={`${name} position ${POSITION_LABELS[p]}`}
                         title={`${name} ${POSITION_LABELS[p]} — double-click to edit`}
                         onDragStart={(event) => {
-                          event.dataTransfer.setData("application/x-mclone-position", JSON.stringify({ id, p }));
+                          event.dataTransfer.setData("application/x-idm-position", JSON.stringify({ id, p }));
                         }}
                         onDragOver={(event) => event.preventDefault()}
                         onDrop={(event) => {
                           event.preventDefault();
                           try {
                             const source = JSON.parse(event.dataTransfer.getData(
-                              "application/x-mclone-position",
+                              "application/x-idm-position",
                             )) as { id: PositionVarId; p: number };
                             if (source.id === id) {
                               transferVariablePosition(id, source.p, p, event.altKey);
@@ -1094,12 +1094,12 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
                   key={voice}>
                   <span className="uvarcontrol__voice" draggable
                     onDragStart={(event) => event.dataTransfer.setData(
-                      "application/x-mclone-voice", String(voice),
+                      "application/x-idm-voice", String(voice),
                     )}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={(event) => {
                       event.preventDefault();
-                      const source = Number(event.dataTransfer.getData("application/x-mclone-voice"));
+                      const source = Number(event.dataTransfer.getData("application/x-idm-voice"));
                       if (Number.isInteger(source)) transferVariableVoice(
                         editingVar, editPosition,
                         source, voice, event.altKey,

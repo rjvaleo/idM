@@ -1,4 +1,4 @@
-# Moving M Classic to JUCE
+# Moving idM to JUCE
 
 The plugin is JUCE and C++. The engine moves into it. Nothing else.
 
@@ -77,7 +77,7 @@ channel routing through the existing `midiAssignments.outputs`.
 stop, loop, locate, tempo change, bypass — leaves nothing sounding.
 
 ### 8. Project state into the plugin — done
-The interface sends whole `.mclone` documents across the bridge, and the
+The interface sends whole `.idm` documents across the bridge, and the
 processor keeps them verbatim for `getStateInformation` — so what the host
 stores is exactly what the interface produced, and a round trip cannot lose a
 field this port does not read. `document.ts` itself was not ported: nothing in

@@ -1,4 +1,4 @@
-// The versioned project document — M-Clone's portable save format.
+// The versioned project document — idM's portable save format.
 //
 // The document holds everything musical: the Project and its Patterns
 // (Original and Scrambled material both), Variable and Cyclic Positions,
@@ -38,7 +38,7 @@ import type { Slideshow, SlideshowAction } from "./slideshow";
  * is long, between 1 and 16. Version 2 documents always had exactly four and
  * still open unchanged.
  *
- * The bump exists so an older M-Clone refuses an eight-Voice document with
+ * The bump exists so an older idM refuses an eight-Voice document with
  * "saved by a newer version" rather than its v2 reader rejecting it as damaged
  * musical data — the same outcome, but one of them tells the truth.
  */
@@ -523,7 +523,7 @@ export function decodeDocument(raw: unknown): DecodeResult {
   if (version > DOCUMENT_VERSION) {
     return {
       ok: false,
-      error: `This project was saved by a newer version of M-Clone (document version ${version}).`,
+      error: `This project was saved by a newer version of idM (document version ${version}).`,
     };
   }
 

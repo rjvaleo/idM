@@ -1,6 +1,6 @@
 #include "Diagnostics.h"
 
-namespace mclassic
+namespace idm
 {
 
 Diagnostics& Diagnostics::get()
@@ -11,14 +11,14 @@ Diagnostics& Diagnostics::get()
 
 Diagnostics::Diagnostics()
 {
-    logFile = juce::FileLogger::getSystemLogFileFolder().getChildFile ("MClassic.log");
+    logFile = juce::FileLogger::getSystemLogFileFolder().getChildFile ("Idm.log");
     logFile.getParentDirectory().createDirectory();
 
     // Started fresh each session, so what is in it is this run rather than
     // an archaeology of every run since the plugin was installed.
     logFile.replaceWithText ({});
 
-    log ("--- M Classic started ---");
+    log ("--- idM started ---");
 }
 
 void Diagnostics::log (const juce::String& line)
@@ -46,4 +46,4 @@ void Diagnostics::logThrottled (const juce::String& tag, const juce::String& lin
     log (line);
 }
 
-} // namespace mclassic
+} // namespace idm

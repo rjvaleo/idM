@@ -410,7 +410,7 @@ int main()
 {
     juce::ScopedJuceInitialiser_GUI juceInit;
 
-    const juce::File artefacts { juce::String (MCLASSIC_ARTEFACTS_DIR) };
+    const juce::File artefacts { juce::String (IDM_ARTEFACTS_DIR) };
 
     std::printf ("Loading the built plugin as a host would.\n");
 
@@ -419,7 +419,7 @@ int main()
     juce::VST3PluginFormat midiVst3;
     const auto midiVst3Path = artefacts.getParentDirectory()
                                        .getParentDirectory()
-                                       .getChildFile ("MClassicMidiPlugin_artefacts/Release/VST3/M Classic MIDI.vst3");
+                                       .getChildFile ("IdmMidiPlugin_artefacts/Release/VST3/idM MIDI.vst3");
 
     if (midiVst3Path.exists())
         testFormat (midiVst3, midiVst3Path.getFullPathName());
@@ -428,14 +428,14 @@ int main()
     juce::AudioUnitPluginFormat midiAu;
     const auto midiAuPath = artefacts.getParentDirectory()
                                      .getParentDirectory()
-                                     .getChildFile ("MClassicMidiPlugin_artefacts/Release/AU/M Classic MIDI.component");
+                                     .getChildFile ("IdmMidiPlugin_artefacts/Release/AU/idM MIDI.component");
 
     if (midiAuPath.exists())
         testFormat (midiAu, midiAuPath.getFullPathName());
    #endif
 
     juce::VST3PluginFormat vst3;
-    const auto vst3Path = artefacts.getChildFile ("VST3/M Classic.vst3");
+    const auto vst3Path = artefacts.getChildFile ("VST3/idM.vst3");
 
     if (vst3Path.exists())
         testFormat (vst3, vst3Path.getFullPathName());
@@ -447,7 +447,7 @@ int main()
 
    #if JUCE_PLUGINHOST_AU && JUCE_MAC
     juce::AudioUnitPluginFormat au;
-    const auto auPath = artefacts.getChildFile ("AU/M Classic.component");
+    const auto auPath = artefacts.getChildFile ("AU/idM.component");
 
     if (auPath.exists())
         testFormat (au, auPath.getFullPathName());

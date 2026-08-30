@@ -115,7 +115,7 @@ function useElementSize() {
 /**
  * `onExitToPatch` is the one concession to living inside idMLab: when it is
  * supplied a "Return to Patch" item appears at the foot of the View menu.
- * Absent — which is how M-Clone's own entry point mounts this — nothing about
+ * Absent — which is how idM's own entry point mounts this — nothing about
  * the app changes.
  */
 /**
@@ -161,14 +161,14 @@ export function App({ onExitToPatch, extraControls }: {
   const lastNumerical = useRef<number | null>(null);
   const [workspaceZoom, setWorkspaceZoom] = useState(() => {
     try {
-      return clampWorkspaceZoom(Number(localStorage.getItem("mclone.workspaceZoom") ?? 100));
+      return clampWorkspaceZoom(Number(localStorage.getItem("idm.workspaceZoom") ?? 100));
     } catch {
       return 100;
     }
   });
   const [theme, setTheme] = useState<Theme>(() => {
     try {
-      return (localStorage.getItem("mclone.theme") as Theme) ?? "light";
+      return (localStorage.getItem("idm.theme") as Theme) ?? "light";
     } catch {
       return "light";
     }
@@ -179,7 +179,7 @@ export function App({ onExitToPatch, extraControls }: {
       const id = windowBackShortcut(event);
       if (!id) return;
       event.preventDefault();
-      window.dispatchEvent(new CustomEvent("mclone:send-window-back", {
+      window.dispatchEvent(new CustomEvent("idm:send-window-back", {
         detail: draggableIdForMainWindow(id),
       }));
     };
@@ -196,7 +196,7 @@ export function App({ onExitToPatch, extraControls }: {
   const [channelPreset, setChannelPreset] = useState<ChannelThemePresetId | "custom">(
     () => {
       try {
-        const saved = localStorage.getItem("mclone.channelTheme");
+        const saved = localStorage.getItem("idm.channelTheme");
         return saved && (saved === "custom" || saved in CHANNEL_THEME_PRESETS)
           ? saved as ChannelThemePresetId | "custom" : "classic";
       } catch {
@@ -206,7 +206,7 @@ export function App({ onExitToPatch, extraControls }: {
   );
   const [customColors, setCustomColors] = useState<ChannelColors>(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem("mclone.channelColors") ?? "null");
+      const saved = JSON.parse(localStorage.getItem("idm.channelColors") ?? "null");
       return Array.isArray(saved) && saved.length === 4
         ? makeCustomChannelTheme(saved as unknown as ChannelColors).colors
         : [...CHANNEL_THEME_PRESETS.classic.colors];
@@ -221,7 +221,7 @@ export function App({ onExitToPatch, extraControls }: {
   useEffect(() => {
     document.body.classList.toggle("dark-bg", theme === "dark");
     try {
-      localStorage.setItem("mclone.theme", theme);
+      localStorage.setItem("idm.theme", theme);
     } catch {
       // ignore storage failures
     }
@@ -229,8 +229,8 @@ export function App({ onExitToPatch, extraControls }: {
 
   useEffect(() => {
     try {
-      localStorage.setItem("mclone.channelTheme", channelPreset);
-      localStorage.setItem("mclone.channelColors", JSON.stringify(customColors));
+      localStorage.setItem("idm.channelTheme", channelPreset);
+      localStorage.setItem("idm.channelColors", JSON.stringify(customColors));
     } catch {
       // ignore storage failures
     }
@@ -238,7 +238,7 @@ export function App({ onExitToPatch, extraControls }: {
 
   useEffect(() => {
     try {
-      localStorage.setItem("mclone.workspaceZoom", String(workspaceZoom));
+      localStorage.setItem("idm.workspaceZoom", String(workspaceZoom));
     } catch {
       // ignore storage failures
     }
@@ -254,7 +254,7 @@ export function App({ onExitToPatch, extraControls }: {
     setChannelPreset("custom");
   };
   const openWindow = (id: AppWindowId) => window.dispatchEvent(
-    new CustomEvent<AppWindowId>("mclone:open-window", { detail: id }),
+    new CustomEvent<AppWindowId>("idm:open-window", { detail: id }),
   );
   // Voice lanes come from the project, which is how many Voices it has.
   const voices = useM((s) => s.project.voices);
@@ -275,8 +275,8 @@ export function App({ onExitToPatch, extraControls }: {
       setFileActionAfterSave((event as CustomEvent<"new" | "open">).detail);
       showSaveNameDialog();
     };
-    window.addEventListener("mclone:save-before-file-action", requestName);
-    return () => window.removeEventListener("mclone:save-before-file-action", requestName);
+    window.addEventListener("idm:save-before-file-action", requestName);
+    return () => window.removeEventListener("idm:save-before-file-action", requestName);
   });
 
   const runSave = async (saveAs: boolean) => {
@@ -313,7 +313,7 @@ export function App({ onExitToPatch, extraControls }: {
       hint: "Save the current screen locally; Patterns and Time Maps remain fresh",
     },
     midiAssignment: {
-      run: () => window.dispatchEvent(new CustomEvent("mclone:open-midi-assignment")),
+      run: () => window.dispatchEvent(new CustomEvent("idm:open-midi-assignment")),
       hint: "Open the sixteen-channel Web MIDI assignment matrix",
     },
   });
@@ -337,7 +337,7 @@ export function App({ onExitToPatch, extraControls }: {
   const windowItems: MenuItem[] = [
     ...buildMenu(WINDOWS_MENU_ITEMS, {
       closeEditWindows: {
-        run: () => window.dispatchEvent(new CustomEvent("mclone:close-edit-windows")),
+        run: () => window.dispatchEvent(new CustomEvent("idm:close-edit-windows")),
         hint: "Close every open edit window",
       },
     }),
@@ -477,7 +477,7 @@ export function App({ onExitToPatch, extraControls }: {
         </div>
       </nav>
 
-      <a id="mclone-project-download" className="visually-hidden"
+      <a id="idm-project-download" className="visually-hidden"
         aria-hidden="true" tabIndex={-1} />
 
       {saveNameDialogOpen && (

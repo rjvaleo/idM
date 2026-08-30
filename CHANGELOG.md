@@ -1,17 +1,72 @@
 # Changelog
 
-All notable changes to M-Clone are recorded here. The format follows
+All notable changes to idM are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Pre-1.0 releases are
-alpha: the interface, the audio rack, and the `.mclone` document may still
+alpha: the interface, the audio rack, and the `.idm` document may still
 change between minor versions.
 
-## [Unreleased] — idMLab, branch `modular`
+## [Unreleased] — idM
+
+### Changed
+
+- **Renamed from M Classic to idM.** The product, the bundle identifiers, the
+  C++ namespace, the document extension and every document. AU plugin codes are
+  now `idMa` (instrument) and `idMm` (MIDI FX); bundle identifiers are
+  `com.rjvaleo.idm` and `com.rjvaleo.idmmidi`. **A host session saved against
+  the old identifiers will not find the plugin** and needs it re-added.
+- **Documents save as `.idm`.** The previous `.mclone` extension is gone; a file
+  saved under it has to be renamed by hand to open.
+- **Licensed under AGPL-3.0-or-later.** JUCE 9 is dual-licensed
+  AGPLv3-or-commercial and this project holds no commercial JUCE licence, so
+  AGPLv3 is the licence under which JUCE is used here and idM inherits it.
+
+### Added
+
+- **The engine, in C++.** `Music`, `Cyclic`, `Transform`, `Project`, `Planner`
+  and `Events` ported from the TypeScript and gated on 13,225 values from the
+  fixtures the TypeScript engine emits.
+- **AU, VST3, CLAP and Standalone builds** that generate MIDI against a host
+  transport — start, stop, loop, locate, tempo change and bypass, with nothing
+  left sounding across any of them. The standalone carries its own transport,
+  its own virtual MIDI port and MIDI Clock at 24 PPQN.
+- **Universal macOS binaries** — `arm64` and `x86_64` in one bundle. The Intel
+  slice is verified rather than assumed: the conformance runner under Rosetta
+  reports the same 13,225 values.
+- **Session persistence** — the document and the open windows save with the host
+  session.
+- **Pop-out windows** as real OS windows.
+
+### Fixed
+
+- **The deployment target was never applied.** The CMakeLists read 11.0 but sat
+  below `project()`, where CMake has already created that cache entry, so the
+  binaries were stamped `minos 26.0` — requiring macOS 26 as well as Apple
+  Silicon.
+- **Edits no longer strand notes.** Every project change called `rewind()`,
+  which reset the note lifecycle and discarded pending note-offs, so anything
+  sounding when you moved a control stayed on. Only a voice-count change now
+  rebuilds cursors, and it releases sounding notes first.
+- **Midi View scrolled on a dead clock** — the local TypeScript runtime, which
+  the plugin deliberately never starts. The processor now publishes its own
+  elapsed time; seven other call sites moved with it.
+- **Pop-out windows opened to an error frame.** The resource provider answered
+  only `/` and `/index.html`, but a pop-out loads the same bundle with a
+  `#detached=` fragment.
+
+### Removed
+
+- **14,466 committed Rust build artefacts.** Renaming `engine/` to
+  `engine-rust-parked/` stopped `.gitignore`'s `engine/target/` rule matching,
+  and `target/debug` was committed — 98% of the files in the repository,
+  including two 20 MB static libraries.
+
+## [Unreleased] — idMLab, branch `modular` (historical)
 
 idMLab is a separate application on the `modular` branch: a node graph with its
 own document format (`.mmod`, plus the self-contained `.mmodpack`), not a mode of
-M Classic Web. It shares this repository and nothing else. Its state is recorded
-in [`IDMLAB_MASTER_PLAN.md`](IDMLAB_MASTER_PLAN.md).
+idM Web. It shares this repository and nothing else. Its state is recorded
+in `IDMLAB_MASTER_PLAN.md` (idmlab repository).
 
 ### Added
 
@@ -35,7 +90,7 @@ in [`IDMLAB_MASTER_PLAN.md`](IDMLAB_MASTER_PLAN.md).
   `rjvaleo/scale-sequencer`, with its Raga Marwa data bug and its broken
   below-the-root degrees fixed on the way in.
 - **PWM generator.** Fourier coefficients for a pulse of any duty cycle, the
-  first piece of the synth ([`MODULAR_SYNTH_PLAN.md`](MODULAR_SYNTH_PLAN.md)).
+  first piece of the synth (`MODULAR_SYNTH_PLAN.md` (idmlab repository)).
 - **A stereo rack.** Every source has a pan and Percussion pans per pad; the
   feedback-delay reverbs tap alternate lines to alternate sides so their tails
   decorrelate; a **Stereo Widener** does mid/side width with a mono bass band;
@@ -55,7 +110,7 @@ in [`IDMLAB_MASTER_PLAN.md`](IDMLAB_MASTER_PLAN.md).
 
 ## [0.8.0-alpha] — 2026-08-02
 
-First public alpha build. M Classic Web is feature-complete against the M 2.7
+First public alpha build. idM Web is feature-complete against the M 2.7
 manual audit apart from the deliberate exclusions listed below; the remaining
 1.0 work is the role-specific Classic audio rack, release hardening, and
 hardware/browser MIDI certification.
@@ -103,8 +158,8 @@ hardware/browser MIDI certification.
 - **Midi View.** Four-stream diagnostic tracker of generated output.
 - **Movies and export.** Performance capture with deterministic format-1
   Standard MIDI File export at 960 PPQN.
-- **Project documents.** Versioned `.mclone` JSON (`ProjectDocumentV2`) with
-  defensive decoding, v1 migration, and legacy `.json` / `.mclone.json` import.
+- **Project documents.** Versioned `.idm` JSON (`ProjectDocumentV2`) with
+  defensive decoding, v1 migration, and legacy `.json` / `.idm.json` import.
 - **Interface.** Movable window canvas with persisted positions and z-order,
   right-click window launcher, classic global menu, 640 × 480 logical desktop
   with 50–200% scaling, uniform rendered typography, complete four-channel
@@ -133,11 +188,11 @@ hardware/browser MIDI certification.
   still works there.
 - Scheduling runs on the browser main thread with a bounded adaptive horizon.
   Background tabs, heavy pages, and system sleep can stall it; see
-  [`IDMLAB_MASTER_PLAN.md`](IDMLAB_MASTER_PLAN.md) §A.6 for the exact
+  `IDMLAB_MASTER_PLAN.md` (idmlab repository) §A.6 for the exact
   guarantees and recovery behavior.
 - Events more than 20 ms late are dropped; releases and state events are always
   retained.
-- Synth patches are application state and are not yet stored in the `.mclone`
+- Synth patches are application state and are not yet stored in the `.idm`
   document.
 - Long-session CPU/memory, asset-loading, and accessibility audits are release
   hardening work that has not been completed.
@@ -151,4 +206,4 @@ hardware/browser MIDI certification.
   and state modules.
 - Clean `tsc --noEmit`, plus successful normal, Pages, and single-file builds.
 
-[0.8.0-alpha]: https://github.com/rjvaleo/M-Clone/releases/tag/v0.8.0-alpha
+[0.8.0-alpha]: https://github.com/rjvaleo/idM/releases/tag/v0.8.0-alpha

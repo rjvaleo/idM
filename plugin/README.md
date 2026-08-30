@@ -1,21 +1,40 @@
-# M Classic — plugin shell
+# idM — plugin shell
 
-JUCE 9 host for the M Classic engine. One target yields **AU**, **VST3** and
-**Standalone**; CLAP follows via `clap-juce-extensions`.
+JUCE 9 host for the idM engine. One target yields **AU**, **VST3**, **CLAP** and
+**Standalone**; a second yields the **AU MIDI-effect** build for Logic's MIDI FX
+slot.
 
 The UI is the browser app's own single-file build, served whole to a
 `WebBrowserComponent`. Nothing about the windows is reimplemented here, and
 nothing should be.
 
-Nothing of the engine is here yet. The processor accepts MIDI and emits none;
-the Rust engine arrives in M2.
+The engine is here, in C++, in `engine/` — ported from the TypeScript and gated
+on the same fixtures. `processBlock` asks it one question: what plays between
+these two musical positions?
+
+## Identity
+
+| | Instrument | MIDI FX |
+|---|---|---|
+| Product | `idM` | `idM MIDI` |
+| Bundle ID | `com.rjvaleo.idm` | `com.rjvaleo.idmmidi` |
+| AU type | `aumu` | `aumi` |
+| Plugin code | `idMa` | `idMm` |
+| Manufacturer | `Rjvl` | `Rjvl` |
+
+JUCE's docs require a plugin code to contain exactly one upper-case letter, and
+`idMa` / `idMm` satisfy that — both pass `auval`. They do *not* follow the
+further GarageBand 10.3 convention of an upper-case first letter, which is a
+deliberate trade for matching the product name.
 
 ## Layout
 
     plugin/
-      CMakeLists.txt     target definition
+      CMakeLists.txt     target definitions
       JUCE/              git submodule, pinned to 9.0.1, shallow
-      src/               PluginProcessor / PluginEditor scaffold
+      engine/            the engine in C++
+      src/               processor, editor, pop-out windows, diagnostics
+      tests/             conformance, host, state, MIDI-port suites
       build/             ignored
 
 ## Building
@@ -27,6 +46,18 @@ pointer to this command if it does not.
     git submodule update --init --depth 1 plugin/JUCE
     cmake -S plugin -B plugin/build -DCMAKE_BUILD_TYPE=Release
     cmake --build plugin/build -j
+
+macOS builds are universal — `CMAKE_OSX_ARCHITECTURES` is `arm64;x86_64` and the
+deployment target is 11.0. Both are set **above** `project()`, and have to be:
+CMake creates those cache entries while it works out the compiler, so a
+`set(... CACHE ...)` placed after `project()` is a no-op against an entry that
+already exists. That is not hypothetical — the deployment target sat below
+`project()` for months, read 11.0, and produced binaries stamped `minos 26.0`.
+
+Check what you actually built:
+
+    lipo -archs ~/Library/Audio/Plug-Ins/Components/"idM.component"/Contents/MacOS/idM
+    arch -x86_64 plugin/build/IdmConformance
 
 `COPY_PLUGIN_AFTER_BUILD` installs into `~/Library/Audio/Plug-Ins/` on macOS, so
 Live and `auval` see the result without a further step.
@@ -55,9 +86,10 @@ the same way. There is deliberately no workaround baked into `CMakeLists.txt`.
 
 ## Validating the AU
 
-    rm -rf ~/Library/Audio/Plug-Ins/Components/"M Classic.component"
+    rm -rf ~/Library/Audio/Plug-Ins/Components/"idM.component"
     cmake --build plugin/build -j
-    auval -v aumu Mcls Rjvl
+    auval -v aumu idMa Rjvl
+    auval -v aumi idMm Rjvl
 
 **Clear the installed component first.** `auval` validates whatever is in
 `~/Library/Audio/Plug-Ins/Components`, not what you just built. A failed build
@@ -66,19 +98,19 @@ leaves the previous bundle in place, and the run reports
 
 ## Proving the UI renders
 
-`MCLASSIC_UI_PROBE` compiles in a probe that queries the live DOM once the
+`IDM_UI_PROBE` compiles in a probe that queries the live DOM once the
 webview settles, and writes what it finds to the file named by
-`MCLASSIC_UI_PROBE_OUT`. It is compiled out of ordinary builds.
+`IDM_UI_PROBE_OUT`. It is compiled out of ordinary builds.
 
     cmake -S plugin -B plugin/build-probe -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_CXX_FLAGS=-DMCLASSIC_UI_PROBE=1
-    cmake --build plugin/build-probe --target MClassicPlugin_Standalone -j
-    open --env MCLASSIC_UI_PROBE_OUT=/tmp/probe.txt \
-      "plugin/build-probe/MClassicPlugin_artefacts/Release/Standalone/M Classic.app"
+      -DCMAKE_CXX_FLAGS=-DIDM_UI_PROBE=1
+    cmake --build plugin/build-probe --target IdmPlugin_Standalone -j
+    open --env IDM_UI_PROBE_OUT=/tmp/probe.txt \
+      "plugin/build-probe/IdmPlugin_artefacts/Release/Standalone/idM.app"
     cat /tmp/probe.txt
 
 **Launch with `open`, not by running the binary.** Executing
-`M Classic.app/Contents/MacOS/M Classic` straight from a shell exits after a
+`idM.app/Contents/MacOS/idM` straight from a shell exits after a
 second without ever constructing the editor, silently and with status 0. Going
 through LaunchServices gives it the GUI session it needs.
 

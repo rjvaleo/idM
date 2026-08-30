@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace mclassic
+namespace idm
 {
 
 /** One step of a Pattern. Only the pitches matter to planning. */
@@ -126,4 +126,4 @@ inline constexpr int patternCount = 24;
     riff so the instrument makes sound the moment the transport starts. */
 ProjectState createDefaultProject (int voices = 4);
 
-} // namespace mclassic
+} // namespace idm

@@ -6,7 +6,7 @@
 #include <map>
 #include <vector>
 
-namespace mclassic
+namespace idm
 {
 
 /** Ordered Midi before Synth, matching JavaScript's `localeCompare` on those
@@ -110,4 +110,4 @@ private:
     uint64_t noteId = 0;
 };
 
-} // namespace mclassic
+} // namespace idm

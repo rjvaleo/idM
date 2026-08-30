@@ -1,5 +1,5 @@
 #include "PluginProcessor.h"
-#if ! MCLASSIC_NO_EDITOR
+#if ! IDM_NO_EDITOR
  #include "PluginEditor.h"
 #endif
 
@@ -14,7 +14,7 @@
     which shape may send MIDI onward: Ableton does not route MIDI out of an
     instrument, and takes it from a MIDI effect.
 */
-juce::AudioProcessor::BusesProperties MClassicProcessor::busesForThisBuild()
+juce::AudioProcessor::BusesProperties IdmProcessor::busesForThisBuild()
 {
    #if JucePlugin_IsMidiEffect
     return {};
@@ -23,10 +23,10 @@ juce::AudioProcessor::BusesProperties MClassicProcessor::busesForThisBuild()
    #endif
 }
 
-MClassicProcessor::MClassicProcessor()
+IdmProcessor::IdmProcessor()
     : AudioProcessor (busesForThisBuild())
 {
-    projects[0] = mclassic::createDefaultProject();
+    projects[0] = idm::createDefaultProject();
     projects[1] = projects[0];
 
     planned.reserve (1024);
@@ -43,7 +43,7 @@ MClassicProcessor::MClassicProcessor()
     to open one is not fatal — the interface still runs, and the plugin builds
     still have their host.
 */
-void MClassicProcessor::openStandalonePort()
+void IdmProcessor::openStandalonePort()
 {
     if (portOpened)
         return;
@@ -56,8 +56,8 @@ void MClassicProcessor::openStandalonePort()
     // told to select would not be the one they see.
     for (int attempt = 1; attempt <= 16 && midiOut == nullptr; ++attempt)
     {
-        const auto name = attempt == 1 ? juce::String ("M Classic")
-                                       : "M Classic " + juce::String (attempt);
+        const auto name = attempt == 1 ? juce::String ("idM")
+                                       : "idM " + juce::String (attempt);
 
         midiOut = juce::MidiOutput::createNewDevice (name);
     }
@@ -80,14 +80,14 @@ void MClassicProcessor::openStandalonePort()
         midiOut->startBackgroundThread();
 }
 
-void MClassicProcessor::prepareToPlay (double newSampleRate, int)
+void IdmProcessor::prepareToPlay (double newSampleRate, int)
 {
     // Not in the constructor: JUCE assigns wrapperType after the processor is
     // built, so anything that depends on it has to wait until the host is
     // actually preparing us.
     openStandalonePort();
 
-    mclassic::Diagnostics::get().log (
+    idm::Diagnostics::get().log (
         juce::String ("prepareToPlay  host=\"") + juce::PluginHostType().getHostDescription()
         + "\"  wrapper=" + getWrapperTypeDescription (wrapperType)
         + "  sampleRate=" + juce::String (newSampleRate)
@@ -99,7 +99,7 @@ void MClassicProcessor::prepareToPlay (double newSampleRate, int)
     rewind (0.0);
 }
 
-void MClassicProcessor::releaseResources()
+void IdmProcessor::releaseResources()
 {
 }
 
@@ -110,23 +110,23 @@ void MClassicProcessor::releaseResources()
     performance is reproducible from its seed rather than from how long the
     transport happened to be running.
 */
-void MClassicProcessor::rewind (double ppq)
+void IdmProcessor::rewind (double ppq)
 {
     originPpq = ppq;
     lastPpq = ppq;
 
-    cursors = mclassic::makeCursors (project(), 0.0);
+    cursors = idm::makeCursors (project(), 0.0);
 
     rngs.clear();
     rngs.reserve (project().voices.size());
 
     for (size_t voice = 0; voice < project().voices.size(); ++voice)
-        rngs.push_back (mclassic::Random { project().seed ^ ((uint32_t) (voice + 1) * 0x9e3779b1u) });
+        rngs.push_back (idm::Random { project().seed ^ ((uint32_t) (voice + 1) * 0x9e3779b1u) });
 
     lifecycle.reset();
 }
 
-void MClassicProcessor::sendRealtime (juce::MidiBuffer& midi, uint8_t status, int samplePosition)
+void IdmProcessor::sendRealtime (juce::MidiBuffer& midi, uint8_t status, int samplePosition)
 {
     const auto byte = status;
     midi.addEvent (juce::MidiMessage (&byte, 1), samplePosition);
@@ -137,7 +137,7 @@ void MClassicProcessor::sendRealtime (juce::MidiBuffer& midi, uint8_t status, in
     Standalone only. A plugin follows the host's transport, and a follower also
     broadcasting its own clock is how two devices end up each thinking they lead.
 */
-void MClassicProcessor::scheduleClock (juce::MidiBuffer& midi, double ppqStart, double ppqEnd,
+void IdmProcessor::scheduleClock (juce::MidiBuffer& midi, double ppqStart, double ppqEnd,
                                        double samplesPerPpq, int numSamples)
 {
     constexpr double pulsesPerQuarter = 24.0;
@@ -156,7 +156,7 @@ void MClassicProcessor::scheduleClock (juce::MidiBuffer& midi, double ppqStart, 
     }
 }
 
-void MClassicProcessor::allNotesOff (juce::MidiBuffer& midi, int samplePosition)
+void IdmProcessor::allNotesOff (juce::MidiBuffer& midi, int samplePosition)
 {
     // Close what we opened, by name, before the blunt instrument. Hardware and
     // plenty of software ignore CC123; an explicit note off is never ignored.
@@ -177,7 +177,7 @@ void MClassicProcessor::allNotesOff (juce::MidiBuffer& midi, int samplePosition)
     }
 }
 
-void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
+void IdmProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
 
@@ -304,7 +304,7 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     // The one fact everything else depends on: is the host telling us it is
     // playing, and where. If this says stopped while the DAW is running, the
     // playhead is the problem and nothing downstream matters.
-    mclassic::Diagnostics::get().logThrottled (
+    idm::Diagnostics::get().logThrottled (
         "transport",
         "transport  playing=" + juce::String ((int) playing)
         + "  ppq=" + juce::String (ppq, 3)
@@ -333,7 +333,7 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
                        sampleRate * secondsPerBeat, numSamples);
 
     // M's own planner decides what plays. This is the whole point of the port.
-    mclassic::planWindow (project(), cursors, rngs, blockStartSec, blockEndSec,
+    idm::planWindow (project(), cursors, rngs, blockStartSec, blockEndSec,
                           planned, nextCursors, steps);
     cursors = nextCursors;
 
@@ -347,7 +347,7 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         const auto channel = juce::jlimit (1, 16, event.channel);
         const auto note = juce::jlimit (0, 127, event.note);
 
-        if (event.kind == mclassic::EventKind::noteOn)
+        if (event.kind == idm::EventKind::noteOn)
         {
             midi.addEvent (juce::MidiMessage::noteOn (channel, note,
                                                       (juce::uint8) juce::jlimit (0, 127, event.velocity)),
@@ -375,7 +375,7 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
                 break;
             }
         }
-        else if (event.kind == mclassic::EventKind::noteOff)
+        else if (event.kind == idm::EventKind::noteOff)
         {
             midi.addEvent (juce::MidiMessage::noteOff (channel, note), offset);
 
@@ -405,7 +405,7 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         midiOut->sendBlockOfMessages (midi, juce::Time::getMillisecondCounterHiRes(), sampleRate);
 }
 
-void MClassicProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,
+void IdmProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midi)
 {
     buffer.clear();
@@ -419,7 +419,7 @@ void MClassicProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,
         midiOut->sendBlockOfMessages (midi, juce::Time::getMillisecondCounterHiRes(), sampleRate);
 }
 
-int MClassicProcessor::drainIncoming (IncomingMidi* destination, int capacity)
+int IdmProcessor::drainIncoming (IncomingMidi* destination, int capacity)
 {
     const auto ready = juce::jmin (capacity, incomingFifo.getNumReady());
 
@@ -438,7 +438,7 @@ int MClassicProcessor::drainIncoming (IncomingMidi* destination, int capacity)
     return written;
 }
 
-int MClassicProcessor::drainPlayed (PlayedNote* destination, int capacity)
+int IdmProcessor::drainPlayed (PlayedNote* destination, int capacity)
 {
     const auto ready = juce::jmin (capacity, playedFifo.getNumReady());
 
@@ -457,13 +457,13 @@ int MClassicProcessor::drainPlayed (PlayedNote* destination, int capacity)
     return written;
 }
 
-void MClassicProcessor::setProjectFromJson (const juce::String& json)
+void IdmProcessor::setProjectFromJson (const juce::String& json)
 {
     // A change is already waiting; the newer state wins, so overwrite the same
     // spare half rather than queueing. The interface sends whole projects, so
     // nothing is lost by dropping an intermediate one.
     const auto spare = 1 - liveProject;
-    projects[spare] = mclassic::projectFromJson (juce::JSON::parse (json));
+    projects[spare] = idm::projectFromJson (juce::JSON::parse (json));
 
     // Kept verbatim. What the host stores is exactly what the interface
     // produced, so a round trip cannot lose a field this port does not read.
@@ -473,18 +473,18 @@ void MClassicProcessor::setProjectFromJson (const juce::String& json)
     received.fetch_add (1, std::memory_order_relaxed);
 }
 
-juce::AudioProcessorEditor* MClassicProcessor::createEditor()
+juce::AudioProcessorEditor* IdmProcessor::createEditor()
 {
-   #if MCLASSIC_NO_EDITOR
+   #if IDM_NO_EDITOR
     // The state test links the processor without the webview, which would drag
     // in the whole UI bundle for a check that never opens a window.
     return nullptr;
    #else
-    return new MClassicEditor (*this);
+    return new IdmEditor (*this);
    #endif
 }
 
-void MClassicProcessor::getStateInformation (juce::MemoryBlock& destination)
+void IdmProcessor::getStateInformation (juce::MemoryBlock& destination)
 {
     // Empty until the interface has sent something. Saving a default project
     // over a session that never opened its window would be worse than saving
@@ -501,7 +501,7 @@ void MClassicProcessor::getStateInformation (juce::MemoryBlock& destination)
     destination.replaceAll (blob.toRawUTF8(), (size_t) blob.getNumBytesAsUTF8());
 }
 
-void MClassicProcessor::setStateInformation (const void* data, int size)
+void IdmProcessor::setStateInformation (const void* data, int size)
 {
     if (data == nullptr || size <= 0)
         return;
@@ -535,5 +535,5 @@ void MClassicProcessor::setStateInformation (const void* data, int size)
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new MClassicProcessor();
+    return new IdmProcessor();
 }

@@ -8,7 +8,7 @@
 
 #include "../engine/Transform.h"
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 namespace
 {
@@ -127,4 +127,4 @@ void checkTransform()
     });
 }
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

@@ -2,7 +2,7 @@
 
 #include "Random.h"
 
-namespace mclassic
+namespace idm
 {
 
 /** A cyclic step is either a single level or an inclusive range of them.
@@ -39,4 +39,4 @@ CyclicLevelRange normalizeCyclicStep (CyclicStep step) noexcept;
 */
 int pickCyclicLevel (CyclicStep step, Random& rng) noexcept;
 
-} // namespace mclassic
+} // namespace idm

@@ -1351,9 +1351,9 @@ describe("document name and unsaved changes", () => {
   it("is clean again after saving, and remembers the name", () => {
     g().newDocument();
     g().setTempo(120);
-    g().markSaved("Piece One.mclone.json");
+    g().markSaved("Piece One.idm.json");
     expect(g().isDirty).toBe(false);
-    expect(g().documentName).toBe("Piece One.mclone.json");
+    expect(g().documentName).toBe("Piece One.idm.json");
   });
 
   it("goes dirty again after a change following a save", () => {
@@ -1372,8 +1372,8 @@ describe("document name and unsaved changes", () => {
 
   it("adopts the name it was opened under", () => {
     const doc = JSON.parse(JSON.stringify(g().exportDocument()));
-    g().importDocument(doc, "Opened.mclone.json");
-    expect(g().documentName).toBe("Opened.mclone.json");
+    g().importDocument(doc, "Opened.idm.json");
+    expect(g().documentName).toBe("Opened.idm.json");
     expect(g().isDirty).toBe(false);
   });
 
@@ -1421,7 +1421,7 @@ describe("the Options menu in the store", () => {
     const saved = JSON.parse(JSON.stringify(g().exportDocument()));
     g().newDocument();
     expect(g().options.useMetronome).toBe(false);
-    const result = g().importDocument(saved, "x.mclone.json");
+    const result = g().importDocument(saved, "x.idm.json");
     expect(result.ok).toBe(true);
     expect(g().options.useMetronome).toBe(true);
   });

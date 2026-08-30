@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace mclassic
+namespace idm
 {
 
 /** Scales, snapping, and diatonic transposition.
@@ -63,4 +63,4 @@ int diatonicTranspose (int note, int root, Scale scale, int steps) noexcept;
 
 int clampMidi (double note) noexcept;
 
-} // namespace mclassic
+} // namespace idm

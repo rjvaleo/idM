@@ -2,7 +2,7 @@
 
 #include <juce_core/juce_core.h>
 
-namespace mclassic
+namespace idm
 {
 
 /** A log the plugin writes wherever it is running.
@@ -13,7 +13,7 @@ namespace mclassic
     screen between a dead engine and a host that is ignoring a working one.
 
     So the plugin says what it is doing, to
-    `~/Library/Logs/MClassic.log` (or the platform equivalent). Rate-limited,
+    `~/Library/Logs/Idm.log` (or the platform equivalent). Rate-limited,
     because processBlock runs hundreds of times a second and a log that costs
     real time would change what it is measuring.
 */
@@ -40,4 +40,4 @@ private:
     std::map<juce::String, juce::int64> lastWrite;
 };
 
-} // namespace mclassic
+} // namespace idm

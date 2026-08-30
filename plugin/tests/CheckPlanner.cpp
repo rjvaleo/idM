@@ -13,7 +13,7 @@
 #include <cmath>
 #include <sstream>
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 namespace
 {
@@ -184,4 +184,4 @@ void checkPlanner()
     }
 }
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

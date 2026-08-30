@@ -36,7 +36,7 @@ int main (int argc, char** argv)
 {
     juce::ScopedJuceInitialiser_GUI juceInit;
 
-    const juce::String wanted = argc > 1 ? argv[1] : "M Classic";
+    const juce::String wanted = argc > 1 ? argv[1] : "idM";
     const auto seconds = argc > 2 ? juce::String (argv[2]).getDoubleValue() : 5.0;
 
     juce::MidiDeviceInfo target;

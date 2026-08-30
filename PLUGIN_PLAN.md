@@ -1,4 +1,4 @@
-# M Classic as a plugin — build plan
+# idM as a plugin — build plan
 
 **Target:** AU and VST3, macOS / Windows / Linux. MIDI clock in, MIDI out.
 Eight voices in the engine. Two interfaces: the classic four-channel window
@@ -10,7 +10,7 @@ exactly as it is, and a modern take.
 
 ## 0. The risk that shapes the product
 
-**VST3 MIDI output is unreliable, and M Classic is a MIDI generator.**
+**VST3 MIDI output is unreliable, and idM is a MIDI generator.**
 
 This is the first thing to settle because it determines what the product *is*.
 VST3 de-emphasises MIDI by design: note data moves on event buses, and while a
@@ -22,7 +22,7 @@ supports properly. CLAP handles note output cleanly.
 So a MIDI-only plugin would work in Logic, work in CLAP hosts, and disappoint
 in a meaningful share of VST3 hosts. Three ways to respond:
 
-1. **Ship as an instrument that also emits MIDI.** M Classic already has a
+1. **Ship as an instrument that also emits MIDI.** idM already has a
    built-in synth (`src/engine/outputs/synth.ts`). As an instrument it makes
    sound in every host on day one, and MIDI out is a bonus where the host
    supports it. This is what most generative tools do, and it is the
@@ -170,7 +170,7 @@ URL, and the framework remains AGPLv3-or-commercial. Above that, **Indie** cover
 at $40/month or **$800 perpetual**; **Pro** is unlimited at $175/month or
 $3,500 perpetual.
 
-So selling M Classic costs nothing until it earns real money, and $800 once
+So selling idM costs nothing until it earns real money, and $800 once
 thereafter — which is not a consideration against the effort of building it.
 For an individual the limit aggregates *all* revenue arising from use of the
 framework, including donations, sponsorship and advertising, not only sales.
@@ -294,7 +294,7 @@ MIDI routing does not work.
 
 ## 4. What is deliberately not in this plan
 
-- **idMLab.** It consumes M Classic as a package and is unaffected. The Rust
+- **idMLab.** It consumes idM as a package and is unaffected. The Rust
   engine is additive; the TypeScript engine keeps shipping the browser app and
   keeps being the oracle.
 - **The modern view's design.** Named as Phase 3 work, not designed here.

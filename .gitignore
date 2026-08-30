@@ -33,7 +33,7 @@ coverage/
 .vite/
 
 # generated standalone preview (regenerate with: npm run build:single)
-M-Clone-preview.html
+idM-preview.html
 
 # os / editor
 .DS_Store
@@ -42,8 +42,8 @@ Thumbs.db
 .vscode/
 
 # dev launcher runtime state
-.mclone-dev.log
-.mclone-dev.pid
+.idm-dev.log
+.idm-dev.pid
 
 # personal editor/agent settings (launch.json is shared)
 .claude/settings.local.json
@@ -61,3 +61,8 @@ engine/target/
 
 # Stray copies from mutation-testing backups
 engine/src/src/
+
+# Rust build output from the parked engine port. 14,466 of these were committed
+# by accident when `engine/` was renamed to `engine-rust-parked/` and the
+# `engine/target/` rule below stopped matching. They were 98% of the repository.
+engine-rust-parked/target/

@@ -47,11 +47,11 @@ struct SoundingNote
     int note = 0;      // 0..127
 };
 
-class MClassicProcessor : public juce::AudioProcessor
+class IdmProcessor : public juce::AudioProcessor
 {
 public:
-    MClassicProcessor();
-    ~MClassicProcessor() override = default;
+    IdmProcessor();
+    ~IdmProcessor() override = default;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -61,7 +61,7 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
 
-    const juce::String getName() const override { return "M Classic"; }
+    const juce::String getName() const override { return "idM"; }
 
     bool acceptsMidi() const override { return true; }
     bool producesMidi() const override { return true; }
@@ -201,18 +201,18 @@ private:
 
     /** Two halves: the audio thread reads one while the message thread fills
         the other. */
-    mclassic::ProjectState projects[2];
+    idm::ProjectState projects[2];
     int liveProject = 0;
     std::atomic<bool> projectPending { false };
-    std::vector<mclassic::VoiceCursor> cursors;
-    std::vector<mclassic::Random> rngs;
-    mclassic::NoteLifecycle lifecycle;
+    std::vector<idm::VoiceCursor> cursors;
+    std::vector<idm::Random> rngs;
+    idm::NoteLifecycle lifecycle;
 
     // Reused every block so the steady state does not allocate.
-    std::vector<mclassic::PlannedNote> planned;
-    std::vector<mclassic::VoiceCursor> nextCursors;
-    std::vector<mclassic::PlannedStep> steps;
-    std::vector<mclassic::OutputDestination> destinations { mclassic::OutputDestination::midi };
+    std::vector<idm::PlannedNote> planned;
+    std::vector<idm::VoiceCursor> nextCursors;
+    std::vector<idm::PlannedStep> steps;
+    std::vector<idm::OutputDestination> destinations { idm::OutputDestination::midi };
 
     /** Host input on its way to the interface. Dropped rather than blocking if
         the interface is not draining — losing a controller move is better than
@@ -225,7 +225,7 @@ private:
     static constexpr int maxSounding = 256;
     std::array<SoundingNote, maxSounding> sounding {};
 
-    const mclassic::ProjectState& project() const noexcept { return projects[liveProject]; }
+    const idm::ProjectState& project() const noexcept { return projects[liveProject]; }
 
     void openStandalonePort();
     void sendRealtime (juce::MidiBuffer&, uint8_t status, int samplePosition);
@@ -268,5 +268,5 @@ private:
     juce::String windowsJson;
     std::atomic<bool> restoredPending { false };
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MClassicProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IdmProcessor)
 };

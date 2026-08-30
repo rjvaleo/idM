@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace mclassic
+namespace idm
 {
 
 /** JavaScript's `Math.round`, which rounds a half **toward +Infinity**.
@@ -23,4 +23,4 @@ inline double clampTo (double v, double low, double high) noexcept
     return v < low ? low : (v > high ? high : v);
 }
 
-} // namespace mclassic
+} // namespace idm

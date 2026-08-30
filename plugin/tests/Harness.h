@@ -16,7 +16,7 @@
 #include <functional>
 #include <vector>
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 
 /** Running totals across every module's checker. */
@@ -90,4 +90,4 @@ void checkTransform();
 void checkPlanner();
 void checkEvents();
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

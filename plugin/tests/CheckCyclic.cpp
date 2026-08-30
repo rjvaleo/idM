@@ -4,7 +4,7 @@
 
 #include "../engine/Cyclic.h"
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 
 void checkCyclic()
@@ -56,4 +56,4 @@ void checkCyclic()
     });
 }
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

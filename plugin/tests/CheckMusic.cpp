@@ -8,7 +8,7 @@
 
 #include "../engine/Music.h"
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 namespace
 {
@@ -75,4 +75,4 @@ void checkMusic()
     });
 }
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

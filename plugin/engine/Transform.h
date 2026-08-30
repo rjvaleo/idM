@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace mclassic
+namespace idm
 {
 
 enum class NoteOrder { original, reverse, random, randomWalk, brownian };
@@ -69,4 +69,4 @@ NoteOrderMix noteOrderMixFromEdges (double originalValue, double utterlyValue) n
 int nextMixedStepIndex (NoteOrderMix mix, NoteOrderCursor cursor, int length,
                         Random& rng, NoteSource& source, NoteOrderCursor& advanced);
 
-} // namespace mclassic
+} // namespace idm

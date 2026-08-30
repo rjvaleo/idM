@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace mclassic
+namespace idm
 {
 
 namespace
@@ -130,4 +130,4 @@ double TimeMap::distortClockSeconds (double tempo, double clockSec) const
     return (cycle + clockToReal (phase)) * span;
 }
 
-} // namespace mclassic
+} // namespace idm

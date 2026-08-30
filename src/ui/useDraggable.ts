@@ -41,7 +41,7 @@ export function useDraggable(id: string, def: Pos, options: { autoPlace?: boolea
   // v2 stores positions in the 640×480 logical coordinate system. Old saved
   // positions were physical pixels from the oversized canvas and cannot be
   // migrated without preserving the very layout this refactor replaces.
-  const key = `mclone.v2.panel.${id}`;
+  const key = `idm.v2.panel.${id}`;
 
   const [z, setZ] = useState(1);
   const bringToFront = useCallback(() => {
@@ -55,8 +55,8 @@ export function useDraggable(id: string, def: Pos, options: { autoPlace?: boolea
       zBackCounter -= 1;
       setZ(zBackCounter);
     };
-    window.addEventListener("mclone:send-window-back", sendToBack);
-    return () => window.removeEventListener("mclone:send-window-back", sendToBack);
+    window.addEventListener("idm:send-window-back", sendToBack);
+    return () => window.removeEventListener("idm:send-window-back", sendToBack);
   }, [id]);
 
   const [pos, setPos] = useState<Pos>(() => {

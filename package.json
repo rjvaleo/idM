@@ -1,9 +1,29 @@
 {
-  "name": "m-classic",
+  "name": "idm",
   "private": true,
   "version": "0.8.0-alpha",
   "type": "module",
-  "description": "M Classic — a browser recreation of M, the interactive composing instrument. Consumable as a library; the pure engine is the basis for a VST3/AU port.",
+  "description": "idM — an algorithmic composer inspired by M, the classic sequencer. Runs in a browser, as a standalone app, and as an AU / VST3 / CLAP plugin that generates MIDI.",
+  "license": "AGPL-3.0-or-later",
+  "author": "rjvaleo",
+  "homepage": "https://github.com/rjvaleo/idM",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rjvaleo/idM.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rjvaleo/idM/issues"
+  },
+  "keywords": [
+    "midi",
+    "algorithmic-composition",
+    "generative-music",
+    "sequencer",
+    "vst3",
+    "audio-unit",
+    "clap",
+    "juce"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
@@ -16,7 +36,6 @@
     "coverage": "vitest run --coverage",
     "goldens": "vite-node scripts/goldens.ts",
     "goldens:check": "vite-node scripts/goldens.ts --check",
-    "engine:test": "cargo test --manifest-path engine/Cargo.toml",
     "build:lib": "tsc -p tsconfig.lib.json && cp src/styles.css lib/styles.css",
     "prepare": "npm run build:lib"
   },
@@ -47,7 +66,8 @@
   "files": [
     "lib",
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "peerDependencies": {
     "react": "^18.3.1",

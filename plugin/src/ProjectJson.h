@@ -4,12 +4,12 @@
 
 #include <juce_core/juce_core.h>
 
-namespace mclassic
+namespace idm
 {
 
 /** Build a project from the interface's own JSON.
 
-    The same shape `.mclone` files carry and the same shape the conformance
+    The same shape `.idm` files carry and the same shape the conformance
     fixtures hold, so the plugin and the tests read state through one path
     rather than two that can drift.
 
@@ -18,4 +18,4 @@ namespace mclassic
 */
 ProjectState projectFromJson (const juce::var& root);
 
-} // namespace mclassic
+} // namespace idm

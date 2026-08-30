@@ -5,7 +5,7 @@
 
 #include "../engine/Random.h"
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 namespace
 {
@@ -29,8 +29,8 @@ void checkRandom()
     int lineNumber = 0;
 
     auto section = Section::none;
-    mclassic::Random rng { 0 };
-    mclassic::BrownianWalk walk { mclassic::Random { 0 } };
+    idm::Random rng { 0 };
+    idm::BrownianWalk walk { idm::Random { 0 } };
 
     while (std::getline (stream, line))
     {
@@ -55,7 +55,7 @@ void checkRandom()
             const auto want = static_cast<uint32_t> (std::stoul (f[2]));
 
             if (index == 0)
-                rng = mclassic::Random { seed };
+                rng = idm::Random { seed };
 
             expect (rng.nextU32(), want, at + " seed " + f[0] + " draw " + f[1]);
         }
@@ -67,7 +67,7 @@ void checkRandom()
             const auto want = static_cast<uint32_t> (std::stoul (f[3]));
 
             if (index == 0)
-                rng = mclassic::Random { seed };
+                rng = idm::Random { seed };
 
             expect (rng.intBelow (n), want, at + " int(" + f[1] + ") #" + f[2]);
         }
@@ -80,7 +80,7 @@ void checkRandom()
             const auto want = static_cast<uint32_t> (std::stoul (f[4]));
 
             if (index == 0)
-                rng = mclassic::Random { seed };
+                rng = idm::Random { seed };
 
             expect (rng.pickIndexAvoiding (n, avoid),
                     want,
@@ -93,7 +93,7 @@ void checkRandom()
             const auto want = fromBits (f[2]);
 
             if (index == 0)
-                walk = mclassic::BrownianWalk { mclassic::Random { seed } };
+                walk = idm::BrownianWalk { idm::Random { seed } };
 
             // Compared as bits: "close enough" is not the standard, because the
             // planner's arithmetic runs on top of these values.
@@ -117,8 +117,8 @@ void checkRandom()
 void checkRandom()
 {
     auto section = Section::none;
-    mclassic::Random rng { 0 };
-    mclassic::BrownianWalk walk { mclassic::Random { 0 } };
+    idm::Random rng { 0 };
+    idm::BrownianWalk walk { idm::Random { 0 } };
 
     conformance::walk ("rng.txt", [&] (const std::string& header,
                                        const std::vector<std::string>& f,
@@ -132,7 +132,7 @@ void checkRandom()
             const auto index = std::stoi (f[1]);
 
             if (index == 0)
-                rng = mclassic::Random { static_cast<uint32_t> (std::stoul (f[0])) };
+                rng = idm::Random { static_cast<uint32_t> (std::stoul (f[0])) };
 
             expect (rng.nextU32(), static_cast<uint32_t> (std::stoul (f[2])),
                     at + " seed " + f[0] + " draw " + f[1]);
@@ -140,7 +140,7 @@ void checkRandom()
         else if (section == Section::intBelow)
         {
             if (std::stoi (f[2]) == 0)
-                rng = mclassic::Random { static_cast<uint32_t> (std::stoul (f[0])) };
+                rng = idm::Random { static_cast<uint32_t> (std::stoul (f[0])) };
 
             expect (rng.intBelow (static_cast<uint32_t> (std::stoul (f[1]))),
                     static_cast<uint32_t> (std::stoul (f[3])),
@@ -149,7 +149,7 @@ void checkRandom()
         else if (section == Section::pickAvoiding)
         {
             if (std::stoi (f[3]) == 0)
-                rng = mclassic::Random { static_cast<uint32_t> (std::stoul (f[0])) };
+                rng = idm::Random { static_cast<uint32_t> (std::stoul (f[0])) };
 
             expect (rng.pickIndexAvoiding (static_cast<uint32_t> (std::stoul (f[1])),
                                            static_cast<uint32_t> (std::stoul (f[2]))),
@@ -159,11 +159,11 @@ void checkRandom()
         else if (section == Section::walk)
         {
             if (std::stoi (f[1]) == 0)
-                walk = mclassic::BrownianWalk { mclassic::Random { static_cast<uint32_t> (std::stoul (f[0])) } };
+                walk = idm::BrownianWalk { idm::Random { static_cast<uint32_t> (std::stoul (f[0])) } };
 
             expectBits (walk.next(), fromBits (f[2]), at + " walk #" + f[1]);
         }
     });
 }
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

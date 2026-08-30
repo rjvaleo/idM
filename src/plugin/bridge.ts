@@ -151,7 +151,7 @@ export function onWindowsRestored(handler: (ids: string[]) => void): void {
   const juce = backend();
   if (!juce) return;
 
-  juce.addEventListener("mclassic-windows", (payload) => {
+  juce.addEventListener("idm-windows", (payload) => {
     try {
       const ids = typeof payload === "string" ? JSON.parse(payload) : payload;
       if (Array.isArray(ids)) handler(ids.map(String));
@@ -166,7 +166,7 @@ export function onPopOutClosed(handler: (id: string) => void): void {
   const juce = backend();
   if (!juce) return;
 
-  juce.addEventListener("mclassic-window-closed", (payload) => {
+  juce.addEventListener("idm-window-closed", (payload) => {
     if (typeof payload === "string") handler(payload);
   });
 }
@@ -204,7 +204,7 @@ export function installPluginBridge(): void {
   // A session the host restored reached the engine before this window existed.
   // Applying it here is what makes the windows show the project that is
   // actually playing rather than a default that is not.
-  juce.addEventListener("mclassic-document", (payload) => {
+  juce.addEventListener("idm-document", (payload) => {
     try {
       const raw = typeof payload === "string" ? JSON.parse(payload) : payload;
       const result = useM.getState().importDocument(raw);
@@ -225,7 +225,7 @@ export function installPluginBridge(): void {
   // which then reaches the engine the ordinary way. Arrives as a flat array of
   // status/data1/data2 triples, because a chord or a controller sweep crosses
   // as one burst rather than one message at a time.
-  juce.addEventListener("mclassic-midi-in", (payload) => {
+  juce.addEventListener("idm-midi-in", (payload) => {
     if (!Array.isArray(payload)) return;
 
     const receive = useM.getState().receiveMidi;
@@ -242,7 +242,7 @@ export function installPluginBridge(): void {
   // What the engine played. With the engine in the processor, this is the only
   // way the interface's Midi View can show anything: it is a monitor, and what
   // it monitors now happens on the other side of the bridge.
-  juce.addEventListener("mclassic-played", (payload) => {
+  juce.addEventListener("idm-played", (payload) => {
     if (!Array.isArray(payload)) return;
 
     const notes = [];
@@ -265,7 +265,7 @@ export function installPluginBridge(): void {
 
   // The host's transport, so M's own Start light follows Ableton rather than
   // sitting dark while it plays.
-  juce.addEventListener("mclassic-transport", (payload) => {
+  juce.addEventListener("idm-transport", (payload) => {
     if (!Array.isArray(payload) || payload.length < 1) return;
     useM.getState().setPlaying(Boolean(payload[0]));
   });

@@ -132,12 +132,12 @@ export function TimeDistortEditor({ editVoice, onEditVoice, editPosition }: {
               aria-pressed={v === editVoice}
               aria-label={`Edit Voice ${v + 1}'s time map`}
               onDragStart={(event) => event.dataTransfer.setData(
-                "application/x-mclone-voice", String(v),
+                "application/x-idm-voice", String(v),
               )}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
-                const source = Number(event.dataTransfer.getData("application/x-mclone-voice"));
+                const source = Number(event.dataTransfer.getData("application/x-idm-voice"));
                 if (Number.isInteger(source)) transferVariableVoice(
                   "timeDistort", active, source, v, event.altKey,
                 );

@@ -155,7 +155,7 @@ export const MANUAL_CAPABILITIES: readonly ManualCapability[] = [
   item("19", "162-163", "file.new", "Reset to a startup state", "pass", "New loads the machine-local Startup State while replacing Pattern contents and Time Maps with fresh defaults."),
   item("19", "162-163", "file.open", "Open one project at a time and replace current work", "pass", "Defensive ProjectDocumentV2 import replaces state."),
   item("19", "166", "file.save", "Save to the current project name or behave as Save As when unnamed", "pass", "fileCommands and title tests cover the save paths."),
-  item("19", "166", "file.save-as", "Save the project under an explicit new name", "pass", "The app-owned naming dialog and .mclone download are tested."),
+  item("19", "166", "file.save-as", "Save the project under an explicit new name", "pass", "The app-owned naming dialog and .idm download are tested."),
   item("19", "167", "file.startup-state", "Persist current controls as the New/launch Startup State, excluding Patterns and Time Maps", "pass", "Save State As Startup persists locally; launch/New merge its screen state onto fresh Pattern contents and Time Maps."),
   item("19", "163", "file.unsaved-guard", "Offer to save unsaved work before New/Open", "pass", "New/Open offer Save, Discard, and Cancel; untitled saves resume the pending action after the app-owned filename dialog."),
   item("19", "167-171", "file.midi-assignment", "Open the full Input/Output MIDI Assignment window", "pass", "MIDI Setup exposes the full sixteen-row input/output matrix plus program base, latency, conducting CCs, and channel-mode commands."),

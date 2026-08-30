@@ -1,4 +1,4 @@
-// Seedable, deterministic randomness for M-Clone's generative engine.
+// Seedable, deterministic randomness for idM's generative engine.
 //
 // M's "alive" feel does not come from flat uniform noise. This module provides
 // the building blocks we tune toward that feel:

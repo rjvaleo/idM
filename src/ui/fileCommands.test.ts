@@ -20,7 +20,7 @@ describe("project file saving", () => {
     const write = vi.fn(async () => {});
     const close = vi.fn(async () => {});
     const showSaveFilePicker = vi.fn(async () => ({
-      name: "Picked.mclone",
+      name: "Picked.idm",
       createWritable: async () => ({ write, close }),
     }));
     vi.stubGlobal("window", { showSaveFilePicker });
@@ -30,11 +30,11 @@ describe("project file saving", () => {
     expect(showSaveFilePicker).toHaveBeenCalledOnce();
     expect(write).toHaveBeenCalledWith(expect.stringContaining(`"version": ${DOCUMENT_VERSION}`));
     expect(close).toHaveBeenCalledOnce();
-    expect(useM.getState().documentName).toBe("Picked.mclone");
+    expect(useM.getState().documentName).toBe("Picked.idm");
   });
 
   it("uses the app-owned download anchor in the embedded browser", async () => {
-    useM.getState().markSaved("Existing.mclone");
+    useM.getState().markSaved("Existing.idm");
     const click = vi.fn();
     const remove = vi.fn();
     const link = { href: "", download: "", click, remove };
@@ -53,9 +53,9 @@ describe("project file saving", () => {
   });
 
   it("requests an in-app name when the embedded browser cannot show a picker", () => {
-    expect(needsDownloadName(true, "Existing.mclone", false)).toBe(true);
+    expect(needsDownloadName(true, "Existing.idm", false)).toBe(true);
     expect(needsDownloadName(false, null, false)).toBe(true);
-    expect(needsDownloadName(false, "Existing.mclone", false)).toBe(false);
+    expect(needsDownloadName(false, "Existing.idm", false)).toBe(false);
     expect(needsDownloadName(true, null, true)).toBe(false);
   });
 
@@ -63,7 +63,7 @@ describe("project file saving", () => {
     const click = vi.fn();
     const link = { href: "", download: "", click };
     const showSaveFilePicker = vi.fn(async () => ({
-      name: "Late Picker Name.mclone",
+      name: "Late Picker Name.idm",
       createWritable: async () => ({ write: async () => {}, close: async () => {} }),
     }));
     vi.stubGlobal("window", { showSaveFilePicker });
@@ -72,8 +72,8 @@ describe("project file saving", () => {
     await saveProject(true, "Untitled5");
 
     expect(showSaveFilePicker).not.toHaveBeenCalled();
-    expect(link.download).toBe("Untitled5.mclone");
-    expect(useM.getState().documentName).toBe("Untitled5.mclone");
+    expect(link.download).toBe("Untitled5.idm");
+    expect(useM.getState().documentName).toBe("Untitled5.idm");
     expect(useM.getState().isDirty).toBe(false);
     expect(click).toHaveBeenCalledOnce();
   });

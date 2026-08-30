@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace mclassic
+namespace idm
 {
 
 /** Ported from `src/engine/rng.ts`, and required to agree with it exactly.
@@ -106,4 +106,4 @@ private:
     double stepSize;
 };
 
-} // namespace mclassic
+} // namespace idm

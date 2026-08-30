@@ -1,6 +1,6 @@
 #include "Harness.h"
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 
 Totals& totals()
@@ -11,7 +11,7 @@ Totals& totals()
 
 std::string readFixture (const std::string& name)
 {
-    const auto path = std::string (MCLASSIC_GOLDENS_DIR) + "/" + name;
+    const auto path = std::string (IDM_GOLDENS_DIR) + "/" + name;
     std::ifstream file (path);
 
     if (! file)
@@ -65,4 +65,4 @@ void walk (const std::string& name,
     }
 }
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

@@ -5,7 +5,7 @@
  * The palette, expressed against idMLab's theme tokens.
  *
  * Each one falls back to the colour it has always had, so this sheet on its
- * own — M-Clone's own entry point, where no theme is applied — looks exactly
+ * own — idM's own entry point, where no theme is applied — looks exactly
  * as it did. When idMLab's theme engine writes its tokens onto the root
  * element, these follow it instead.
  *

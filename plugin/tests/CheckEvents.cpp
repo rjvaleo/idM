@@ -11,7 +11,7 @@
 #include <cmath>
 #include <sstream>
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 namespace
 {
@@ -120,4 +120,4 @@ void checkEvents()
     }
 }
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

@@ -189,7 +189,7 @@ export function usePatternMenus(): { editMenu: MenuItem[]; patternMenu: MenuItem
     openPatternEditor: {
       hint: "Open the Pattern Editor",
       run: () => window.dispatchEvent(
-        new CustomEvent("mclone:open-window", { detail: "pattern-editor" }),
+        new CustomEvent("idm:open-window", { detail: "pattern-editor" }),
       ),
     },
   });

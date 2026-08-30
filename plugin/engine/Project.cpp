@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace mclassic
+namespace idm
 {
 
 namespace
@@ -116,4 +116,4 @@ ProjectState createDefaultProject (int voices)
     return state;
 }
 
-} // namespace mclassic
+} // namespace idm

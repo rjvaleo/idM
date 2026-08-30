@@ -1,4 +1,4 @@
-// Web MIDI output sink — routes M-Clone's generated notes to real MIDI devices
+// Web MIDI output sink — routes idM's generated notes to real MIDI devices
 // or virtual ports (a DAW, a hardware synth, plugins hosted elsewhere).
 
 import type { EngineEvent } from "../events";

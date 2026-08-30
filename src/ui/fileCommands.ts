@@ -8,9 +8,9 @@
 import { useM } from "../state/store";
 import { encodeMovieAsSmf, movieFileName } from "../engine/movie";
 
-const EXTENSION = ".mclone";
+const EXTENSION = ".idm";
 const DEFAULT_NAME = `Untitled${EXTENSION}`;
-const STARTUP_STATE_KEY = "mclone.startup-state.v2";
+const STARTUP_STATE_KEY = "idm.startup-state.v2";
 
 type ProjectWritable = {
   write: (data: string) => Promise<void>;
@@ -72,7 +72,7 @@ async function guardUnsaved(action: "new" | "open"): Promise<boolean> {
   const result = await saveProject(false);
   if (result === "saved") return true;
   if (result === "needs-name") {
-    window.dispatchEvent(new CustomEvent("mclone:save-before-file-action", { detail: action }));
+    window.dispatchEvent(new CustomEvent("idm:save-before-file-action", { detail: action }));
   }
   return false;
 }
@@ -117,9 +117,9 @@ export async function saveProject(
         projectFileHandle = await showSaveFilePicker.call(window, {
           suggestedName: name,
           types: [{
-            description: "M-Clone project",
+            description: "idM project",
             accept: {
-              "application/x-mclone": [EXTENSION],
+              "application/x-idm": [EXTENSION],
               "application/json": [".json"],
             },
           }],
@@ -139,7 +139,7 @@ export async function saveProject(
 
   if (explicitName !== undefined) {
     name = explicitName.trim() || DEFAULT_NAME;
-    if (/\.mclone\.json$/i.test(name)) name = name.slice(0, -5);
+    if (/\.idm\.json$/i.test(name)) name = name.slice(0, -5);
     else if (/\.json$/i.test(name)) name = name.slice(0, -5) + EXTENSION;
     else if (!name.toLowerCase().endsWith(EXTENSION)) name += EXTENSION;
   } else if (saveAs || !state.documentName) {
@@ -148,7 +148,7 @@ export async function saveProject(
     return "needs-name";
   }
 
-  const link = document.querySelector<HTMLAnchorElement>("#mclone-project-download");
+  const link = document.querySelector<HTMLAnchorElement>("#idm-project-download");
   if (!link) throw new Error("Project download anchor is unavailable");
   link.href = `data:application/json;charset=utf-8,${encodeURIComponent(json)}`;
   link.download = name;
@@ -160,13 +160,13 @@ export async function saveProject(
   return "saved";
 }
 
-/** File ▸ Open — picks a .mclone or legacy JSON project and imports it. */
+/** File ▸ Open — picks a .idm or legacy JSON project and imports it. */
 export async function openProject(skipGuard = false): Promise<void> {
   if (!skipGuard && !await guardUnsaved("open")) return;
 
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = ".mclone,.json,application/x-mclone,application/json";
+  input.accept = ".idm,.json,application/x-idm,application/json";
   input.onchange = async () => {
     const file = input.files?.[0];
     if (!file) return;

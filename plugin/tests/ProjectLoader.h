@@ -4,7 +4,7 @@
 
 #include <string>
 
-namespace mclassic::conformance
+namespace idm::conformance
 {
 
 /** Load a project the TypeScript engine emitted.
@@ -14,4 +14,4 @@ namespace mclassic::conformance
 */
 ProjectState loadProject (const std::string& fixtureName);
 
-} // namespace mclassic::conformance
+} // namespace idm::conformance

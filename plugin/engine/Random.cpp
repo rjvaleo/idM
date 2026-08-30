@@ -2,7 +2,7 @@
 
 #include "Num.h"
 
-namespace mclassic
+namespace idm
 {
 
 double brownianStep (double value, double stepSize, Random& rng) noexcept
@@ -19,4 +19,4 @@ double brownianStep (double value, double stepSize, Random& rng) noexcept
     return clampTo (v, 0.0, 1.0);
 }
 
-} // namespace mclassic
+} // namespace idm
