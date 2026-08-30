@@ -79,6 +79,52 @@ export function setHostedTransport(running: boolean): void {
   callNative("setTransport", running);
 }
 
+/**
+ * Open one auxiliary window as a real OS window.
+ *
+ * The panel is fixed at 1000 x 460 and the auxiliary editors do not fit in it.
+ * Outside a plugin they sit on a canvas that can grow; inside one there is no
+ * canvas to grow, so they become windows you can move and put on a second
+ * monitor.
+ */
+export function openPopOut(id: string, title: string): void {
+  callNative("openWindow", id, title);
+}
+
+export function closePopOut(id: string): void {
+  callNative("closeWindow", id);
+}
+
+/** Which auxiliary windows are open, so a session reopens with them. */
+export function sendOpenWindows(ids: readonly string[]): void {
+  callNative("setWindows", JSON.stringify(ids));
+}
+
+/** The windows a restored session had open. */
+export function onWindowsRestored(handler: (ids: string[]) => void): void {
+  const juce = backend();
+  if (!juce) return;
+
+  juce.addEventListener("mclassic-windows", (payload) => {
+    try {
+      const ids = typeof payload === "string" ? JSON.parse(payload) : payload;
+      if (Array.isArray(ids)) handler(ids.map(String));
+    } catch {
+      // A malformed list costs a window position, not a session.
+    }
+  });
+}
+
+/** Told when a pop-out was closed by its own title bar rather than by us. */
+export function onPopOutClosed(handler: (id: string) => void): void {
+  const juce = backend();
+  if (!juce) return;
+
+  juce.addEventListener("mclassic-window-closed", (payload) => {
+    if (typeof payload === "string") handler(payload);
+  });
+}
+
 export function installPluginBridge(): void {
   const juce = backend();
   if (!juce) return;

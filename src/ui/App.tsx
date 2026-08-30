@@ -33,6 +33,7 @@ import { draggableIdForMainWindow, windowBackShortcut } from "./windowstack";
 import {
   copiedNumericalValue, draggedNumericalValue, setNumericalInput,
 } from "./numericalgesture";
+import { isDetached } from "../plugin/detached";
 
 type Theme = "light" | "dark";
 
@@ -339,7 +340,8 @@ export function App({ onExitToPatch, extraControls }: {
   const layout = workspaceLayout(viewport.width, viewport.height, workspaceZoom);
 
   return (
-    <div className={"app" + (theme === "dark" ? " theme-dark" : "")}
+    <div className={"app" + (theme === "dark" ? " theme-dark" : "")
+      + (isDetached() ? " app--detached" : "")}
       onInputCapture={(event) => {
         const input = event.target as HTMLInputElement;
         if (input.tagName === "INPUT" && input.type === "number"

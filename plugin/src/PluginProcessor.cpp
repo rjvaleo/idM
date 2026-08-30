@@ -387,8 +387,13 @@ void MClassicProcessor::getStateInformation (juce::MemoryBlock& destination)
     if (documentJson.isEmpty())
         return;
 
-    destination.replaceAll (documentJson.toRawUTF8(),
-                            (size_t) documentJson.getNumBytesAsUTF8());
+    // The musical document and the interface state travel together but stay
+    // apart. Reopening a session must not be able to corrupt a project because
+    // a window moved.
+    const auto blob = "{\"v\":1,\"document\":" + documentJson
+                    + ",\"popouts\":" + (windowsJson.isEmpty() ? "[]" : windowsJson) + "}";
+
+    destination.replaceAll (blob.toRawUTF8(), (size_t) blob.getNumBytesAsUTF8());
 }
 
 void MClassicProcessor::setStateInformation (const void* data, int size)
@@ -402,7 +407,20 @@ void MClassicProcessor::setStateInformation (const void* data, int size)
     if (json.isEmpty())
         return;
 
-    setProjectFromJson (json);
+    // Sessions written before the interface state was carried hold a bare
+    // document. Reading both keeps those openable.
+    const auto parsed = juce::JSON::parse (json);
+    const auto wrapped = parsed.isObject() && parsed.hasProperty ("v");
+
+    if (wrapped)
+    {
+        setProjectFromJson (juce::JSON::toString (parsed.getProperty ("document", juce::var())));
+        windowsJson = juce::JSON::toString (parsed.getProperty ("popouts", juce::var()));
+    }
+    else
+    {
+        setProjectFromJson (json);
+    }
 
     // The engine has it; the interface has not. The editor may not exist yet —
     // a host restores state before opening the window, and often never opens it

@@ -3158,3 +3158,26 @@ body.dark-bg { background: rgb(var(--s-body, 25 25 25)); }
 }
 .midiview__transport--out { color: #6ad46a; }
 .midiview__transport--in { color: #6ab8ff; }
+
+/* ===== A window on its own =====================================================
+   In the plugin, auxiliary windows open as real OS windows. Each is another
+   webview loading this same bundle with `#detached=<id>`, and what it shows is
+   the same component, markup and CSS as the canvas version — everything else is
+   simply not rendered.
+
+   The window is pinned to the origin because its OS window is its frame: the
+   canvas position it would have had belongs to a canvas that is not there. */
+.app--detached .app__menubar { display: none; }
+.app--detached .ustage { width: 100%; height: 100%; }
+
+.app--detached .movable:not([data-detached-target="true"]) { display: none; }
+
+.app--detached .movable[data-detached-target="true"] {
+  position: static;
+  left: auto;
+  top: auto;
+  box-shadow: none;
+}
+
+/* The OS window is the frame, so the window does not draw a second one. */
+.app--detached .uwin[data-detached-target="true"] { border: 0; }

@@ -99,6 +99,7 @@ juce_add_plugin(MClassicPlugin
 
 target_sources(MClassicPlugin PRIVATE
   src/ProjectJson.cpp
+  src/PopOutWindow.cpp
   src/PluginProcessor.cpp
   src/PluginEditor.cpp)
 

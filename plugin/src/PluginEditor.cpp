@@ -99,14 +99,39 @@ void MClassicEditor::probeTheme()
                       })()
                     )JS";
 
-                    safe->webView.evaluateJavascript (press, [] (auto pressed)
+                    safe->webView.evaluateJavascript (press, [safe] (auto pressed)
                     {
                         if (const auto* v = pressed.getResult())
                             probeLog ("MCLASSIC_UI_PROBE transport " + v->toString());
 
-                        juce::Timer::callAfterDelay (7000, []
+                        if (safe == nullptr)
                         {
                             juce::JUCEApplicationBase::quit();
+                            return;
+                        }
+
+                        // Ask the interface to open an auxiliary window the way
+                        // the Windows menu does, then look for the OS window.
+                        static constexpr const char* popOut = R"JS(
+                          window.dispatchEvent(new CustomEvent('mclone:open-window',
+                                                               { detail: 'cyclic-editor' }));
+                          'requested'
+                        )JS";
+
+                        safe->webView.evaluateJavascript (popOut, [safe] (auto)
+                        {
+                            juce::Timer::callAfterDelay (2500, [safe]
+                            {
+                                if (safe != nullptr)
+                                    probeLog ("MCLASSIC_UI_PROBE popouts count="
+                                              + juce::String (safe->popOutCount())
+                                              + " titles=" + safe->popOutTitles());
+
+                                juce::Timer::callAfterDelay (5000, []
+                                {
+                                    juce::JUCEApplicationBase::quit();
+                                });
+                            });
                         });
                     });
                 });
@@ -160,6 +185,33 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
 
                                             complete (juce::var());
                                         })
+                   .withNativeFunction ("openWindow",
+                                        [this] (const juce::Array<juce::var>& args,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion complete)
+                                        {
+                                            if (args.size() >= 2)
+                                                openPopOut (args[0].toString(), args[1].toString());
+
+                                            complete (juce::var());
+                                        })
+                   .withNativeFunction ("closeWindow",
+                                        [this] (const juce::Array<juce::var>& args,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion complete)
+                                        {
+                                            if (! args.isEmpty())
+                                                closePopOut (args[0].toString());
+
+                                            complete (juce::var());
+                                        })
+                   .withNativeFunction ("setWindows",
+                                        [&p] (const juce::Array<juce::var>& args,
+                                              juce::WebBrowserComponent::NativeFunctionCompletion complete)
+                                        {
+                                            if (! args.isEmpty())
+                                                p.setWindowsJson (args[0].toString());
+
+                                            complete (juce::var());
+                                        })
                    .withNativeFunction ("setTransport",
                                         [&p] (const juce::Array<juce::var>& args,
                                               juce::WebBrowserComponent::NativeFunctionCompletion complete)
@@ -191,9 +243,13 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
     // point at which the page can receive it.
     webView.onPageLoaded = [this]
     {
-        if (processorRef.takeRestoredFlag())
-            webView.emitEventIfBrowserIsVisible ("mclassic-document",
-                                                 processorRef.restoredDocument());
+        if (! processorRef.takeRestoredFlag())
+            return;
+
+        webView.emitEventIfBrowserIsVisible ("mclassic-document",
+                                             processorRef.restoredDocument());
+        webView.emitEventIfBrowserIsVisible ("mclassic-windows",
+                                             processorRef.restoredWindows());
     };
    #endif
 
@@ -207,6 +263,58 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
     // the bridge from being hammered a message at a time.
     startTimerHz (50);
 }
+
+/** Open one auxiliary window, or bring it forward if it is already open. */
+void MClassicEditor::openPopOut (const juce::String& id, const juce::String& title)
+{
+    for (auto& window : popOuts)
+    {
+        if (window->windowId() == id)
+        {
+            window->toFront (true);
+            return;
+        }
+    }
+
+    popOuts.push_back (std::make_unique<PopOutWindow> (
+        id, title, provide,
+        [this, id] { tellUiPopOutClosed (id); closePopOut (id); }));
+}
+
+void MClassicEditor::closePopOut (const juce::String& id)
+{
+    for (auto it = popOuts.begin(); it != popOuts.end(); ++it)
+    {
+        if ((*it)->windowId() != id)
+            continue;
+
+        // Deleting a window from inside its own close callback would destroy the
+        // callback mid-call, so it is deferred off the stack.
+        auto* doomed = it->release();
+        popOuts.erase (it);
+        juce::MessageManager::callAsync ([doomed] { delete doomed; });
+        return;
+    }
+}
+
+/** The interface tracks which windows are open, and the OS close button is a
+    way of closing one that the interface never hears about otherwise. */
+void MClassicEditor::tellUiPopOutClosed (const juce::String& id)
+{
+    webView.emitEventIfBrowserIsVisible ("mclassic-window-closed", id);
+}
+
+#if MCLASSIC_UI_PROBE
+juce::String MClassicEditor::popOutTitles() const
+{
+    juce::String out;
+
+    for (const auto& window : popOuts)
+        out += (out.isEmpty() ? "" : ", ") + window->getName();
+
+    return out;
+}
+#endif
 
 void MClassicEditor::resized()
 {

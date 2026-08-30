@@ -110,6 +110,13 @@ public:
         interface has not sent one yet. Read on the message thread only. */
     juce::String restoredDocument() const { return documentJson; }
 
+    /** Which auxiliary windows were open, as a JSON array. Interface state, not
+        musical state: restoring a session must not be able to corrupt a project
+        because a window moved. */
+    juce::String restoredWindows() const { return windowsJson; }
+
+    void setWindowsJson (const juce::String& json) { windowsJson = json; }
+
     /** True when a session was restored and the interface has not yet been told
         about it. Cleared by the editor once it has pushed it into the UI. */
     bool takeRestoredFlag() noexcept { return restoredPending.exchange (false); }
@@ -183,6 +190,7 @@ private:
     /** The document verbatim, so what the host stores is exactly what the
         interface produced — no re-serialising, nothing to drift. */
     juce::String documentJson;
+    juce::String windowsJson;
     std::atomic<bool> restoredPending { false };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MClassicProcessor)

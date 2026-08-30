@@ -26,6 +26,10 @@ import type { ArrowDir, ArrowState } from "../engine/snapshot";
 import { ConductingArrow } from "./ConductingArrow";
 import { ConductorWindow } from "./ConductorWindow";
 import { useContextMenu, type MenuItem } from "./WindowMenu";
+import { detachedWindowId } from "../plugin/detached";
+import {
+  closePopOut, isPlugin, onPopOutClosed, onWindowsRestored, openPopOut, sendOpenWindows,
+} from "../plugin/bridge";
 import { WindowLauncherProvider, useWindowContextMenu } from "./windowlauncher";
 import { CyclicEditor } from "./CyclicEditor";
 import { voiceColorClass } from "./voicecolor";
@@ -137,6 +141,8 @@ function Win({ id, defX, defY, title, note, menuItems, children, className, onCl
   const context = useWindowContextMenu(menuItems ?? []);
   return (
     <section ref={ref} className={"uwin movable " + (className ?? "")}
+      data-window={id}
+      data-detached-target={detachedWindowId() === id ? "true" : undefined}
       style={{ left: pos.x, top: pos.y, zIndex: z }}
       onPointerDownCapture={(event) => focusWindowPointerDown(event, bringToFront)}
       onContextMenu={menuItems?.length ? context.onContextMenu : undefined}>
@@ -162,7 +168,10 @@ function VariableWindowHost({ id, index, children }: {
     `variable-editor-${id}`, { x: 34 + index * 22, y: 72 + index * 20 },
     { autoPlace: true },
   );
-  return <div ref={ref} className="movable uvarpop-host" style={{ left: pos.x, top: pos.y, zIndex: z }}
+  const detachedId = `variable-editor-${id}`;
+  return <div ref={ref} className="movable uvarpop-host" data-window={detachedId}
+    data-detached-target={detachedWindowId() === detachedId ? "true" : undefined}
+    style={{ left: pos.x, top: pos.y, zIndex: z }}
     onPointerDownCapture={(event) => focusWindowPointerDown(event, bringToFront)}>
     {children(onPointerDown)}</div>;
 }
@@ -175,7 +184,12 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
   // that matters now is a plugin in a host that supplies its own instruments —
   // where an internal synth is not a monitor but a second sound nobody asked
   // for. It stays available from the Windows menu for anyone who wants it.
-  const [openWindows, setOpenWindows] = useState<Set<string>>(() => new Set([
+  // A detached document shows one window. Opening the usual startup set would
+  // render seven more behind it that CSS then has to hide.
+  const detached = detachedWindowId();
+  const [openWindows, setOpenWindows] = useState<Set<string>>(() => detached
+    ? new Set([detached])
+    : new Set([
     ...APP_WINDOWS.filter((window) => window.permanent).map((window) => window.id),
     "pattern-editor", "midi-view",
   ]));
@@ -250,7 +264,26 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
     };
   }, []);
 
+  /*
+   * In the plugin an auxiliary window becomes a real OS window rather than
+   * another overlay on a panel that cannot grow. The canvas document asks for
+   * one; the detached document that opens is the one that renders it, so this
+   * returns rather than also opening it here.
+   *
+   * Permanent windows are never popped out: they are the docked panel.
+   */
+  const popsOut = (id: AppWindowId) =>
+    isPlugin() && !detached
+    && APP_WINDOWS.some((window) => window.id === id && !window.permanent);
+
   const showWindow = (id: AppWindowId) => {
+    if (popsOut(id)) {
+      const entry = APP_WINDOWS.find((window) => window.id === id);
+      openPopOut(id, entry?.label ?? id);
+      setOpenWindows((current) => openAppWindow(current, id));
+      return;
+    }
+
     if (id === "cyclic-editor") {
       setCyclicEditor((current) => ensureCyclicSelection(
         current, activeCyclicPositions.accent,
@@ -264,7 +297,42 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
     }
     setOpenWindows((current) => openAppWindow(current, id));
   };
-  const hideWindow = (id: AppWindowId) => setOpenWindows((current) => closeAppWindow(current, id));
+  const hideWindow = (id: AppWindowId) => {
+    if (popsOut(id)) closePopOut(id);
+    setOpenWindows((current) => closeAppWindow(current, id));
+  };
+
+  // A detached document is one window, and the state that window needs — a
+  // cyclic selection, an edited Variable Position — is set up by the same
+  // function the canvas uses, so the two cannot drift.
+  useEffect(() => {
+    if (detached) showWindow(detached as AppWindowId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // A pop-out closed by its own title bar is a close the canvas never hears
+  // about otherwise, and its record of what is open would go stale.
+  useEffect(() => {
+    onPopOutClosed((id) => setOpenWindows((current) => closeAppWindow(current, id as AppWindowId)));
+
+    // A session restored by the host reopens the windows it had.
+    onWindowsRestored((ids) => {
+      for (const id of ids) {
+        if (APP_WINDOWS.some((window) => window.id === id)) showWindow(id as AppWindowId);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // The host stores what is open alongside the project, so tell it whenever
+  // that changes. Only the pop-outs: the docked panel is not a choice.
+  useEffect(() => {
+    if (!isPlugin() || detached) return;
+
+    sendOpenWindows(APP_WINDOWS
+      .filter((window) => !window.permanent && openWindows.has(window.id))
+      .map((window) => window.id));
+  }, [openWindows, detached]);
 
   useEffect(() => {
     const openRequestedWindow = (event: Event) => {

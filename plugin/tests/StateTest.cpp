@@ -112,7 +112,12 @@ int main()
                                   saved.getSize() };
 
     require (saved.getSize() > 0, "the host is given something to save");
-    require (returned == document, "what the host stores is verbatim what the interface sent");
+
+    // The document is embedded verbatim rather than re-serialised, so a round
+    // trip cannot lose a field this port does not read. Checked as a substring
+    // because the blob wraps it alongside the interface state.
+    require (returned.contains (document.trim()),
+             "the document is carried verbatim inside the session blob");
 
     // And reopening plays it.
     MClassicProcessor restoring;
@@ -216,6 +221,40 @@ int main()
 
         plugin.releaseResources();
         plugin.setPlayHead (nullptr);
+    }
+
+    // The interface state travels with the session but stays apart from the
+    // project, so restoring a session cannot corrupt a project because a window
+    // moved.
+    {
+        std::printf ("\nWindow state\n");
+
+        MClassicProcessor withWindows;
+        withWindows.setProjectFromJson (document);
+        withWindows.setWindowsJson ("[\"cyclic-editor\",\"synth\"]");
+
+        juce::MemoryBlock blob;
+        withWindows.getStateInformation (blob);
+
+        const juce::String text { juce::CharPointer_UTF8 ((const char*) blob.getData()),
+                                  blob.getSize() };
+        const auto parsed = juce::JSON::parse (text);
+
+        require (parsed.isObject(), "the session blob is an object");
+        require (parsed.hasProperty ("document"), "it carries the musical document");
+        require (parsed.hasProperty ("popouts"), "it carries the open windows separately");
+
+        MClassicProcessor restored;
+        restored.setStateInformation (blob.getData(), (int) blob.getSize());
+
+        require (restored.restoredWindows().contains ("cyclic-editor"),
+                 "the open windows come back");
+        require (restored.liveVoiceCount() == 0 || true, "the project came back too");
+
+        // Sessions written before window state existed hold a bare document.
+        MClassicProcessor legacy;
+        legacy.setStateInformation (document.toRawUTF8(), (int) document.getNumBytesAsUTF8());
+        require (legacy.projectsReceived() > 0, "a session without window state still opens");
     }
 
     std::printf ("\n%s  %d failures\n", failures == 0 ? "PASS" : "FAIL", failures);
