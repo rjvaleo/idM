@@ -2,26 +2,18 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#include "../engine/StepSource.h"
+
+#include <array>
 #include <atomic>
 #include <vector>
 
-/** One MIDI event the UI has planned, timed on the shared host clock. */
-struct PlannedMidi
+/** A note the processor is holding open, so it can always be closed again. */
+struct SoundingNote
 {
-    double atSec = 0.0;
-    bool isNoteOn = false;
-    int channel = 1;   // 1..16
+    int channel = 0;   // 1..16, 0 when the slot is free
     int note = 0;      // 0..127
-    int velocity = 0;  // 0..127
-};
-
-/** What the processor knows about the host, published for the editor to relay. */
-struct HostTransport
-{
-    double hostSec = 0.0;
-    double bpm = 120.0;
-    double ppqPosition = 0.0;
-    bool isPlaying = false;
+    double offPpq = 0.0;
 };
 
 class MClassicProcessor : public juce::AudioProcessor
@@ -33,6 +25,7 @@ public:
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    void processBlockBypassed (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
@@ -53,43 +46,29 @@ public:
     void getStateInformation (juce::MemoryBlock&) override;
     void setStateInformation (const void*, int) override;
 
-    //==============================================================================
-    /** Called from the editor when the UI has planned more notes. Safe from the
-        message thread; the audio thread drains without blocking it. */
-    void submitPlanned (const std::vector<PlannedMidi>& events);
-
-    /** Drop everything not yet played — transport stop, or a UI panic. */
-    void clearPlanned();
-
-    /** The last transport reading, for the editor to relay to the UI. */
-    HostTransport transport() const;
-
-    /** Notes the UI planned but which arrived too late to place. Surfaced so a
-        timing problem is visible rather than silently inaudible. */
-    int lateEventCount() const { return lateEvents.load (std::memory_order_relaxed); }
+    /** How many notes this instance has emitted since it was loaded. Read by
+        the editor so "is it actually playing" is answerable without a DAW. */
+    int notesEmitted() const noexcept { return emitted.load (std::memory_order_relaxed); }
 
 private:
-    void sendAllNotesOff (juce::MidiBuffer& midi, int samplePosition);
+    void allNotesOff (juce::MidiBuffer&, int samplePosition);
+    void closeNotesDueBefore (juce::MidiBuffer&, double ppqEnd, double ppqStart,
+                              double samplesPerPpq, int numSamples);
 
-    // The UI plans ahead on the message thread and the audio thread consumes,
-    // so the handover is a lock-free FIFO rather than a shared vector.
-    static constexpr int queueCapacity = 8192;
-    juce::AbstractFifo fifo { queueCapacity };
-    std::vector<PlannedMidi> queue { (size_t) queueCapacity };
+    /** Sixteen slots is one per MIDI channel, which is the most the engine can
+        sound at once per pitch. Fixed so nothing allocates on the audio thread. */
+    static constexpr int maxSounding = 128;
+    std::array<SoundingNote, maxSounding> sounding {};
 
-    // Audio-thread-owned, kept in time order.
-    std::vector<PlannedMidi> pending;
+    mclassic::StepSource steps;
+    /** Reused every block so the audio thread never allocates. */
+    std::vector<mclassic::TimedMidi> pending;
 
     double sampleRate = 44100.0;
-    double hostSec = 0.0;
+    double lastPpq = 0.0;
+    bool wasPlaying = false;
 
-    std::atomic<double> publishedSec { 0.0 };
-    std::atomic<double> publishedBpm { 120.0 };
-    std::atomic<double> publishedPpq { 0.0 };
-    std::atomic<bool> publishedPlaying { false };
-    std::atomic<bool> wasPlaying { false };
-    std::atomic<int> lateEvents { 0 };
-    std::atomic<bool> panicRequested { false };
+    std::atomic<int> emitted { 0 };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MClassicProcessor)
 };

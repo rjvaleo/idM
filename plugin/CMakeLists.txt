@@ -30,13 +30,34 @@ endif()
 # ---------------------------------------------------------------------------
 
 add_library(MClassicEngine STATIC
-  engine/Random.cpp)
+  engine/Random.cpp
+  engine/TimeMap.cpp
+  engine/StepSource.cpp)
 
 target_include_directories(MClassicEngine PUBLIC engine)
 
-add_executable(MClassicConformance tests/Conformance.cpp)
+# The engine must agree with the TypeScript bit for bit, and the default here
+# does not. Clang contracts `a + b * c` into a fused multiply-add, which rounds
+# once where JavaScript rounds twice — worth one unit in the last place, which
+# is exactly what the conformance runner caught in `interpolate`. PUBLIC,
+# because the headers carry inline arithmetic that consumers compile
+# themselves.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+  target_compile_options(MClassicEngine PUBLIC -ffp-contract=off)
+elseif(MSVC)
+  target_compile_options(MClassicEngine PUBLIC /fp:precise)
+endif()
+
+add_executable(MClassicConformance
+  tests/Runner.cpp
+  tests/Harness.cpp
+  tests/CheckRandom.cpp
+  tests/CheckTimeMap.cpp
+  tests/CheckStepSource.cpp)
 
 target_link_libraries(MClassicConformance PRIVATE MClassicEngine)
+
+target_compile_features(MClassicConformance PRIVATE cxx_std_20)
 
 target_compile_definitions(MClassicConformance PRIVATE
   MCLASSIC_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
