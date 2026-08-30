@@ -51,11 +51,33 @@ public:
         editor answer "is it actually playing" without a DAW. */
     int notesEmitted() const noexcept { return emitted.load (std::memory_order_relaxed); }
 
+    /** Replace the project the engine is playing. Called from the message
+        thread when the interface changes something.
+
+        The audio thread never blocks on this: the new state is built into the
+        spare half of a double buffer and swapped in at a block boundary. Only
+        one change is in flight at a time, which is why the message thread also
+        checks the flag before writing.
+    */
+    void setProjectFromJson (const juce::String& json);
+
+    /** How many projects the interface has sent. Zero means the bridge never
+        fired, which looks identical to a working plugin until you change
+        something and nothing happens. */
+    int projectsReceived() const noexcept { return received.load (std::memory_order_relaxed); }
+
+    /** Voices in the project the engine is currently playing. */
+    int liveVoiceCount() const noexcept { return (int) projects[liveProject].voices.size(); }
+
 private:
     void allNotesOff (juce::MidiBuffer&, int samplePosition);
     void rewind (double ppq);
 
-    mclassic::ProjectState project;
+    /** Two halves: the audio thread reads one while the message thread fills
+        the other. */
+    mclassic::ProjectState projects[2];
+    int liveProject = 0;
+    std::atomic<bool> projectPending { false };
     std::vector<mclassic::VoiceCursor> cursors;
     std::vector<mclassic::Random> rngs;
     mclassic::NoteLifecycle lifecycle;
@@ -70,6 +92,8 @@ private:
     static constexpr int maxSounding = 256;
     std::array<SoundingNote, maxSounding> sounding {};
 
+    const mclassic::ProjectState& project() const noexcept { return projects[liveProject]; }
+
     double sampleRate = 44100.0;
     /** Where the engine's own clock was zeroed, in host beats. */
     double originPpq = 0.0;
@@ -77,6 +101,7 @@ private:
     bool wasPlaying = false;
 
     std::atomic<int> emitted { 0 };
+    std::atomic<int> received { 0 };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MClassicProcessor)
 };

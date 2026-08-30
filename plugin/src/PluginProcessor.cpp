@@ -1,13 +1,17 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#include "ProjectJson.h"
+
 #include <cmath>
 
 MClassicProcessor::MClassicProcessor()
     : AudioProcessor (BusesProperties()
-                          .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
-      project (mclassic::createDefaultProject())
+                          .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
 {
+    projects[0] = mclassic::createDefaultProject();
+    projects[1] = projects[0];
+
     planned.reserve (1024);
     nextCursors.reserve (16);
     steps.reserve (1024);
@@ -37,13 +41,13 @@ void MClassicProcessor::rewind (double ppq)
     originPpq = ppq;
     lastPpq = ppq;
 
-    cursors = mclassic::makeCursors (project, 0.0);
+    cursors = mclassic::makeCursors (project(), 0.0);
 
     rngs.clear();
-    rngs.reserve (project.voices.size());
+    rngs.reserve (project().voices.size());
 
-    for (size_t voice = 0; voice < project.voices.size(); ++voice)
-        rngs.push_back (mclassic::Random { project.seed ^ ((uint32_t) (voice + 1) * 0x9e3779b1u) });
+    for (size_t voice = 0; voice < project().voices.size(); ++voice)
+        rngs.push_back (mclassic::Random { project().seed ^ ((uint32_t) (voice + 1) * 0x9e3779b1u) });
 
     lifecycle.reset();
 }
@@ -79,10 +83,19 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     // leaving again as if this plugin had generated it.
     midi.clear();
 
+    // Take a waiting edit at a block boundary, never mid-block. Swapping the
+    // live half is a single assignment; nothing is copied on this thread.
+    if (projectPending.load (std::memory_order_acquire))
+    {
+        liveProject = 1 - liveProject;
+        projectPending.store (false, std::memory_order_release);
+        rewind (lastPpq);
+    }
+
     const auto numSamples = buffer.getNumSamples();
 
     auto playing = false;
-    auto bpm = project.tempo;
+    auto bpm = project().tempo;
     auto ppq = lastPpq;
 
     if (auto* head = getPlayHead())
@@ -125,7 +138,7 @@ void MClassicProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     const auto blockEndSec = blockStartSec + (double) numSamples / sampleRate;
 
     // M's own planner decides what plays. This is the whole point of the port.
-    mclassic::planWindow (project, cursors, rngs, blockStartSec, blockEndSec,
+    mclassic::planWindow (project(), cursors, rngs, blockStartSec, blockEndSec,
                           planned, nextCursors, steps);
     cursors = nextCursors;
 
@@ -188,6 +201,18 @@ void MClassicProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,
     // Bypass must not strand a note. It is one of the four ways a plugin leaves
     // something sounding forever.
     allNotesOff (midi, 0);
+}
+
+void MClassicProcessor::setProjectFromJson (const juce::String& json)
+{
+    // A change is already waiting; the newer state wins, so overwrite the same
+    // spare half rather than queueing. The interface sends whole projects, so
+    // nothing is lost by dropping an intermediate one.
+    const auto spare = 1 - liveProject;
+    projects[spare] = mclassic::projectFromJson (juce::JSON::parse (json));
+
+    projectPending.store (true, std::memory_order_release);
+    received.fetch_add (1, std::memory_order_relaxed);
 }
 
 juce::AudioProcessorEditor* MClassicProcessor::createEditor()

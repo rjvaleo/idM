@@ -63,7 +63,8 @@ add_executable(MClassicConformance
   tests/CheckTransform.cpp
   tests/CheckPlanner.cpp
   tests/CheckEvents.cpp
-  tests/ProjectLoader.cpp)
+  tests/ProjectLoader.cpp
+  src/ProjectJson.cpp)
 
 # juce_core only, for its JSON parser. The engine itself stays free of JUCE.
 target_link_libraries(MClassicConformance PRIVATE MClassicEngine juce::juce_core)
@@ -97,6 +98,7 @@ juce_add_plugin(MClassicPlugin
   COPY_PLUGIN_AFTER_BUILD   TRUE)
 
 target_sources(MClassicPlugin PRIVATE
+  src/ProjectJson.cpp
   src/PluginProcessor.cpp
   src/PluginEditor.cpp)
 

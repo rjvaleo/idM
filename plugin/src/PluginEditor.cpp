@@ -110,9 +110,25 @@ MClassicEditor::MClassicEditor (MClassicProcessor& p)
     : AudioProcessorEditor (&p),
       processorRef (p),
       webView (juce::WebBrowserComponent::Options {}
-                   .withResourceProvider (provide))
+                   .withResourceProvider (provide)
+                   // Required before any native function can be called, and
+                   // safe here because the only content loaded is our own
+                   // bundle, served from memory.
+                   .withNativeIntegrationEnabled()
+                   .withNativeFunction ("setProject",
+                                        [&p] (const juce::Array<juce::var>& args,
+                                              juce::WebBrowserComponent::NativeFunctionCompletion complete)
+                                        {
+                                            // The interface sends whole projects,
+                                            // so a dropped intermediate costs
+                                            // nothing and the engine can never
+                                            // hold a half-applied edit.
+                                            if (! args.isEmpty())
+                                                p.setProjectFromJson (args[0].toString());
+
+                                            complete (juce::var());
+                                        }))
 {
-    juce::ignoreUnused (processorRef);
 
     addAndMakeVisible (webView);
 
@@ -205,6 +221,9 @@ void MClassicEditor::probe (int attempt)
         if (rendered || attempt >= 40)
         {
             probeLog ("MCLASSIC_UI_PROBE attempts=" + juce::String (attempt) + " " + line);
+            probeLog ("MCLASSIC_UI_PROBE bridge projectsReceived="
+                      + juce::String (safe->processorRef.projectsReceived())
+                      + " liveVoices=" + juce::String (safe->processorRef.liveVoiceCount()));
 
             if (safe != nullptr)
                 safe->probeTheme();

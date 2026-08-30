@@ -10,6 +10,8 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_utils/juce_audio_utils.h>
 
+#include <cmath>
+#include <functional>
 #include <map>
 #include <set>
 
@@ -24,14 +26,15 @@ constexpr double bpm = 120.0;
 struct FakePlayHead : juce::AudioPlayHead
 {
     double ppq = 0.0;
+    double tempo = bpm;
     bool playing = true;
 
     juce::Optional<PositionInfo> getPosition() const override
     {
         PositionInfo info;
-        info.setBpm (bpm);
+        info.setBpm (tempo);
         info.setPpqPosition (ppq);
-        info.setTimeInSeconds (ppq * 60.0 / bpm);
+        info.setTimeInSeconds (ppq * 60.0 / tempo);
         info.setIsPlaying (playing);
         info.setTimeSignature (TimeSignature { 4, 4 });
         return info;
@@ -154,6 +157,8 @@ void require (bool condition, const juce::String& what)
     ++failures;
 }
 
+void testSync (juce::AudioPluginInstance& plugin);
+
 void testFormat (juce::AudioPluginFormat& format, const juce::String& path)
 {
     std::printf ("\n  %s: %s\n", format.getName().toRawUTF8(), path.toRawUTF8());
@@ -218,6 +223,185 @@ void testFormat (juce::AudioPluginFormat& format, const juce::String& path)
     // Now the same run, stopped mid-phrase.
     const auto stopped = drive (*plugin, 3.7, true);
     require (stopped.maxSimultaneous == 0, "leaves nothing sounding after the transport stops");
+
+    testSync (*plugin);
+}
+
+/** Drive an arbitrary transport shape and report what happened.
+
+    `advance` is handed the block index and returns the next PPQ position and
+    tempo, so a test can ramp the tempo, wrap a loop, or locate — the three
+    things that actually strand notes in a DAW.
+*/
+struct SyncResult
+{
+    int noteOn = 0;
+    int noteOff = 0;
+    int leftSounding = 0;
+    double firstNoteBeat = -1.0;
+    double lastNoteBeat = -1.0;
+};
+
+SyncResult driveTransport (juce::AudioPluginInstance& plugin,
+                           int blocks,
+                           const std::function<void (int, double&, double&, bool&)>& advance)
+{
+    FakePlayHead head;
+    plugin.setPlayHead (&head);
+    plugin.prepareToPlay (sampleRate, blockSize);
+
+    juce::AudioBuffer<float> audio (juce::jmax (2, plugin.getTotalNumOutputChannels()), blockSize);
+    juce::MidiBuffer midi;
+
+    SyncResult result;
+    std::map<std::pair<int, int>, int> open;
+
+    double ppq = 0.0;
+    double tempo = bpm;
+    bool playing = true;
+
+    for (int block = 0; block < blocks; ++block)
+    {
+        advance (block, ppq, tempo, playing);
+
+        head.ppq = ppq;
+        head.playing = playing;
+        head.tempo = tempo;
+
+        audio.clear();
+        midi.clear();
+        plugin.processBlock (audio, midi);
+
+        for (const auto metadata : midi)
+        {
+            const auto message = metadata.getMessage();
+
+            if (message.isNoteOn())
+            {
+                ++result.noteOn;
+                ++open[{ message.getChannel(), message.getNoteNumber() }];
+
+                if (result.firstNoteBeat < 0.0)
+                    result.firstNoteBeat = ppq;
+
+                result.lastNoteBeat = ppq;
+            }
+            else if (message.isNoteOff())
+            {
+                ++result.noteOff;
+                const auto key = std::make_pair (message.getChannel(), message.getNoteNumber());
+
+                if (--open[key] <= 0)
+                    open.erase (key);
+            }
+        }
+    }
+
+    // One stopped block, so `leftSounding` means stranded rather than "the run
+    // happened to end mid-note", which is not a defect.
+    head.playing = false;
+    audio.clear();
+    midi.clear();
+    plugin.processBlock (audio, midi);
+
+    for (const auto metadata : midi)
+    {
+        const auto message = metadata.getMessage();
+
+        if (! message.isNoteOff())
+            continue;
+
+        const auto key = std::make_pair (message.getChannel(), message.getNoteNumber());
+
+        if (--open[key] <= 0)
+            open.erase (key);
+    }
+
+    result.leftSounding = (int) open.size();
+
+    plugin.releaseResources();
+    plugin.setPlayHead (nullptr);
+    return result;
+}
+
+/** The three transport shapes that strand notes, plus a tempo ramp. */
+void testSync (juce::AudioPluginInstance& plugin)
+{
+    const auto secondsPerBeat = 60.0 / bpm;
+    const auto beatsPerBlock = ((double) blockSize / sampleRate) / secondsPerBeat;
+
+    // Following the host clock at all: notes must arrive while it runs.
+    {
+        const auto r = driveTransport (plugin, 400, [&] (int block, double& ppq, double&, bool&)
+        {
+            ppq = block * beatsPerBlock;
+        });
+
+        require (r.noteOn > 0, "sync: follows a running host transport");
+        require (r.leftSounding == 0 || r.noteOn > r.noteOff,
+                 "sync: releases are paired with attacks");
+    }
+
+    // Tempo doubles halfway. The engine must keep following rather than
+    // running on its own idea of time.
+    {
+        auto ppqAtSwitch = 0.0;
+
+        const auto r = driveTransport (plugin, 400, [&] (int block, double& ppq, double& tempo, bool&)
+        {
+            if (block < 200)
+            {
+                ppq = block * beatsPerBlock;
+                ppqAtSwitch = ppq;
+                tempo = bpm;
+            }
+            else
+            {
+                // Twice the tempo means twice the beats per block.
+                ppq = ppqAtSwitch + (block - 200) * beatsPerBlock * 2.0;
+                tempo = bpm * 2.0;
+            }
+        });
+
+        require (r.noteOn > 0, "sync: keeps playing across a tempo change");
+    }
+
+    // A loop that wraps back to the top every two bars.
+    {
+        const auto r = driveTransport (plugin, 600, [&] (int block, double& ppq, double&, bool&)
+        {
+            ppq = std::fmod (block * beatsPerBlock, 8.0);
+        });
+
+        require (r.noteOn > 0, "sync: plays through a looping transport");
+        require (r.leftSounding == 0, "sync: a loop wrap leaves nothing sounding");
+    }
+
+    // A locate: jump forward, then backward, mid-phrase.
+    {
+        const auto r = driveTransport (plugin, 400, [&] (int block, double& ppq, double&, bool&)
+        {
+            const auto base = block * beatsPerBlock;
+            ppq = block < 150 ? base : (block < 300 ? base + 64.0 : base - 32.0);
+        });
+
+        require (r.noteOn > 0, "sync: plays after a locate");
+        require (r.leftSounding == 0, "sync: a locate leaves nothing sounding");
+    }
+
+    // Stop and start repeatedly.
+    {
+        const auto r = driveTransport (plugin, 600, [&] (int block, double& ppq, double&, bool& playing)
+        {
+            playing = (block / 50) % 2 == 0;
+
+            if (playing)
+                ppq += beatsPerBlock;
+        });
+
+        require (r.noteOn > 0, "sync: survives repeated start and stop");
+        require (r.leftSounding == 0, "sync: nothing is left sounding across stops");
+    }
 }
 
 } // namespace
