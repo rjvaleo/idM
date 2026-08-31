@@ -78,6 +78,47 @@ void IdmProcessor::openStandalonePort()
 
     if (midiOut != nullptr)
         midiOut->startBackgroundThread();
+
+    // The manual's "to M 1" and "to M 2": a destination other software can send
+    // into, so idM can be played from another program without a host between
+    // them. Named to match whatever the output ended up called, because a user
+    // told to look for "idM" should find "to idM" beside it.
+    const auto suffix = midiOut != nullptr ? midiOut->getName().fromFirstOccurrenceOf ("idM", false, false)
+                                           : juce::String();
+
+    midiIn = juce::MidiInput::createNewDevice ("to idM" + suffix, this);
+
+    if (midiIn != nullptr)
+        midiIn->start();
+}
+
+/*  Core MIDI's own thread.
+
+    Nothing here touches the engine: incoming MIDI belongs to the interface,
+    where M's Input Control System lives. All this does is queue the bytes.
+*/
+void IdmProcessor::handleIncomingMidiMessage (juce::MidiInput*, const juce::MidiMessage& message)
+{
+    pushIncoming (virtualInFifo, virtualIn, message.getRawData(), message.getRawDataSize());
+}
+
+void IdmProcessor::pushIncoming (juce::AbstractFifo& fifo,
+                                 std::array<IncomingMidi, incomingCapacity>& store,
+                                 const uint8_t* raw, int bytes)
+{
+    if (bytes < 1 || bytes > 3)
+        return; // SysEx is not forwarded
+
+    const auto scope = fifo.write (1);
+
+    if (scope.blockSize1 + scope.blockSize2 < 1)
+        return; // the interface is not draining; drop rather than stall
+
+    const auto index = scope.blockSize1 > 0 ? scope.startIndex1 : scope.startIndex2;
+
+    store[(size_t) index] = IncomingMidi { (uint8_t) raw[0],
+                                           (uint8_t) (bytes > 1 ? raw[1] : 0),
+                                           (uint8_t) (bytes > 2 ? raw[2] : 0) };
 }
 
 void IdmProcessor::prepareToPlay (double newSampleRate, int)
@@ -188,31 +229,16 @@ void IdmProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuf
     // Input Control System with it, which is what used to happen here.
     if (! midi.isEmpty())
     {
-        const auto scope = incomingFifo.write (midi.getNumEvents());
-        auto written = 0;
-
+        // One reservation per message, deliberately, rather than one for the
+        // whole block. AbstractFifo's scoped write commits blockSize1 +
+        // blockSize2 when it goes out of scope whatever you actually wrote into
+        // it - JUCE's own header says so - so reserving getNumEvents() slots and
+        // then skipping the SysEx among them committed slots that were never
+        // filled. The interface read whatever those slots held last time round:
+        // a phantom note or controller move, arriving from nowhere, only when a
+        // host happened to send SysEx. pushIncoming reserves after it validates.
         for (const auto metadata : midi)
-        {
-            if (written >= scope.blockSize1 + scope.blockSize2)
-                break; // the interface is not draining; drop rather than stall
-
-            const auto* raw = metadata.data;
-            const auto bytes = metadata.numBytes;
-
-            if (bytes < 1 || bytes > 3)
-                continue; // SysEx is not forwarded
-
-            const IncomingMidi message { (uint8_t) raw[0],
-                                         (uint8_t) (bytes > 1 ? raw[1] : 0),
-                                         (uint8_t) (bytes > 2 ? raw[2] : 0) };
-
-            const auto index = written < scope.blockSize1
-                ? scope.startIndex1 + written
-                : scope.startIndex2 + (written - scope.blockSize1);
-
-            incoming[(size_t) index] = message;
-            ++written;
-        }
+            pushIncoming (incomingFifo, incoming, metadata.data, metadata.numBytes);
     }
 
     midi.clear();
@@ -421,19 +447,31 @@ void IdmProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer,
 
 int IdmProcessor::drainIncoming (IncomingMidi* destination, int capacity)
 {
-    const auto ready = juce::jmin (capacity, incomingFifo.getNumReady());
-
-    if (ready <= 0)
-        return 0;
-
-    const auto scope = incomingFifo.read (ready);
     auto written = 0;
 
-    for (int i = 0; i < scope.blockSize1; ++i)
-        destination[written++] = incoming[(size_t) (scope.startIndex1 + i)];
+    // Two producers, one consumer: the host's buffer from the audio thread, and
+    // the virtual input from Core MIDI's thread. Order between the two queues
+    // is arbitrary, which is fine - the Input Control System reads messages,
+    // not their interleaving, and neither source is timestamped here.
+    const auto drain = [&] (juce::AbstractFifo& fifo,
+                            const std::array<IncomingMidi, incomingCapacity>& store)
+    {
+        const auto ready = juce::jmin (capacity - written, fifo.getNumReady());
 
-    for (int i = 0; i < scope.blockSize2; ++i)
-        destination[written++] = incoming[(size_t) (scope.startIndex2 + i)];
+        if (ready <= 0)
+            return;
+
+        const auto scope = fifo.read (ready);
+
+        for (int i = 0; i < scope.blockSize1; ++i)
+            destination[written++] = store[(size_t) (scope.startIndex1 + i)];
+
+        for (int i = 0; i < scope.blockSize2; ++i)
+            destination[written++] = store[(size_t) (scope.startIndex2 + i)];
+    };
+
+    drain (incomingFifo, incoming);
+    drain (virtualInFifo, virtualIn);
 
     return written;
 }

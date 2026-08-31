@@ -47,7 +47,8 @@ struct SoundingNote
     int note = 0;      // 0..127
 };
 
-class IdmProcessor : public juce::AudioProcessor
+class IdmProcessor : public juce::AudioProcessor,
+                     private juce::MidiInputCallback
 {
 public:
     IdmProcessor();
@@ -94,6 +95,7 @@ public:
     /** The name of the port M is publishing, or empty if none opened. Shown in
         the interface so "where is my MIDI" has an answer on screen. */
     juce::String portName() const { return midiOut != nullptr ? midiOut->getName() : juce::String(); }
+    juce::String inputPortName() const { return midiIn != nullptr ? midiIn->getName() : juce::String(); }
 
     /** How many notes this instance has emitted since it was loaded. Lets the
         editor answer "is it actually playing" without a DAW. */
@@ -221,6 +223,22 @@ private:
     juce::AbstractFifo incomingFifo { incomingCapacity };
     std::array<IncomingMidi, incomingCapacity> incoming {};
 
+    /** The virtual input's own queue, and not merely for tidiness:
+        juce::AbstractFifo is single-producer, single-consumer. The host writes
+        the queue above from the audio thread; Core MIDI delivers on a thread of
+        its own. Sharing one queue between them would break that contract in a
+        way that shows up as corruption under load rather than as a crash. Two
+        queues, one consumer, both drained by drainIncoming. */
+    juce::AbstractFifo virtualInFifo { incomingCapacity };
+    std::array<IncomingMidi, incomingCapacity> virtualIn {};
+
+    void pushIncoming (juce::AbstractFifo& fifo,
+                       std::array<IncomingMidi, incomingCapacity>& store,
+                       const uint8_t* raw, int bytes);
+
+    /** Core MIDI's thread, for the virtual input. */
+    void handleIncomingMidiMessage (juce::MidiInput*, const juce::MidiMessage&) override;
+
     /** One slot per pitch per channel is more than the engine can sound at once. */
     static constexpr int maxSounding = 256;
     std::array<SoundingNote, maxSounding> sounding {};
@@ -234,6 +252,9 @@ private:
 
     /** Our own MIDI destination, in the plugin as well as the standalone. */
     std::unique_ptr<juce::MidiOutput> midiOut;
+    /** And our own MIDI source, so other software can play into idM without a
+        host in between - the manual's "to M" ports. macOS and Linux only. */
+    std::unique_ptr<juce::MidiInput> midiIn;
     bool portOpened = false;
 
     std::atomic<bool> standaloneRunning { false };

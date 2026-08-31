@@ -8,7 +8,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json"],
       // Keep coverage temp/report files off the mounted project folder.
-      reportsDirectory: "/tmp/m-clone-coverage",
+      reportsDirectory: "/tmp/idm-coverage",
       /*
        * What is measured.
        *

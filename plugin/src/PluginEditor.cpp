@@ -213,6 +213,15 @@ IdmEditor::IdmEditor (IdmProcessor& p)
       processorRef (p),
       webView (juce::WebBrowserComponent::Options {}
                    .withResourceProvider (provide)
+                  #if JUCE_WINDOWS
+                   // Windows' default backend is Internet Explorer, and JUCE's
+                   // own header says it "will use an ancient version of IE".
+                   // This interface is a modern bundle; it does not render
+                   // there. Asking for webview2 is not enough on its own -
+                   // JUCE silently falls back when the backend is unavailable,
+                   // which is why prepareToPlay logs areOptionsSupported.
+                   .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
+                  #endif
                    // Required before any native function can be called, and
                    // safe here because the only content loaded is our own
                    // bundle, served from memory.
@@ -279,7 +288,24 @@ IdmEditor::IdmEditor (IdmProcessor& p)
 
     addAndMakeVisible (webView);
 
+    // Say which browser engine actually got used. On Windows the requested
+    // webview2 backend falls back to Internet Explorer without complaint if the
+    // WebView2 runtime is missing, and IE cannot render this interface - so the
+    // symptom is a blank or broken window with nothing anywhere to explain it.
+    // One line in the log turns that into a five-second diagnosis.
+   #if JUCE_WINDOWS
+    const auto backendAvailable = juce::WebBrowserComponent::areOptionsSupported (
+        juce::WebBrowserComponent::Options {}
+            .withBackend (juce::WebBrowserComponent::Options::Backend::webview2));
+
+    idm::Diagnostics::get().log (juce::String ("editor constructed  webview2=")
+                                 + (backendAvailable ? "yes"
+                                                     : "NO - falling back to Internet Explorer, "
+                                                       "which cannot render this interface. Install "
+                                                       "the Microsoft Edge WebView2 Runtime."));
+   #else
     idm::Diagnostics::get().log ("editor constructed");
+   #endif
 
    #if IDM_UI_PROBE
     probeLog ("IDM_UI_PROBE stage=editor-constructed");

@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# One run per branch. A new push cancels the previous one rather than queueing.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The version JUCE's own FindWebView2.cmake names in its instructions.
+  WEBVIEW2_VERSION: 1.0.3485.44
+
+jobs:
+  web:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Manual conformance
+        run: npm run test:manual
+
+      # The C++ engine is checked against these on every platform below. If the
+      # TypeScript changed them without them being regenerated, every one of
+      # those jobs would fail with no explanation. Fail here instead, once.
+      - name: Golden fixtures unchanged
+        run: npm run goldens:check
+
+      - name: Coverage
+        run: npm run coverage
+
+      - name: Build the single-file UI
+        run: npm run build:single
+
+      # Every plugin job needs this exact file, and building it once means the
+      # UI a release ships is bit-identical on all three platforms.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ui-bundle
+          path: dist-single/index.html
+          retention-days: 1
+
+  plugin:
+    name: ${{ matrix.name }}
+    needs: web
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS (universal)
+            os: macos-14
+          - name: Windows
+            os: windows-2022
+          - name: Linux
+            os: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ui-bundle
+          path: dist-single
+
+      # JUCE's own docs/Linux Dependencies.md, for the modules this build uses.
+      # libwebkit2gtk is not optional here: the interface is a WebBrowserComponent.
+      - name: Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libjack-jackd2-dev ladspa-sdk \
+            libcurl4-openssl-dev libfontconfig1-dev libfreetype-dev \
+            libx11-dev libxcomposite-dev libxcursor-dev libxext-dev \
+            libxinerama-dev libxrandr-dev libxrender-dev libxi-dev \
+            libwebkit2gtk-4.1-dev xvfb ninja-build
+
+      # Without this the Windows configure fails at find_package(WebView2 REQUIRED),
+      # and without WebView2 at runtime the interface silently renders in Internet
+      # Explorer. The commands are the ones FindWebView2.cmake prints itself.
+      - name: WebView2 SDK
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Register-PackageSource -Provider NuGet -Name nugetRepository `
+            -Location https://www.nuget.org/api/v2 -Force | Out-Null
+          Install-Package Microsoft.Web.WebView2 -Scope CurrentUser `
+            -RequiredVersion $env:WEBVIEW2_VERSION -Source nugetRepository -Force | Out-Null
+
+      - name: Configure
+        run: cmake -S plugin -B plugin/build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build plugin/build --config Release -j 4
+
+      # The whole point of the C++ port: the same 13,225 values the TypeScript
+      # engine emits. A platform that disagrees here is not shippable, whatever
+      # else passes.
+      - name: Engine conformance
+        shell: bash
+        run: |
+          BIN=$(find plugin/build -name 'IdmConformance*' -type f -perm -u+x | head -1)
+          echo "running $BIN"
+          "$BIN"
+
+      # macOS builds universal, so the Intel half needs running too. Rosetta is
+      # present on the arm64 runners.
+      - name: Engine conformance, x86_64 slice
+        if: runner.os == 'macOS'
+        run: arch -x86_64 plugin/build/IdmConformance
+
+      - name: Session state
+        shell: bash
+        run: |
+          BIN=$(find plugin/build -name 'IdmStateTest*' -type f -perm -u+x | head -1)
+          "$BIN"
+
+      # Loads the built bundle through JUCE's format managers - the same path a
+      # DAW takes - so this is the test that would have caught a plugin that
+      # generates perfectly and emits nothing. Needs a display on Linux.
+      - name: Host transport
+        if: runner.os != 'Linux'
+        shell: bash
+        run: |
+          BIN=$(find plugin/build -name 'IdmHostTest*' -type f -perm -u+x | head -1)
+          "$BIN"
+
+      - name: Host transport (Xvfb)
+        if: runner.os == 'Linux'
+        run: |
+          BIN=$(find plugin/build -name 'IdmHostTest*' -type f -perm -u+x | head -1)
+          xvfb-run -a "$BIN"
+
+      - name: Validate the Audio Units
+        if: runner.os == 'macOS'
+        run: |
+          auval -v aumu idMa Rjvl
+          auval -v aumi idMm Rjvl
+
+      # Proof of what was actually produced, in the log, where a claim about it
+      # can be checked rather than believed.
+      - name: Report what was built
+        shell: bash
+        run: |
+          find plugin/build -name '*.vst3' -o -name '*.component' -o -name '*.clap' \
+            -o -name 'idM.exe' -o -name 'idM.app' | sort
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            for b in $(find plugin/build -path '*Release*' -name idM -type f); do
+              echo "$b: $(lipo -archs "$b")"
+            done
+          fi

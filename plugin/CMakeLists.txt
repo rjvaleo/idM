@@ -113,6 +113,15 @@ juce_add_plugin(IdmPlugin
   NEEDS_MIDI_OUTPUT         TRUE
   IS_MIDI_EFFECT            FALSE
   NEEDS_WEB_BROWSER         TRUE
+  # Windows only in effect - JUCE guards it with elseif(WIN32). Without it the
+  # WebBrowserComponent falls back to the Internet Explorer backend, which
+  # JUCE's own header describes as "an ancient version of IE", and this
+  # interface is a modern bundle that will not render in it. Worse, the
+  # fallback is silent: WebBrowserComponent::Options documents that JUCE
+  # "will silently fallback to the default backend if the selected backend is
+  # not supported". Requires the Microsoft.Web.WebView2 NuGet package at
+  # configure time; see .github/workflows.
+  NEEDS_WEBVIEW2            TRUE
   EDITOR_WANTS_KEYBOARD_FOCUS TRUE
   COPY_PLUGIN_AFTER_BUILD   TRUE)
 
@@ -143,6 +152,15 @@ juce_add_plugin(IdmMidiPlugin
   NEEDS_MIDI_OUTPUT         TRUE
   IS_MIDI_EFFECT            TRUE
   NEEDS_WEB_BROWSER         TRUE
+  # Windows only in effect - JUCE guards it with elseif(WIN32). Without it the
+  # WebBrowserComponent falls back to the Internet Explorer backend, which
+  # JUCE's own header describes as "an ancient version of IE", and this
+  # interface is a modern bundle that will not render in it. Worse, the
+  # fallback is silent: WebBrowserComponent::Options documents that JUCE
+  # "will silently fallback to the default backend if the selected backend is
+  # not supported". Requires the Microsoft.Web.WebView2 NuGet package at
+  # configure time; see .github/workflows.
+  NEEDS_WEBVIEW2            TRUE
   EDITOR_WANTS_KEYBOARD_FOCUS TRUE
   COPY_PLUGIN_AFTER_BUILD   TRUE)
 
@@ -156,7 +174,8 @@ target_sources(IdmMidiPlugin PRIVATE
 target_compile_definitions(IdmMidiPlugin PUBLIC
   JUCE_WEB_BROWSER=1
   JUCE_USE_CURL=0
-  JUCE_VST3_CAN_REPLACE_VST2=0)
+  JUCE_VST3_CAN_REPLACE_VST2=0
+  $<$<BOOL:${WIN32}>:JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1>)
 
 target_link_libraries(IdmMidiPlugin
   PRIVATE
@@ -180,7 +199,10 @@ target_sources(IdmPlugin PRIVATE
 target_compile_definitions(IdmPlugin PUBLIC
   JUCE_WEB_BROWSER=1
   JUCE_USE_CURL=0
-  JUCE_VST3_CAN_REPLACE_VST2=0)
+  JUCE_VST3_CAN_REPLACE_VST2=0
+  # FindWebView2 hands us WebView2LoaderStatic.lib, so the static variant is the
+  # matching one. juce_gui_extra.h derives JUCE_USE_WIN_WEBVIEW2 from this.
+  $<$<BOOL:${WIN32}>:JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1>)
 
 target_link_libraries(IdmPlugin
   PRIVATE

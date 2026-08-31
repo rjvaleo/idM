@@ -26,7 +26,7 @@ const item = (
  */
 export const MANUAL_CAPABILITIES: readonly ManualCapability[] = [
   item("1", "7", "host.registration", "Serial-number registration and demo-mode save restrictions", "not-applicable", "Browser product has no legacy registration system."),
-  item("1", "7", "host.core-midi", "Use OS X Core MIDI as the host I/O system", "not-applicable", "Web MIDI replaces Core MIDI in the browser edition."),
+  item("1", "7", "host.core-midi", "Use OS X Core MIDI as the host I/O system", "pass", "The plugin and standalone reach Core MIDI through JUCE: MidiOutput::createNewDevice publishes a Core MIDI source, and the standalone's Options > Audio/MIDI Settings selects Core MIDI devices. The browser build still uses Web MIDI, which is the same requirement met by the platform it runs on."),
 
   item("2", "8-14", "desktop.six-main-windows", "Expose Patterns, Conducting, Variables, Cyclic Variables, Midi, and Snapshot windows simultaneously", "pass", "Unified.tsx renders the six permanent modules."),
   item("2", "10,145", "variables.six-positions", "Give each non-Sound-Choice Variable six selectable Positions", "pass", "variables.ts and project state use six Positions."),
@@ -42,7 +42,7 @@ export const MANUAL_CAPABILITIES: readonly ManualCapability[] = [
   item("2", "14,151", "controls.slider", "Set sliders from handles or associated numericals", "pass", "Density, Velocity Range, and Note Order editors expose both paths."),
 
   item("3,19", "15-16,167-171", "midi.assignment.devices", "Map each M Input and Output Channel to a MIDI device and channel", "pass", "The MIDI setup has sixteen persisted input/output rows; input events and output events are rechannelized through their assigned physical devices."),
-  item("3,19", "15-16,168", "midi.assignment.virtual-ports", "Expose the manual's virtual to/from M ports", "not-applicable", "Browser Web MIDI cannot create OS-level virtual ports."),
+  item("3,19", "15-16,168", "midi.assignment.virtual-ports", "Expose the manual's virtual to/from M ports", "pass", "idM publishes a virtual output named idM and a virtual input named \"to idM\", the pair the manual calls from M and to M, so other software can both play into idM and read from it with no host in between. The manual fixes two of each; idM gives every instance its own numbered pair, which covers the same need without a fixed ceiling. macOS and Linux only - JUCE has no virtual ports on Windows, where the host path is the only route."),
   item("19", "168-169", "midi.assignment.program-base", "Choose whether each output channel displays programs as 0-127 or 1-128", "pass", "The persisted display-base selector changes program numericals without changing transmitted 0-127 program bytes."),
   item("19", "169-170", "midi.assignment.channel-mode", "Send Omni On/Off, Local Control On/Off, System Reset, and All Notes Off", "pass", "The MIDI setup exposes all six commands and MidiSink byte-level tests cover Omni, Local Control, All Notes Off, and System Reset."),
   item("19", "170", "midi.assignment.panic", "Send a Note Off for every pitch on selected channels", "pass", "WebMidiSink panic covers active/controller cleanup; runtime panic is tested."),
@@ -159,8 +159,8 @@ export const MANUAL_CAPABILITIES: readonly ManualCapability[] = [
   item("19", "167", "file.startup-state", "Persist current controls as the New/launch Startup State, excluding Patterns and Time Maps", "pass", "Save State As Startup persists locally; launch/New merge its screen state onto fresh Pattern contents and Time Maps."),
   item("19", "163", "file.unsaved-guard", "Offer to save unsaved work before New/Open", "pass", "New/Open offer Save, Discard, and Cancel; untitled saves resume the pending action after the app-owned filename dialog."),
   item("19", "167-171", "file.midi-assignment", "Open the full Input/Output MIDI Assignment window", "pass", "MIDI Setup exposes the full sixteen-row input/output matrix plus program base, latency, conducting CCs, and channel-mode commands."),
-  item("19", "167", "file.midi-setup", "Open host MIDI system configuration", "not-applicable", "Browser security model owns MIDI permission/setup."),
-  item("19", "162", "file.quit", "Quit the application", "not-applicable", "A browser tab does not own application termination."),
+  item("19", "167", "file.midi-setup", "Open host MIDI system configuration", "pass", "The standalone's Options button opens JUCE's Audio/MIDI Settings, which selects Core MIDI input and output devices - verified on screen. In a plugin the host owns device configuration, and in the browser the permission model does."),
+  item("19", "162", "file.quit", "Quit the application", "pass", "The standalone is a macOS application and quits like one. In a plugin the host owns termination, and a browser tab does not own it at all."),
 
   item("20", "172-173", "edit.multi-select", "Select arbitrary multiple Patterns and apply Edit commands", "pass", "Shift-click builds an arbitrary Pattern selection and whole-Pattern Edit/Pattern commands fan out to every selected Pattern."),
   item("5,20", "56,172-173", "edit.cut", "Copy then delete selected Pattern or Region steps", "pass", "patterncmd/store tests cover Cut and detached clipboard data."),
@@ -194,7 +194,7 @@ export const MANUAL_CAPABILITIES: readonly ManualCapability[] = [
 
   item("22", "182", "option.metronome", "Generate an audible metronome at the configured Sync Ratio", "pass", "The runtime schedules short Web Audio clicks at the configured outgoing ratio."),
   item("22", "183", "option.send-clock", "Send MIDI clock at the configured ratio", "pass", "The runtime sends Start, 24-PPQN Clock pulses, and Stop through selected Web MIDI outputs at the configured ratio and latency."),
-  item("22", "183", "option.external-clock", "Drive M from external MIDI clock", "not-applicable", "The 2.7 manual itself says this feature is no longer available."),
+  item("22", "183", "option.external-clock", "Drive M from external MIDI clock", "not-applicable", "The 2.7 manual itself says, in full: \"This feature is no longer available.\" There is nothing to reach parity with. The plugin follows its host's transport and tempo instead, which is the modern form of the same idea."),
   item("22", "183", "option.tap-velocity", "Scale all Voice and Sequence velocities from the last Tap Conduct key", "pass", "Tap Conduct velocity scales all in-scope Voice velocity ranges; imported Sequence playback is excluded."),
   item("22", "183", "option.keep-rests", "Preserve rest locations when scrambling", "pass", "Ordinary Pattern edits and explicit ReScramble pass the option through the deterministic scramble path."),
   item("22", "183", "option.slideshow-wait", "Delay Slideshow timing until its first event by default", "pass", "Slideshow Record Wait defaults on and is behavior-tested."),
@@ -206,7 +206,7 @@ export const MANUAL_CAPABILITIES: readonly ManualCapability[] = [
   item("22", "185", "option.sync-sequence", "Choose whether Sync restarts an imported Sequence", "not-applicable", "Sync-Restarts-Sequence has no target because imported Sequence playback is intentionally excluded."),
   item("22", "185", "option.editor-sound", "Allow Pattern Editor audition during playback", "pass", "Pattern Editor reads the persisted option before every audition path."),
   item("22", "185-186", "option.lock-marked", "Prevent editing marked Variable Positions", "pass", "Marked Position edits, Position transfers, and per-Voice transfers are blocked while Lock Marked Variables is enabled."),
-  item("22", "186", "option.echo-background", "Continue processing MIDI input while another application is foreground", "not-applicable", "Web MIDI delivery while backgrounded is controlled by the browser/OS rather than application foreground state."),
+  item("22", "186", "option.echo-background", "Continue processing MIDI input while another application is foreground", "pass", "A plugin processes MIDI whenever the host runs its graph, foreground or not, and nothing in the input path is gated on focus - so the behaviour the Option existed to switch on is now unconditional. The manual's MIDI Manager and OMS preconditions have no modern equivalent."),
 
   item("A", "187", "power.shift-numerical", "Shift-click a Numerical to copy the most recently changed numerical value", "pass", "The app tracks the most recently edited Numerical and Shift-click copies it with destination min/max/step clamping."),
   item("A", "187", "power.pattern-group-no-sync", "Option-click Pattern Group without Sync", "pass", "Ordinary Pattern Group clicks Sync; Option/Alt-click selects without resetting playback."),
