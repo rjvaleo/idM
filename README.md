@@ -10,8 +10,9 @@ steering rather than by typing.
 idM generates **MIDI**. It runs as an **AU**, a **VST3**, a **CLAP**, a
 **standalone app**, and in a **browser**.
 
+[![CI](https://github.com/rjvaleo/idM/actions/workflows/ci.yml/badge.svg)](https://github.com/rjvaleo/idM/actions/workflows/ci.yml)
+[![Download](https://img.shields.io/github/v/release/rjvaleo/idM?label=download&color=E65100)](https://github.com/rjvaleo/idM/releases/latest)
 [![Licence](https://img.shields.io/badge/licence-AGPL--3.0-blue)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.9.0--alpha-E65100)](CHANGELOG.md)
 [![Formats](https://img.shields.io/badge/formats-AU%20%7C%20VST3%20%7C%20CLAP%20%7C%20Standalone-8DC63F)](#formats)
 [![macOS](https://img.shields.io/badge/macOS-universal%2C%2011%2B-informational)](#platforms)
 [![Tests](https://img.shields.io/badge/tests-913%20passing-brightgreen)](#how-it-is-tested)
@@ -73,12 +74,37 @@ exist on Windows and the host path has to carry it alone.
 Builds are **not signed or notarised.** macOS will warn on first open, and you
 will need to allow it in System Settings ▸ Privacy & Security.
 
-## Install
+## Download
 
-No published downloads yet — [build from source](#build-from-source). The build
-installs the plugins into `~/Library/Audio/Plug-Ins/` itself. Copy
-`plugin/build/IdmPlugin_artefacts/Release/Standalone/idM.app` to `/Applications`
-by hand if you want the standalone.
+**[Latest release →](https://github.com/rjvaleo/idM/releases/latest)**
+
+| | | |
+|---|---|---|
+| **macOS** | universal, 11+ | [idM-macOS-universal.zip](https://github.com/rjvaleo/idM/releases/latest/download/idM-macOS-universal.zip) — AU, AU MIDI FX, VST3, CLAP, Standalone |
+| **Windows** | x64 | [idM-Windows-x64.zip](https://github.com/rjvaleo/idM/releases/latest/download/idM-Windows-x64.zip) — VST3, CLAP, Standalone |
+| **Linux** | x86_64 | [idM-Linux-x86_64.tar.gz](https://github.com/rjvaleo/idM/releases/latest/download/idM-Linux-x86_64.tar.gz) — VST3, CLAP, Standalone |
+
+Every archive carries an `INSTALL.txt` with the paths for that platform, and
+[`SHA256SUMS.txt`](https://github.com/rjvaleo/idM/releases/latest/download/SHA256SUMS.txt)
+covers all three.
+
+### macOS needs one extra step
+
+The builds are **not signed or notarised**, so macOS quarantines them and the
+plugin will not load until that flag is cleared. In Terminal, in the folder you
+unzipped:
+
+```bash
+xattr -dr com.apple.quarantine .
+```
+
+Then copy `idM.component` and `idM MIDI.component` into
+`~/Library/Audio/Plug-Ins/Components/`, `idM.vst3` into
+`~/Library/Audio/Plug-Ins/VST3/`, `idM.clap` into
+`~/Library/Audio/Plug-Ins/CLAP/`, and `idM.app` wherever you like.
+
+If you would rather not run that, [build from source](#build-from-source)
+instead — a local build is not quarantined.
 
 ## Getting MIDI out of it
 
