@@ -14,8 +14,9 @@ idM generates **MIDI**. It runs as an **AU**, a **VST3**, a **CLAP**, a
 [![Download](https://img.shields.io/github/v/release/rjvaleo/idM?label=download&color=E65100)](https://github.com/rjvaleo/idM/releases/latest)
 [![Licence](https://img.shields.io/badge/licence-AGPL--3.0-blue)](LICENSE)
 [![Formats](https://img.shields.io/badge/formats-AU%20%7C%20VST3%20%7C%20CLAP%20%7C%20Standalone-8DC63F)](#formats)
-[![macOS](https://img.shields.io/badge/macOS-universal%2C%2011%2B-informational)](#platforms)
-[![Tests](https://img.shields.io/badge/tests-913%20passing-brightgreen)](#how-it-is-tested)
+[![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-informational)](#platforms)
+[![macOS](https://img.shields.io/badge/macOS-universal%2C%2011%2B-lightgrey)](#platforms)
+[![Tests](https://img.shields.io/badge/tests-921%20passing-brightgreen)](#how-it-is-tested)
 
 > **Alpha, and looking for testers.** macOS is built, validated and confirmed
 > working in Ableton Live 12. Windows and Linux build and pass the engine and
@@ -223,7 +224,7 @@ not found`, see [`plugin/README.md`](plugin/README.md).
 ## How it is tested
 
 ```bash
-npm test              # 913 tests across 67 files
+npm test              # 921 tests across 68 files
 npm run typecheck
 npm run coverage      # engine + state coverage, with a ratchet
 npm run test:manual   # M 2.7 manual conformance audit
@@ -258,11 +259,13 @@ isolation. That distinction was learned the hard way: the plugin once passed
 every test it had while emitting nothing into any DAW, because nothing measured
 whether anything collected the buffer it wrote into.
 
-**Known gap:** the coverage ratchet is currently red. Statements, lines and
-functions are at 100%; branches are at 98.97% against a 99% threshold, so
-`npm run coverage` fails. The uncovered branches are browser-only fallbacks in
-`src/engine/runtime.ts`. The threshold has deliberately not been lowered to
-paper over it.
+Coverage is a ratchet rather than an aspiration: statements, lines and
+functions sit at 100% and stay there, and branches at 99.01% against a 99%
+threshold. What is left uncovered is browser-only fallbacks in
+`src/engine/runtime.ts` — a context the autoplay policy suspended, a control
+moved before the first user gesture built the audio graph. When that number
+dipped below the threshold it was raised back by writing the missing tests,
+never by lowering the bar.
 
 All of this runs on CI, on every push, across macOS, Windows and Linux —
 `.github/workflows/ci.yml`. The x86_64 slice of the macOS universal binary is
