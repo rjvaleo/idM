@@ -17,7 +17,8 @@ idM generates **MIDI**. It runs as an **AU**, a **VST3**, a **CLAP**, a
 [![Tests](https://img.shields.io/badge/tests-913%20passing-brightgreen)](#how-it-is-tested)
 
 > **Alpha, and looking for testers.** macOS is built, validated and confirmed
-> working in Ableton Live 12. Windows and Linux are **not built yet** — see
+> working in Ableton Live 12. Windows and Linux build and pass the engine and
+> transport suites on CI, but **nobody has run either in a DAW** — see
 > [Platforms](#platforms) for exactly what has and has not been run. If you try
 > it, [open an issue](https://github.com/rjvaleo/idM/issues); host reports are
 > the most useful thing anyone can send right now.
@@ -54,15 +55,20 @@ Nothing in this table is a guess.
 | **macOS** (Apple Silicon + Intel) | **built and validated.** Universal binaries, minimum macOS 11. |
 | **Ableton Live 12**, macOS | **confirmed working** — notes reach a synth on a second track. |
 | Logic, Bitwig, Reaper, Cubase, Studio One, FL | **untested.** No reports yet. |
-| **Windows** | **not built and not tested.** |
-| **Linux** | **not built and not tested.** |
+| **Windows** (x64) | **builds and passes on CI** — engine conformance under MSVC, session state, and the host suite loading the built VST3. **Never run in a DAW.** |
+| **Linux** (x86_64) | **builds and passes on CI** — engine conformance under GCC, session state, and the host suite. **Never run in a DAW.** |
 
-Windows and Linux are the next real piece of work. JUCE supports both, and the
-engine is plain C++ with no platform code in it, so nothing is known to be in
-the way — but nothing has been compiled, so nothing is claimed. One thing *is*
-known in advance: `MidiOutput::createNewDevice` is macOS/iOS/Linux only, so the
-virtual-port fallback described below will not exist on Windows and the host
-path has to carry it.
+The engine is the same everywhere, and that is now measured rather than hoped:
+the C++ engine reproduces all **13,225 conformance values under clang, MSVC and
+GCC** — and on both slices of the macOS universal binary. Those are three
+independent compilers agreeing with the TypeScript, bit for bit.
+
+What CI cannot tell you is whether a real DAW on Windows or Linux routes the
+MIDI, which is the part that has historically gone wrong. That needs people.
+
+One difference is structural rather than untested: `MidiOutput::createNewDevice`
+is macOS/iOS/Linux only, so the virtual-port fallback described below does not
+exist on Windows and the host path has to carry it alone.
 
 Builds are **not signed or notarised.** macOS will warn on first open, and you
 will need to allow it in System Settings ▸ Privacy & Security.
@@ -232,7 +238,15 @@ functions are at 100%; branches are at 98.97% against a 99% threshold, so
 `src/engine/runtime.ts`. The threshold has deliberately not been lowered to
 paper over it.
 
-There is **no CI** — `.github/` is empty and every gate above is run by hand.
+All of this runs on CI, on every push, across macOS, Windows and Linux —
+`.github/workflows/ci.yml`. The x86_64 slice of the macOS universal binary is
+run under Rosetta there too. `auval` runs on macOS.
+
+Where a machine cannot provide something a check needs — a headless Linux
+runner has no ALSA sequencer, so there is nothing for JUCE to publish a virtual
+MIDI port on — the suite prints a **skip** naming what it skipped and why,
+rather than a pass that would be a lie or a failure that is nothing to do with
+the code.
 
 ## Layout
 

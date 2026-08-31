@@ -66,7 +66,8 @@ showing the plugin missing, that is the first thing to change.
 | Logic Pro | AU | untested |
 | Bitwig, Reaper, Studio One | CLAP / VST3 | untested |
 | Cubase, FL Studio | VST3 | untested |
-| Windows, any host | VST3 / CLAP | **not built and not tested.** No Windows machine here. |
+| Windows, any host | VST3 / CLAP | **builds and passes CI**, never run in a DAW. No virtual port there, so the host path is the only route. |
+| Linux, any host | VST3 / CLAP | **builds and passes CI**, never run in a DAW. |
 
 ## Windows
 
@@ -81,8 +82,15 @@ Two things are known without building it:
    because Steinberg marked them legacy — which is why program changes are
    **off by default** here.
 
-Everything else about Windows is unverified. It needs a machine or a CI runner,
-and until one has built and run it, this table should keep saying so.
+That was written before there was a CI runner. There is one now, and it builds
+Windows on every push: MSVC compiles the engine, the engine reproduces all
+13,225 conformance values, session state round-trips, and the host suite loads
+the built VST3 through JUCE's format manager and confirms it emits across
+start, stop, loop, locate, tempo change and bypass.
+
+What remains unverified is the part that has always been the problem: whether a
+real DAW on Windows activates the event output bus. No CI runner can answer
+that. It needs somebody with Cubase or Reaper open.
 
 ## What was learned the expensive way
 
