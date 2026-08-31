@@ -140,6 +140,11 @@ juce_add_plugin(IdmPlugin
 # documented mechanism, and it needs an instrument, not a MIDI effect.
 # ---------------------------------------------------------------------------
 
+# AU is an Apple format, so this target only exists on Apple platforms.
+# Defining it elsewhere leaves a plugin target with no formats at all, and
+# anything that depends on IdmPlugin_AU then fails at generate time - which
+# is exactly how the first Linux CI run died.
+if(APPLE)
 juce_add_plugin(IdmMidiPlugin
   PRODUCT_NAME              "idM MIDI"
   COMPANY_NAME              "rjvaleo"
@@ -188,6 +193,7 @@ target_link_libraries(IdmMidiPlugin
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
+endif()
 
 target_sources(IdmPlugin PRIVATE
   src/Diagnostics.cpp
@@ -229,7 +235,7 @@ target_sources(IdmHostTest PRIVATE tests/HostTest.cpp)
 
 target_compile_definitions(IdmHostTest PRIVATE
   JUCE_PLUGINHOST_VST3=1
-  JUCE_PLUGINHOST_AU=1
+  $<$<BOOL:${APPLE}>:JUCE_PLUGINHOST_AU=1>
   JUCE_USE_CURL=0
   JUCE_WEB_BROWSER=0
   IDM_ARTEFACTS_DIR="${CMAKE_CURRENT_BINARY_DIR}/IdmPlugin_artefacts/Release"
@@ -239,7 +245,12 @@ target_link_libraries(IdmHostTest PRIVATE
   juce::juce_audio_utils
   juce::juce_recommended_config_flags)
 
-add_dependencies(IdmHostTest IdmPlugin_VST3 IdmPlugin_AU)
+# VST3 everywhere; the AU only where there is one to load.
+add_dependencies(IdmHostTest IdmPlugin_VST3)
+
+if(APPLE)
+  add_dependencies(IdmHostTest IdmPlugin_AU)
+endif()
 
 # ---------------------------------------------------------------------------
 # Session persistence, against the processor itself.
