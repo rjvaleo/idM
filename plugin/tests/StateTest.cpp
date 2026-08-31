@@ -280,10 +280,26 @@ int main()
         port.prepareToPlay (48000.0, 512);
 
         const auto name = port.portName();
-        std::printf ("    port name: \"%s\"\n", name.toRawUTF8());
+        const auto inputName = port.inputPortName();
+        std::printf ("    output port: \"%s\"\n", name.toRawUTF8());
+        std::printf ("    input port:  \"%s\"\n", inputName.toRawUTF8());
 
+       #if JUCE_WINDOWS
+        // JUCE's own header on MidiOutput::createNewDevice: "only available on
+        // Linux, macOS and iOS". There is no virtual port to publish here and
+        // no fallback, so the host path is the only route out - which is why
+        // it has to work on Windows rather than merely usually work.
+        //
+        // Asserting the absence rather than skipping: if a future JUCE gains
+        // Windows virtual ports, this fails and someone reads this comment.
+        require (name.isEmpty(), "no virtual output on Windows, as documented");
+        require (inputName.isEmpty(), "no virtual input on Windows, as documented");
+       #else
         require (name.isNotEmpty(), "a port is published");
         require (name.startsWith ("idM"), "under a name a user would recognise");
+        require (inputName.isNotEmpty(), "an input port is published");
+        require (inputName.startsWith ("to idM"), "under the manual's own name for it");
+       #endif
 
         // Whether other processes can see it is checked by IdmMidiListen,
         // from outside: a process does not reliably enumerate its own virtual

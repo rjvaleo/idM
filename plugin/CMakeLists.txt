@@ -91,6 +91,13 @@ target_link_libraries(IdmConformance PRIVATE IdmEngine juce::juce_core)
 target_compile_features(IdmConformance PRIVATE cxx_std_20)
 
 target_compile_definitions(IdmConformance PRIVATE
+  # This is a plain add_executable, so it never gets the JUCE_USE_CURL=0 that
+  # juce_add_console_app derives from an absent NEEDS_CURL. On Linux juce_core
+  # then compiles its curl-backed URL downloader against a library nothing
+  # links, and the run dies at the linker with a page of undefined references
+  # to curl_easy_*. A conformance runner has no business making HTTP requests.
+  JUCE_USE_CURL=0
+  JUCE_WEB_BROWSER=0
   IDM_GOLDENS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/engine/__goldens__")
 
 enable_testing()
