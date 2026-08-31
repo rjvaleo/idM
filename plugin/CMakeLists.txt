@@ -60,6 +60,17 @@ add_library(IdmEngine STATIC
 
 target_include_directories(IdmEngine PUBLIC engine)
 
+# This static library is linked into shared objects - the VST3 .so and the
+# CLAP - and Linux will not have that unless its objects are position
+# independent: "relocation R_X86_64_PC32 ... can not be used when making a
+# shared object; recompile with -fPIC". macOS and Windows do not care, so the
+# only place this shows up is a Linux build.
+#
+# JUCE sets this on every target its own helpers create. IdmEngine is a plain
+# add_library, so it gets nothing for free - the same gap that left it
+# compiling juce_core's curl downloader with no curl to link against.
+set_target_properties(IdmEngine PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 # The engine must agree with the TypeScript bit for bit, and the default here
 # does not. Clang contracts `a + b * c` into a fused multiply-add, which rounds
 # once where JavaScript rounds twice — worth one unit in the last place, which
