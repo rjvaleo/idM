@@ -25,6 +25,19 @@ void require (bool condition, const char* what)
         ++failures;
 }
 
+/*  Not a pass and not a failure.
+
+    Some of what this suite checks needs something of the machine - a MIDI
+    subsystem, in practice - and a headless CI container does not have one.
+    Printing "ok" there would be a lie, and failing would make the suite red
+    for a reason that is nothing to do with the code. It says what it skipped
+    and why, so a green run that skipped something still reads as such.
+*/
+void skip (const char* what, const char* why)
+{
+    std::printf ("    skip  %s\n          (%s)\n", what, why);
+}
+
 struct FakePlayHead : juce::AudioPlayHead
 {
     double ppq = 0.0;
@@ -295,10 +308,33 @@ int main()
         require (name.isEmpty(), "no virtual output on Windows, as documented");
         require (inputName.isEmpty(), "no virtual input on Windows, as documented");
        #else
-        require (name.isNotEmpty(), "a port is published");
-        require (name.startsWith ("idM"), "under a name a user would recognise");
-        require (inputName.isNotEmpty(), "an input port is published");
-        require (inputName.startsWith ("to idM"), "under the manual's own name for it");
+        // Linux has virtual ports through the ALSA sequencer, and a headless
+        // container has no ALSA at all - no /dev/snd/seq, nothing for JUCE to
+        // publish on. That is the machine's limitation, not the plugin's, so
+        // it is skipped rather than failed. The check is for the device node
+        // itself because that is the actual precondition; inferring it from an
+        // empty device list would also be true on a real machine that simply
+        // has nothing plugged in.
+        // JUCE_LINUX is only defined on Linux, so it has to be tested by the
+        // preprocessor rather than in an expression.
+       #if JUCE_LINUX
+        const auto haveMidiStack = juce::File ("/dev/snd/seq").exists();
+       #else
+        const auto haveMidiStack = true;
+       #endif
+
+        if (haveMidiStack)
+        {
+            require (name.isNotEmpty(), "a port is published");
+            require (name.startsWith ("idM"), "under a name a user would recognise");
+            require (inputName.isNotEmpty(), "an input port is published");
+            require (inputName.startsWith ("to idM"), "under the manual's own name for it");
+        }
+        else
+        {
+            skip ("virtual MIDI ports",
+                  "no ALSA sequencer at /dev/snd/seq on this machine");
+        }
        #endif
 
         // Whether other processes can see it is checked by IdmMidiListen,
