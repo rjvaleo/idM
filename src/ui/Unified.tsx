@@ -43,7 +43,7 @@ import { patternGroupSelectionSyncs } from "./patterngroupgesture";
 import { focusWindowPointerDown } from "./windowfocus";
 import { runSnapshotGesture } from "./snapshotgesture";
 import { variablePositionGesture } from "./variablepositiongesture";
-import { APP_WINDOWS, closeAppWindow, openAppWindow, type AppWindowId } from "../engine/windows";
+import { APP_WINDOWS, closeAppWindow, drawnOnCanvas, openAppWindow, popsOutOfCanvas, type AppWindowId } from "../engine/windows";
 import {
   cycleChordMode,
   cycleInputUse,
@@ -264,17 +264,11 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
     };
   }, []);
 
-  /*
-   * In the plugin an auxiliary window becomes a real OS window rather than
-   * another overlay on a panel that cannot grow. The canvas document asks for
-   * one; the detached document that opens is the one that renders it, so this
-   * returns rather than also opening it here.
-   *
-   * Permanent windows are never popped out: they are the docked panel.
-   */
-  const popsOut = (id: AppWindowId) =>
-    isPlugin() && !detached
-    && APP_WINDOWS.some((window) => window.id === id && !window.permanent);
+  // Both rules live in engine/windows.ts, where they are tested. Restating
+  // either here is how the drawn-twice bug would come back.
+  const where = { hosted: isPlugin(), detached: Boolean(detached) };
+  const popsOut = (id: AppWindowId) => popsOutOfCanvas(id, where);
+  const rendersHere = (id: AppWindowId) => drawnOnCanvas(id, openWindows, where);
 
   const showWindow = (id: AppWindowId) => {
     if (popsOut(id)) {
@@ -892,7 +886,7 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
 
         </Win>
 
-        {openWindows.has("midi-assignment") && <Win id="midi-assignment" defX={80} defY={180}
+        {rendersHere("midi-assignment") && <Win id="midi-assignment" defX={80} defY={180}
           title="Midi Assignment" note="input / output routing" className="u-midi-assignment"
           onClose={() => hideWindow("midi-assignment")}>
           <div className="umidi__assignment-head">
@@ -959,26 +953,26 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
           </div>
         </Win>}
 
-        {openWindows.has("midi-view") && <Win id="midi-view" defX={80} defY={180} title="Midi View"
+        {rendersHere("midi-view") && <Win id="midi-view" defX={80} defY={180} title="Midi View"
           note="generated output tracker" className="u-midiview-win"
           onClose={() => hideWindow("midi-view")}><MidiView /></Win>}
 
-        {openWindows.has("synth") && <Win id="synth" defX={90} defY={200} title="Synth"
+        {rendersHere("synth") && <Win id="synth" defX={90} defY={200} title="Synth"
           note="built-in subtractive instrument" className="u-synth-win"
           onClose={() => hideWindow("synth")}><SynthWindow /></Win>}
 
         {/* Pattern Editor — M-style editor window with a resizable grid */}
-        {openWindows.has("pattern-editor") &&
+        {rendersHere("pattern-editor") &&
           <PatternEditor onClose={() => hideWindow("pattern-editor")} />}
       </div>
-      {openWindows.has("cyclic-editor") && cyclicEditor &&
+      {rendersHere("cyclic-editor") && cyclicEditor &&
         <CyclicEditor kind={cyclicEditor.kind} position={cyclicEditor.position}
           onSelect={(kind, position) => setCyclicEditor({ kind, position })}
           onClose={() => hideWindow("cyclic-editor")} />
       }
 
       {(["density", "velocityRange", "noteOrderMix", "transposition", "timeDistort", "outputChannels"] as PositionVarId[])
-        .filter((id) => openWindows.has(id)).map((editingVar, editorIndex) => {
+        .filter((id) => rendersHere(id)).map((editingVar, editorIndex) => {
         const editPosition = editPositionFor(editingVar);
         return (
         <VariableWindowHost id={editingVar} index={editorIndex} key={editingVar}>{(titleDrag) => (

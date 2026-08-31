@@ -32,3 +32,33 @@ export function closeAppWindow(current: ReadonlySet<string>, id: AppWindowId): S
   next.delete(id);
   return next;
 }
+
+/*
+ * Open, and drawn on this canvas, are not the same question.
+ *
+ * In the plugin an auxiliary window becomes a real OS window: the panel is
+ * fixed at 1000 x 460 and the editors do not fit in it. That window is drawn by
+ * the detached document, not by the canvas that asked for it.
+ *
+ * It is still *open* — the Windows menu has to show it as taken, and the
+ * session has to restore it — so the two questions need two answers. Answering
+ * both with "is it in the open set" is what put an OS window and an in-app
+ * window on screen at once, one of which had to be closed by hand before the
+ * other could be used.
+ */
+export function popsOutOfCanvas(
+  id: AppWindowId,
+  { hosted, detached }: { hosted: boolean; detached: boolean },
+): boolean {
+  if (!hosted || detached) return false;
+  return APP_WINDOWS.some((window) => window.id === id && !window.permanent);
+}
+
+/** Whether this canvas should draw the window itself. */
+export function drawnOnCanvas(
+  id: AppWindowId,
+  open: ReadonlySet<string>,
+  where: { hosted: boolean; detached: boolean },
+): boolean {
+  return open.has(id) && !popsOutOfCanvas(id, where);
+}
