@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>idM — an algorithmic composer</title>
+<meta name="description" content="idM is an algorithmic composer inspired by M, the classic sequencer. You set up processes and play those, live. Runs in a browser, as a standalone app, and as an AU / VST3 / CLAP plugin that generates MIDI.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%2316160f'/><text y='23' x='16' text-anchor='middle' font-family='monospace' font-size='18' fill='%23d9d9d3'>M</text></svg>">
+
+<meta property="og:title" content="idM — an algorithmic composer">
+<meta property="og:description" content="Inspired by M, the classic sequencer. Try it in your browser, or run it as an AU, VST3 or CLAP plugin.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="screenshots/idm-light.png">
+
+<style>
+:root {
+  --bg: #d9d9d3;
+  --panel: #f4f4ef;
+  --ink: #16160f;
+  --line: #16160f;
+  --muted: #5a5a50;
+  --rule: #b9b9b0;
+  --accent: #1f6f4a;
+  --font: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16160f;
+    --panel: #22221a;
+    --ink: #e8e8e0;
+    --line: #4a4a40;
+    --muted: #9a9a90;
+    --rule: #3a3a32;
+    --accent: #6ee7a8;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 62rem; margin: 0 auto; padding: 0 1.25rem; }
+a { color: inherit; }
+
+/* Header ------------------------------------------------------------ */
+header { border-bottom: 1px solid var(--rule); }
+.bar {
+  display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+  padding: 1.1rem 0;
+}
+.logo {
+  font-family: var(--mono); font-size: 1.6rem; font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.logo em { font-style: normal; opacity: 0.55; }
+.bar nav { margin-left: auto; display: flex; gap: 1.25rem; font-size: 0.9rem; }
+.bar nav a { color: var(--muted); text-decoration: none; }
+.bar nav a:hover { color: var(--ink); text-decoration: underline; }
+
+/* Hero --------------------------------------------------------------- */
+.hero { padding: 3.5rem 0 2.5rem; }
+h1 {
+  font-size: clamp(1.8rem, 4.5vw, 2.9rem); line-height: 1.15;
+  margin: 0 0 1rem; letter-spacing: -0.02em; max-width: 20ch;
+}
+.lede { font-size: clamp(1.05rem, 2vw, 1.2rem); max-width: 58ch; margin: 0 0 1.1rem; }
+.lede + .lede { color: var(--muted); }
+.cta { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 2rem; align-items: center; }
+.btn {
+  display: inline-block; padding: 0.7rem 1.3rem; border: 1px solid var(--line);
+  background: var(--ink); color: var(--bg); text-decoration: none;
+  font-weight: 600; font-size: 0.98rem;
+}
+.btn:hover { opacity: 0.85; }
+.btn--ghost { background: transparent; color: var(--ink); }
+.cta small { color: var(--muted); font-size: 0.85rem; }
+
+/* Shots -------------------------------------------------------------- */
+figure { margin: 0 0 2rem; }
+figure img {
+  width: 100%; height: auto; display: block;
+  border: 1px solid var(--rule); background: var(--panel);
+}
+figcaption { color: var(--muted); font-size: 0.85rem; margin-top: 0.5rem; }
+.shots { padding: 1rem 0 2rem; }
+.shots .pair { display: grid; gap: 1.5rem; }
+@media (min-width: 52rem) { .shots .pair { grid-template-columns: 1fr 1fr; } }
+
+/* Sections ----------------------------------------------------------- */
+section { padding: 2.5rem 0; border-top: 1px solid var(--rule); }
+h2 { font-size: 1.35rem; margin: 0 0 1rem; letter-spacing: -0.01em; }
+h3 { font-size: 1rem; margin: 1.5rem 0 0.4rem; }
+p { max-width: 62ch; }
+ul { max-width: 62ch; padding-left: 1.1rem; }
+li { margin: 0.35rem 0; }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.94rem; margin: 1rem 0; }
+th, td { text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; white-space: nowrap; }
+td code, p code, li code { font-family: var(--mono); font-size: 0.88em; }
+.scroller { overflow-x: auto; }
+
+pre {
+  background: var(--panel); border: 1px solid var(--rule);
+  padding: 0.8rem 1rem; overflow-x: auto; font-family: var(--mono);
+  font-size: 0.88rem; margin: 1rem 0;
+}
+
+.note {
+  border-left: 3px solid var(--accent); padding: 0.2rem 0 0.2rem 1rem;
+  margin: 1.25rem 0; color: var(--muted);
+}
+.note strong { color: var(--ink); }
+
+footer {
+  border-top: 1px solid var(--rule); padding: 2rem 0 3rem;
+  color: var(--muted); font-size: 0.88rem;
+}
+footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <span class="logo">id<em>M</em></span>
+    <nav>
+      <a href="#try">Try it</a>
+      <a href="#download">Download</a>
+      <a href="#what">What it does</a>
+      <a href="https://github.com/rjvaleo/idM">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <h1>An algorithmic composer, inspired by M.</h1>
+    <p class="lede">
+      You do not write notes in idM. You set up processes &mdash; patterns, cyclic
+      variables, note-order mixes, density and transposition tables &mdash; and
+      then you play <em>those</em>, live, while they generate.
+    </p>
+    <p class="lede">
+      It is an instrument for composing by steering rather than by typing. It
+      generates MIDI, and it runs in your browser, as a standalone app, and as an
+      AU, VST3 or CLAP plugin.
+    </p>
+    <div class="cta">
+      <a class="btn" href="app/" id="try">Try it in your browser</a>
+      <a class="btn btn--ghost" href="#download">Download the plugin</a>
+      <small>No install, no sign-up.</small>
+    </div>
+  </div>
+
+  <div class="wrap shots">
+    <div class="pair">
+      <figure>
+        <img src="screenshots/idm-light.png" alt="idM's window suite in the light theme: Patterns, the transport, Snapshot, Midi View, the Pattern Editor, Cyclic Variables, the Variables grid and the Midi output strip." loading="lazy" width="2920" height="940">
+      </figure>
+      <figure>
+        <img src="screenshots/idm-dark.png" alt="The same interface in the dark theme." loading="lazy" width="2920" height="940">
+      </figure>
+    </div>
+    <p style="color:var(--muted);font-size:0.85rem;margin:0">
+      Light and dark. Every Voice keeps its colour across every window.
+    </p>
+  </div>
+
+  <section id="what">
+    <div class="wrap">
+      <h2>What it does</h2>
+      <ul>
+        <li><strong>Voices and Patterns.</strong> A project opens with four Voices; the engine carries between one and sixteen. Twenty-four Patterns, six Pattern Groups of four.</li>
+        <li><strong>Variable Positions (a&ndash;f)</strong> &mdash; six snapshot-able positions for Note Order, Transposition, Note Density, Velocity Range, Time Distortion and Orchestration.</li>
+        <li><strong>M-style Note Order mixing.</strong> Each Voice blends Original Order, a stored repeating scramble, and continually changing random playback, on one bar with two draggable boundaries.</li>
+        <li><strong>Cyclic Variables</strong> &mdash; five-level Accent, Legato and Rhythm. Legato is M's Phrasing system, and may exceed 100% for overlapping articulation.</li>
+        <li><strong>Conducting</strong> &mdash; a six-by-six Baton grid, conducted tempo range, sync ratio, a bounded Robot Conductor, and per-Voice continuous conducting.</li>
+        <li><strong>Snapshots and Slideshows</strong> &mdash; 26 partial locations, nine timed Slideshows, Snapshot-quantised playback.</li>
+        <li><strong>Host sync.</strong> The plugin follows your DAW's transport &mdash; start, stop, loop, locate, tempo change &mdash; with nothing left sounding across any of them.</li>
+      </ul>
+      <p><a href="https://github.com/rjvaleo/idM#what-it-does">The full list is in the README &rarr;</a></p>
+    </div>
+  </section>
+
+  <section id="download">
+    <div class="wrap">
+      <h2>Download</h2>
+      <div class="scroller">
+      <table>
+        <tr>
+          <th>macOS</th>
+          <td>universal, 11+</td>
+          <td><a href="https://github.com/rjvaleo/idM/releases/latest/download/idM-macOS-universal.zip">idM-macOS-universal.zip</a><br>AU, AU MIDI FX, VST3, CLAP, Standalone</td>
+        </tr>
+        <tr>
+          <th>Windows</th>
+          <td>x64</td>
+          <td><a href="https://github.com/rjvaleo/idM/releases/latest/download/idM-Windows-x64.zip">idM-Windows-x64.zip</a><br>VST3, CLAP, Standalone</td>
+        </tr>
+        <tr>
+          <th>Linux</th>
+          <td>x86_64</td>
+          <td><a href="https://github.com/rjvaleo/idM/releases/latest/download/idM-Linux-x86_64.tar.gz">idM-Linux-x86_64.tar.gz</a><br>VST3, CLAP, Standalone</td>
+        </tr>
+      </table>
+      </div>
+      <p>
+        Each archive carries an <code>INSTALL.txt</code> with the paths for that
+        platform, and
+        <a href="https://github.com/rjvaleo/idM/releases/latest/download/SHA256SUMS.txt">SHA256SUMS.txt</a>
+        covers all three.
+      </p>
+
+      <h3>macOS needs one extra step</h3>
+      <p>
+        The builds are not signed or notarised yet, so macOS quarantines them and
+        the plugin will not load until that flag is cleared. In Terminal, in the
+        folder you unzipped:
+      </p>
+      <pre>xattr -dr com.apple.quarantine .</pre>
+    </div>
+  </section>
+
+  <section id="midi">
+    <div class="wrap">
+      <h2>Getting MIDI out of it</h2>
+      <p>
+        This is the part that trips people. Both plugin formats hand MIDI to the
+        host through a gate the host controls and never reports &mdash; so an
+        engine running perfectly and a host ignoring it look identical.
+      </p>
+      <p>
+        <strong>In Ableton Live</strong>, put idM on one MIDI track, add a second
+        MIDI track with an instrument on it, set that track's <em>MIDI From</em> to
+        the idM track, set the chooser below it to <em>idM</em>, and set
+        <em>Monitor</em> to <em>In</em>. That routing is what makes Live activate
+        the bus.
+      </p>
+      <p>
+        idM also publishes its own virtual MIDI ports on macOS and Linux &mdash;
+        <code>idM</code> to listen to it, <code>to idM</code> to play into it &mdash;
+        so you can always reach it from outside the host. And the interface carries
+        a notes-sent counter: if it is climbing and your DAW is silent, the fault is
+        the routing, not the music.
+      </p>
+      <p><a href="https://github.com/rjvaleo/idM/blob/main/HOSTS.md">Per-host notes &rarr;</a></p>
+    </div>
+  </section>
+
+  <section id="status">
+    <div class="wrap">
+      <h2>Where this actually stands</h2>
+      <div class="note">
+        <strong>Alpha, and looking for testers.</strong> One person has confirmed
+        idM working in one host on one operating system: Ableton Live 12 on macOS.
+        Everything else is untested by a human.
+      </div>
+      <p>
+        What <em>is</em> measured: the engine exists twice, once in TypeScript and
+        once in C++, and the two agree to all 13,225 conformance values under
+        clang, MSVC and GCC &mdash; and on both slices of the macOS universal
+        binary. Windows and Linux build on CI and pass the engine, session and
+        host-transport suites. <code>auval</code> passes both Audio Units.
+      </p>
+      <p>
+        What CI cannot tell you is whether a real DAW routes the MIDI, which is
+        precisely the thing that has gone wrong before. That needs people.
+      </p>
+      <p>
+        <strong>If you try it, please say what happened</strong> &mdash; which host,
+        which OS, which format, and whether MIDI reached anything, including when it
+        did not.
+        <a href="https://github.com/rjvaleo/idM/issues">Open an issue &rarr;</a>
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p style="margin:0 0 0.5rem">
+      idM is free software under the
+      <a href="https://github.com/rjvaleo/idM/blob/main/LICENSE">GNU AGPL v3</a>.
+      A clean-room reimplementation, written from the published M 2.7 manual.
+    </p>
+    <p style="margin:0">
+      <a href="https://github.com/rjvaleo/idM">Source on GitHub</a> &middot;
+      <a href="https://github.com/rjvaleo/idM/releases">Releases</a> &middot;
+      <a href="https://github.com/rjvaleo/idM/issues">Issues</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

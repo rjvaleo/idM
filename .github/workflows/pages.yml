@@ -1,0 +1,69 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Pages deploys the site as it is on main; a superseded run has nothing to add.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The site ships the instrument itself, so a broken engine must not reach
+      # it. These are the same gates CI runs; failing here costs a deploy, not a
+      # visitor's first impression.
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Build the instrument
+        run: npm run build:single
+
+      - name: Assemble the site
+        run: |
+          set -euo pipefail
+          mkdir -p _site/app _site/screenshots
+          cp site/index.html _site/index.html
+          # The single-file build is the whole instrument in one document, so
+          # the "app" is a copy rather than a bundle to wire up.
+          cp dist-single/index.html _site/app/index.html
+          cp docs/screenshots/idm-light.png docs/screenshots/idm-dark.png _site/screenshots/
+          # Jekyll would otherwise try to process this and choke on the app.
+          touch _site/.nojekyll
+          echo "assembled:"
+          find _site -type f | sort
+          du -sh _site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
