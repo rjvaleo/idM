@@ -1,7 +1,7 @@
 {
   "name": "idm",
   "private": true,
-  "version": "0.8.0-alpha",
+  "version": "0.9.0-alpha",
   "type": "module",
   "description": "idM — an algorithmic composer inspired by M, the classic sequencer. Runs in a browser, as a standalone app, and as an AU / VST3 / CLAP plugin that generates MIDI.",
   "license": "AGPL-3.0-or-later",

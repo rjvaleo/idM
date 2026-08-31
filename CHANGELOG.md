@@ -6,7 +6,7 @@ All notable changes to idM are recorded here. The format follows
 alpha: the interface, the audio rack, and the `.idm` document may still
 change between minor versions.
 
-## [Unreleased] — idM
+## [0.9.0-alpha] — 2026-08-30
 
 ### Changed
 
@@ -60,6 +60,27 @@ change between minor versions.
   `engine-rust-parked/` stopped `.gitignore`'s `engine/target/` rule matching,
   and `target/debug` was committed — 98% of the files in the repository,
   including two 20 MB static libraries.
+
+### Verification at this tag
+
+- 921 tests across 68 files, and a clean `tsc --noEmit`.
+- 184 manual-conformance tests against the M 2.7 inventory: 172 implemented,
+  12 documented exceptions. Page coverage of the manual is complete apart from
+  pp.17-30, the Beginning Tutorial, whose features are inventoried at their
+  reference chapters instead.
+- 13,225 conformance values between the TypeScript engine and the C++ one, on
+  both slices of the universal binary - the x86_64 half under Rosetta.
+- Host suite (start, stop, loop, locate, tempo change, bypass) and state suite
+  (300 edits while playing) clean.
+- `auval -v aumu idMa Rjvl` and `auval -v aumi idMm Rjvl` both succeed.
+- 100% statement, line and function coverage of the engine and state modules;
+  99.01% branches against a 99% ratchet.
+
+### Not verified at this tag
+
+- Windows and Linux builds. CI compiles them; nobody has run one in a DAW.
+- CLAP in a CLAP host.
+- Every host except Ableton Live 12 on macOS.
 
 ## [Unreleased] — idMLab, branch `modular` (historical)
 
@@ -206,4 +227,5 @@ hardware/browser MIDI certification.
   and state modules.
 - Clean `tsc --noEmit`, plus successful normal, Pages, and single-file builds.
 
+[0.9.0-alpha]: https://github.com/rjvaleo/idM/releases/tag/v0.9.0-alpha
 [0.8.0-alpha]: https://github.com/rjvaleo/idM/releases/tag/v0.8.0-alpha

@@ -11,7 +11,7 @@ idM generates **MIDI**. It runs as an **AU**, a **VST3**, a **CLAP**, a
 **standalone app**, and in a **browser**.
 
 [![Licence](https://img.shields.io/badge/licence-AGPL--3.0-blue)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.8.0--alpha-E65100)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.9.0--alpha-E65100)](CHANGELOG.md)
 [![Formats](https://img.shields.io/badge/formats-AU%20%7C%20VST3%20%7C%20CLAP%20%7C%20Standalone-8DC63F)](#formats)
 [![macOS](https://img.shields.io/badge/macOS-universal%2C%2011%2B-informational)](#platforms)
 [![Tests](https://img.shields.io/badge/tests-913%20passing-brightgreen)](#how-it-is-tested)
