@@ -37,8 +37,8 @@ export function closeAppWindow(current: ReadonlySet<string>, id: AppWindowId): S
  * Auxiliary windows are drawn on the canvas, and only there.
  *
  * They used to also open as real OS windows in the plugin, on the reasoning
- * that the panel is fixed at 1000 x 460 and the editors do not fit in it. What
- * that produced was two windows for one command - an OS window in front and the
+ * that the panel was a fixed size and the editors did not fit in it. What that
+ * produced was two windows for one command - an OS window in front and the
  * in-app one behind it - and the OS window had to be closed by hand before the
  * in-app one could be used. The in-app window is the one that works, so it is
  * the only one now.

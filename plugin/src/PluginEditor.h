@@ -25,7 +25,7 @@ public:
 
 /** Hosts the browser app's own UI. The windows are not reimplemented here and
     must not be: this class serves the single-file bundle to a WebBrowserComponent
-    and gets out of the way. Fixed at the measured 1000 x 460. */
+    and gets out of the way. Resizable; see the constructor for the limits. */
 class IdmEditor final : public juce::AudioProcessorEditor
 {
 public:

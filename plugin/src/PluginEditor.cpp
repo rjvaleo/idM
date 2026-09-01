@@ -297,8 +297,22 @@ IdmEditor::IdmEditor (IdmProcessor& p)
 
     webView.goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
 
-    setSize (1000, 460);
-    setResizable (false, false);
+    /*  Resizable, because the interface is a desktop of movable windows and
+        1000 x 460 is not much of a desk.
+
+        The web side already expects this: .workspace-viewport is
+        `flex: 1 1 auto; overflow: auto`, so it fills whatever it is given and
+        scrolls only when the content is genuinely larger. Nailing the editor
+        shut was the only thing forcing everything to scroll inside a fixed box.
+
+        The lower bound is the 640 x 480 the classic layout is drawn against,
+        plus the menu bar - below that the windows start clipping rather than
+        merely crowding. The upper bound is loose; a second monitor is a
+        reasonable place to put this.
+    */
+    setResizable (true, true);
+    setResizeLimits (640, 520, 4096, 2304);
+    setSize (1000, 620);
 
     // The interface polls; nothing is pushed at it. See pollEngine.
 }
