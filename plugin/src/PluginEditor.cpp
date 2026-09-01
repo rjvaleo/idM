@@ -312,7 +312,16 @@ IdmEditor::IdmEditor (IdmProcessor& p)
     */
     setResizable (true, true);
     setResizeLimits (640, 520, 4096, 2304);
-    setSize (1000, 620);
+
+    // Whatever the session was left at, clamped to the limits above in case a
+    // blob was written by a build with different ones. A session that has never
+    // had its window opened carries no size and takes the default.
+    const auto saved = processorRef.restoredEditorSize();
+
+    if (saved.x > 0 && saved.y > 0)
+        setSize (juce::jlimit (640, 4096, saved.x), juce::jlimit (520, 2304, saved.y));
+    else
+        setSize (1000, 620);
 
     // The interface polls; nothing is pushed at it. See pollEngine.
 }
@@ -323,6 +332,11 @@ IdmEditor::IdmEditor (IdmProcessor& p)
 void IdmEditor::resized()
 {
     webView.setBounds (getLocalBounds());
+
+    // Told on every resize rather than on teardown: a host may save its session
+    // while the window is still open, and closing the editor is not the only
+    // way a session gets written.
+    processorRef.setEditorSize (getWidth(), getHeight());
 }
 
 /** Everything the interface needs from the engine, in one answer.

@@ -163,6 +163,10 @@ public:
 
     void setWindowsJson (const juce::String& json) { windowsJson = json; }
 
+    /** The size the editor was left at, or {0, 0} if the session has none. */
+    juce::Point<int> restoredEditorSize() const { return { editorWidth, editorHeight }; }
+    void setEditorSize (int width, int height) { editorWidth = width; editorHeight = height; }
+
     /** True when a session was restored and the interface has not yet been told
         about it. Cleared by the editor once it has pushed it into the UI. */
     bool takeRestoredFlag() noexcept { return restoredPending.exchange (false); }
@@ -287,6 +291,9 @@ private:
         interface produced — no re-serialising, nothing to drift. */
     juce::String documentJson;
     juce::String windowsJson;
+    /** Zero until a session carries one, so a first run takes the default. */
+    int editorWidth = 0;
+    int editorHeight = 0;
     std::atomic<bool> restoredPending { false };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IdmProcessor)

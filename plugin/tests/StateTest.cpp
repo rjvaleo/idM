@@ -270,6 +270,36 @@ int main()
         require (legacy.projectsReceived() > 0, "a session without window state still opens");
     }
 
+    // The window size travels with the session too. The interface is a desktop
+    // of movable windows, and resizing it every time you open a project is the
+    // sort of small friction that makes a plugin feel unfinished.
+    {
+        std::printf ("\nEditor size\n");
+
+        IdmProcessor sized;
+        require (sized.restoredEditorSize() == juce::Point<int> (0, 0),
+                 "a fresh instance carries no size, so the editor takes its default");
+
+        sized.setProjectFromJson (document);
+        sized.setEditorSize (1440, 900);
+
+        juce::MemoryBlock blob;
+        sized.getStateInformation (blob);
+
+        IdmProcessor restored;
+        restored.setStateInformation (blob.getData(), (int) blob.getSize());
+        require (restored.restoredEditorSize() == juce::Point<int> (1440, 900),
+                 "the size comes back");
+
+        // A blob from before this existed has no size key at all, and must not
+        // come back as a zero-by-zero window.
+        const auto old = "{\"v\":1,\"document\":" + document + ",\"popouts\":[]}";
+        IdmProcessor older;
+        older.setStateInformation (old.toRawUTF8(), (int) old.getNumBytesAsUTF8());
+        require (older.restoredEditorSize() == juce::Point<int> (0, 0),
+                 "a session written before sizes existed still opens, at the default");
+    }
+
     // Program changes are opt-in. A stray one silently repatches whatever is
     // downstream, and VST3 delivery of non-note events is unreliable anyway.
     {

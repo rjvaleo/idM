@@ -533,8 +533,16 @@ void IdmProcessor::getStateInformation (juce::MemoryBlock& destination)
     // The musical document and the interface state travel together but stay
     // apart. Reopening a session must not be able to corrupt a project because
     // a window moved.
+    // The window size rides along with the rest of the interface state. A
+    // session that has never had its window opened has none, and gets the
+    // default rather than a zero.
+    const auto size = editorWidth > 0 && editorHeight > 0
+        ? "[" + juce::String (editorWidth) + "," + juce::String (editorHeight) + "]"
+        : juce::String ("null");
+
     const auto blob = "{\"v\":1,\"document\":" + documentJson
-                    + ",\"popouts\":" + (windowsJson.isEmpty() ? "[]" : windowsJson) + "}";
+                    + ",\"popouts\":" + (windowsJson.isEmpty() ? "[]" : windowsJson)
+                    + ",\"size\":" + size + "}";
 
     destination.replaceAll (blob.toRawUTF8(), (size_t) blob.getNumBytesAsUTF8());
 }
@@ -559,6 +567,19 @@ void IdmProcessor::setStateInformation (const void* data, int size)
     {
         setProjectFromJson (juce::JSON::toString (parsed.getProperty ("document", juce::var())));
         windowsJson = juce::JSON::toString (parsed.getProperty ("popouts", juce::var()));
+
+        // Absent in every session written before this existed, which is why it
+        // is read defensively rather than assumed to be a pair.
+        const auto size = parsed.getProperty ("size", juce::var());
+
+        if (auto* pair = size.getArray(); pair != nullptr && pair->size() == 2)
+        {
+            const auto w = (int) (*pair)[0];
+            const auto h = (int) (*pair)[1];
+
+            if (w > 0 && h > 0)
+                setEditorSize (w, h);
+        }
     }
     else
     {
