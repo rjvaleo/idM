@@ -190,7 +190,6 @@ juce_add_plugin(IdmMidiPlugin
 target_sources(IdmMidiPlugin PRIVATE
   src/Diagnostics.cpp
   src/ProjectJson.cpp
-  src/PopOutWindow.cpp
   src/PluginProcessor.cpp
   src/PluginEditor.cpp)
 
@@ -216,7 +215,6 @@ endif()
 target_sources(IdmPlugin PRIVATE
   src/Diagnostics.cpp
   src/ProjectJson.cpp
-  src/PopOutWindow.cpp
   src/PluginProcessor.cpp
   src/PluginEditor.cpp)
 

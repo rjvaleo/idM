@@ -28,7 +28,7 @@ import { ConductorWindow } from "./ConductorWindow";
 import { useContextMenu, type MenuItem } from "./WindowMenu";
 import { detachedWindowId } from "../plugin/detached";
 import {
-  closePopOut, isPlugin, onPopOutClosed, onWindowsRestored, openPopOut, sendOpenWindows,
+  isPlugin, onWindowsRestored, sendOpenWindows,
 } from "../plugin/bridge";
 import { WindowLauncherProvider, useWindowContextMenu } from "./windowlauncher";
 import { CyclicEditor } from "./CyclicEditor";
@@ -43,7 +43,7 @@ import { patternGroupSelectionSyncs } from "./patterngroupgesture";
 import { focusWindowPointerDown } from "./windowfocus";
 import { runSnapshotGesture } from "./snapshotgesture";
 import { variablePositionGesture } from "./variablepositiongesture";
-import { APP_WINDOWS, closeAppWindow, drawnOnCanvas, openAppWindow, popsOutOfCanvas, type AppWindowId } from "../engine/windows";
+import { APP_WINDOWS, closeAppWindow, drawnOnCanvas, openAppWindow, type AppWindowId } from "../engine/windows";
 import {
   cycleChordMode,
   cycleInputUse,
@@ -264,20 +264,9 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
     };
   }, []);
 
-  // Both rules live in engine/windows.ts, where they are tested. Restating
-  // either here is how the drawn-twice bug would come back.
-  const where = { hosted: isPlugin(), detached: Boolean(detached) };
-  const popsOut = (id: AppWindowId) => popsOutOfCanvas(id, where);
-  const rendersHere = (id: AppWindowId) => drawnOnCanvas(id, openWindows, where);
+  const rendersHere = (id: AppWindowId) => drawnOnCanvas(id, openWindows);
 
   const showWindow = (id: AppWindowId) => {
-    if (popsOut(id)) {
-      const entry = APP_WINDOWS.find((window) => window.id === id);
-      openPopOut(id, entry?.label ?? id);
-      setOpenWindows((current) => openAppWindow(current, id));
-      return;
-    }
-
     if (id === "cyclic-editor") {
       setCyclicEditor((current) => ensureCyclicSelection(
         current, activeCyclicPositions.accent,
@@ -292,7 +281,6 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
     setOpenWindows((current) => openAppWindow(current, id));
   };
   const hideWindow = (id: AppWindowId) => {
-    if (popsOut(id)) closePopOut(id);
     setOpenWindows((current) => closeAppWindow(current, id));
   };
 
@@ -307,7 +295,6 @@ export function Unified({ openVoiceColor }: { openVoiceColor?: (voice: number) =
   // A pop-out closed by its own title bar is a close the canvas never hears
   // about otherwise, and its record of what is open would go stale.
   useEffect(() => {
-    onPopOutClosed((id) => setOpenWindows((current) => closeAppWindow(current, id as AppWindowId)));
 
     // A session restored by the host reopens the windows it had.
     onWindowsRestored((ids) => {

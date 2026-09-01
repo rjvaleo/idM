@@ -3,7 +3,6 @@
 #include "PluginProcessor.h"
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "PopOutWindow.h"
 
 #include <memory>
 #include <optional>
@@ -43,15 +42,10 @@ private:
     void probeTheme();
    #endif
 
-    void openPopOut (const juce::String& id, const juce::String& title);
-    void closePopOut (const juce::String& id);
     juce::var pollEngine();
-    juce::StringArray closedPopOuts;
 
    #if IDM_UI_PROBE
     /** How many auxiliary windows are open as real OS windows. */
-    int popOutCount() const noexcept { return (int) popOuts.size(); }
-    juce::String popOutTitles() const;
    #endif
 
     IdmProcessor& processorRef;
@@ -60,7 +54,6 @@ private:
 
     /** Owned by the editor, so closing the plugin window takes them with it.
         A leaked window outlives its engine and is unreachable. */
-    std::vector<std::unique_ptr<PopOutWindow>> popOuts;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IdmEditor)
 };

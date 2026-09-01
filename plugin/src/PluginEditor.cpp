@@ -113,14 +113,15 @@ void IdmEditor::probeTheme()
                         }
 
                         // Ask the interface to open an auxiliary window the way
-                        // the Windows menu does, then look for the OS window.
-                        static constexpr const char* popOut = R"JS(
+                        // the Windows menu does. It draws on the canvas; there
+                        // is no OS window to look for any more.
+                        static constexpr const char* openAux = R"JS(
                           window.dispatchEvent(new CustomEvent('idm:open-window',
                                                                { detail: 'cyclic-editor' }));
                           'requested'
                         )JS";
 
-                        safe->webView.evaluateJavascript (popOut, [safe] (auto)
+                        safe->webView.evaluateJavascript (openAux, [safe] (auto)
                         {
                             juce::Timer::callAfterDelay (2500, [safe]
                             {
@@ -129,10 +130,6 @@ void IdmEditor::probeTheme()
                                     juce::JUCEApplicationBase::quit();
                                     return;
                                 }
-
-                                probeLog ("IDM_UI_PROBE popouts count="
-                                          + juce::String (safe->popOutCount())
-                                          + " titles=" + safe->popOutTitles());
 
                                 // Does the interface see what the engine played?
                                 // This is what a user looks at to decide whether
@@ -245,24 +242,6 @@ IdmEditor::IdmEditor (IdmProcessor& p)
                                         {
                                             complete (pollEngine());
                                         })
-                   .withNativeFunction ("openWindow",
-                                        [this] (const juce::Array<juce::var>& args,
-                                                juce::WebBrowserComponent::NativeFunctionCompletion complete)
-                                        {
-                                            if (args.size() >= 2)
-                                                openPopOut (args[0].toString(), args[1].toString());
-
-                                            complete (juce::var());
-                                        })
-                   .withNativeFunction ("closeWindow",
-                                        [this] (const juce::Array<juce::var>& args,
-                                                juce::WebBrowserComponent::NativeFunctionCompletion complete)
-                                        {
-                                            if (! args.isEmpty())
-                                                closePopOut (args[0].toString());
-
-                                            complete (juce::var());
-                                        })
                    .withNativeFunction ("setWindows",
                                         [&p] (const juce::Array<juce::var>& args,
                                               juce::WebBrowserComponent::NativeFunctionCompletion complete)
@@ -325,49 +304,7 @@ IdmEditor::IdmEditor (IdmProcessor& p)
 }
 
 /** Open one auxiliary window, or bring it forward if it is already open. */
-void IdmEditor::openPopOut (const juce::String& id, const juce::String& title)
-{
-    for (auto& window : popOuts)
-    {
-        if (window->windowId() == id)
-        {
-            window->toFront (true);
-            return;
-        }
-    }
 
-    popOuts.push_back (std::make_unique<PopOutWindow> (
-        id, title, provide,
-        [this, id] { closedPopOuts.add (id); closePopOut (id); }));
-}
-
-void IdmEditor::closePopOut (const juce::String& id)
-{
-    for (auto it = popOuts.begin(); it != popOuts.end(); ++it)
-    {
-        if ((*it)->windowId() != id)
-            continue;
-
-        // Deleting a window from inside its own close callback would destroy the
-        // callback mid-call, so it is deferred off the stack.
-        auto* doomed = it->release();
-        popOuts.erase (it);
-        juce::MessageManager::callAsync ([doomed] { delete doomed; });
-        return;
-    }
-}
-
-#if IDM_UI_PROBE
-juce::String IdmEditor::popOutTitles() const
-{
-    juce::String out;
-
-    for (const auto& window : popOuts)
-        out += (out.isEmpty() ? "" : ", ") + window->getName();
-
-    return out;
-}
-#endif
 
 void IdmEditor::resized()
 {
@@ -461,16 +398,6 @@ juce::var IdmEditor::pollEngine()
 
     // Windows closed by their own title bar, which the interface has no other
     // way of hearing about.
-    if (! closedPopOuts.isEmpty())
-    {
-        juce::Array<juce::var> ids;
-
-        for (const auto& id : closedPopOuts)
-            ids.add (id);
-
-        object->setProperty ("closed", ids);
-        closedPopOuts.clear();
-    }
 
     return juce::var (object);
 }
