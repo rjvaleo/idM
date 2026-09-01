@@ -7,7 +7,7 @@ describe("classicCyclicSideLayout", () => {
 
     expect(layout.gridTemplateRows).toBe("48px repeat(3, 93px)");
     expect(layout["--cyclic-value-row-height"]).toBe("18px");
-    expect(layout["--cyclic-value-box-width"]).toBe("34px");
+    expect(layout["--cyclic-value-box-width"]).toBe("40px");
     expect(layout["--cyclic-position-row-height"]).toBe("10px");
     expect(layout["--cyclic-selector-outer"]).toBe(
       "polygon(0 0, 92px 0, 59px 26px, 0 26px)",

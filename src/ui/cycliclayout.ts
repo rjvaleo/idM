@@ -13,7 +13,9 @@ export function classicCyclicSideLayout(): ClassicCyclicSideStyle {
   return {
     gridTemplateRows: "48px repeat(3, 93px)",
     "--cyclic-value-row-height": "18px",
-    "--cyclic-value-box-width": "34px",
+    // 40 rather than 34: "12.5" needs 27px of text plus 4px of padding, and
+    // the Rhythm levels are the only fractional ones in the editor.
+    "--cyclic-value-box-width": "40px",
     "--cyclic-position-row-height": "10px",
     "--cyclic-selector-outer": "polygon(0 0, 92px 0, 59px 26px, 0 26px)",
     "--cyclic-selector-inner": "polygon(1px 1px, 89px 1px, 58px 25px, 1px 25px)",

@@ -1622,16 +1622,28 @@ body {
 .cyced__values { padding: 1px 0 0 3px; overflow: hidden; }
 .cyced__values label {
   display: grid;
-  grid-template-columns: 29px var(--cyclic-value-box-width, 34px);
+  grid-template-columns: 29px var(--cyclic-value-box-width, 40px);
   align-items: center;
   height: var(--cyclic-value-row-height, 18px); font-size: 12px;
 }
 .cyced__values input {
-  width: var(--cyclic-value-box-width, 34px);
+  width: var(--cyclic-value-box-width, 40px);
   height: calc(var(--cyclic-value-row-height, 18px) - 1px);
   padding: 0 2px; border: 1px solid #000;
   background: var(--panel); color: #000; font: inherit; font-size: 14px; font-weight: 900;
+  /* Without this WebKit reserves room inside the field for the stepper
+     arrows, and takes it from the text rather than from the box. Rhythm is
+     the only fractional variable, so "1.5" was the first value wide enough to
+     be clipped to "1." and the only visible symptom. Every other numeric
+     field in this interface already does this - see .uvel__box and the tempo
+     readout. */
+  appearance: textfield;
 }
+.cyced__values input::-webkit-inner-spin-button,
+.cyced__values input::-webkit-outer-spin-button,
+.cyced__modern-values input::-webkit-inner-spin-button,
+.cyced__modern-values input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.cyced__modern-values input { appearance: textfield; }
 .cyced__accent-key { padding-top: 24px; width: 82px; text-align: center; }
 .cyced__accent-key span { display: grid; grid-template-columns: repeat(4, 1fr); font-size: 11px; }
 .cyced__accent-key i {
